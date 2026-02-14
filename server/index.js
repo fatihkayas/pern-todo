@@ -1,45 +1,36 @@
 const express = require("express");
-const app = express();    
+const app = express();
 const cors = require("cors");
+const pool = require("./db");
+require('dotenv').config();
 
-//middöeware
-
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// database
-
-const pool = require("./db"); // db.js bağlantısını aldık
-
-// Tüm kullanıcıları getir (GET)
+// --- KULLANICI ROTALARI ---
 app.get("/users", async (req, res) => {
+    try {
+        const allUsers = await pool.query("SELECT * FROM users");
+        res.json(allUsers.rows);
+    } catch (err) { console.error(err.message); }
+});
+
+// --- SAAT ROTALARI (Yeni Eklenen) ---
+app.get("/watches", async (req, res) => {
   try {
-    const allUsers = await pool.query("SELECT * FROM users");
-    res.json(allUsers.rows); // Veritabanından gelen satırları JSON olarak gönder
+    const allWatches = await pool.query("SELECT * FROM watches");
+    res.json(allWatches.rows);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send("Sunucu hatası");
+    res.status(500).send("Sunucu hatası: Saatler getirilemedi");
   }
 });
 
-// Kullanıcı Kaydı Yap (POST)
-app.post("/register", async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
-    
-    const newUser = await pool.query(
-      "INSERT INTO users (user_name, user_email, user_password) VALUES($1, $2, $3) RETURNING *",
-      [name, email, password]
-    );
+// ... Diğer POST, DELETE rotaların burada kalsın ...
 
-    res.json(newUser.rows[0]);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Kayıt sırasında hata oluştu");
-  }
-});
-
-
+// EN ALTTA OLMALI
 app.listen(5000, () => {
     console.log("server has started on port 5000");
 });
+
