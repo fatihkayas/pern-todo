@@ -1,0 +1,16 @@
+{
+  "development": {
+    "username": "postgres",
+    "password": "your_password",
+    "database": "jwtauth",
+    "host": "db",
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "postgres",
+    "password": "your_password",
+    "database": "jwtauth",
+    "host": "db",
+    "dialect": "postgres"
+  }
+}
