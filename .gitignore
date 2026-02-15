@@ -1,38 +1,21 @@
-# Bağımlılıklar - Bulut ortamında bunlar 'npm install' ile tekrar kurulur
+# .dockerignore dosyasını düzelt
 node_modules/
-jspm_packages/
-
-# Çıktılar (Production Build)
-build/
-dist/
-out/
-
-# Çevresel Değişkenler (KRİTİK GÜVENLİK!)
-# Veritabanı şifreleri ve Keycloak gizli anahtarları asla Git'e girmemeli
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Günlük Kayıtları (Logs)
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 logs/
 *.log
-
-# İşletim Sistemi Dosyaları
 .DS_Store
 Thumbs.db
-
-# IDE ve Editör Ayarları
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# Docker / Podman Geçici Dosyaları
-.dockerignore
-# Not: .dockerignore dosyasının kendisi git'e girebilir ama 
-# içinde node_modules mutlaka olmalı.
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.git
+.gitignore
+README.md

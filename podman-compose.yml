@@ -1,0 +1,59 @@
+services:
+  # 1. Veritabanı (Postgres) 🐘
+  db:
+    image: postgres:15-alpine
+    container_name: seiko_db
+    environment:
+      POSTGRES_DB: jwtauth
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: your_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. Kimlik Yönetimi (Keycloak) 🔑
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak_server
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    volumes:
+      - ./keycloak-realm.json:/opt/keycloak/data/import/realm.json:ro
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+  # 3. Backend Servisi ⚙️
+  backend:
+    image: localhost/seiko-backend:latest
+    container_name: seiko_backend
+    depends_on:
+      - db
+    ports:
+      - "5000:5000"
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: your_password
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: jwtauth
+
+  # 4. Frontend Servisi (Mağaza) ⌚
+  frontend:
+    image: localhost/seiko-frontend:latest
+    container_name: seiko_frontend
+    depends_on:
+      - backend
+      - keycloak
+    ports:
+      - "3000:3000"
+    environment:
+      BROWSER: none
+      CHOKIDAR_USEPOLLING: true
+
+volumes:
+  postgres_data:
