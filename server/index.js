@@ -1,3 +1,5 @@
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const express = require("express");
 const app = express();
 const cors = require("cors");
@@ -7,6 +9,18 @@ const pool = require("./db");
 require("dotenv").config();
 
 const chatRouter = require("./routes/chat");
+// Security headers — must be first
+app.use(helmet());
+
+// Rate limiting for chat endpoint
+const chatLimiter = rateLimit({
+  windowMs: 60 * 1000,  // 1 minute
+  max: 10,              // max 10 requests per minute
+  message: { error: "Too many requests, please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api/chat", chatLimiter);
 
 app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:3000", credentials: true }));
 app.use(express.json());
