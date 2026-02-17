@@ -1,3 +1,5 @@
+import Contact from "./pages/Contact";
+import Returns from "./pages/Returns";
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
@@ -60,6 +62,8 @@ function App() {
             element={<Store watches={watches} addToCart={addToCart} />}
           />
           <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/returns" element={<Returns />} />
         </Routes>
 
         {/* Sepet Modalı */}

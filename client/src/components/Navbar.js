@@ -27,6 +27,15 @@ const Navbar = ({ userDisplayName, cartCount, logout }) => {
         <Link className="navbar-brand fw-bold text-primary" to="/">
           ⌚ SEIKO STORE
         </Link>
+
+        {/* Nav links */}
+        <div className="d-flex gap-3 ms-4 me-auto">
+          <Link className="nav-link fw-medium" to="/">🏪 Store</Link>
+          <Link className="nav-link fw-medium" to="/about">ℹ️ About</Link>
+          <Link className="nav-link fw-medium" to="/contact">📬 Contact</Link>
+          <Link className="nav-link fw-medium" to="/returns">↩️ Returns</Link>
+        </div>
+
         <div className="d-flex align-items-center gap-3">
           <span className="small text-secondary">👋 {userDisplayName}</span>
 
