@@ -1,3 +1,5 @@
+
+import ProductDetail from "./pages/ProductDetail";
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
@@ -42,6 +44,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/returns" element={<Returns />} />
+          <Route path="/watch/:id" element={<ProductDetail />} />
         </Routes>
         <ChatWidget />
       </Router>
