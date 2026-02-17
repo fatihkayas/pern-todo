@@ -7,13 +7,15 @@ const Navbar = ({ userDisplayName, cartCount, logout }) => {
   const { isDark, toggle } = useTheme();
 
   const handleLogout = () => {
-    toast.success("Çıkış yapıldı. Görüşürüz! 👋");
+    toast.success("Logged out. See you! 👋");
     setTimeout(() => logout(), 1000);
   };
 
   const handleCart = () => {
     if (cartCount === 0) {
-      toast("Sepetiniz boş 🛒", { icon: "ℹ️" });
+      toast("Your cart is empty 🛒", { icon: "ℹ️" });
+    } else {
+      toast(`${cartCount} items in cart 🛒`);
     }
   };
 
@@ -52,8 +54,6 @@ const Navbar = ({ userDisplayName, cartCount, logout }) => {
           <div
             className="position-relative"
             style={{ cursor: "pointer" }}
-            data-bs-toggle="modal"
-            data-bs-target="#cartModal"
             onClick={handleCart}
           >
             <span style={{ fontSize: "1.5rem" }}>🛒</span>
@@ -68,7 +68,7 @@ const Navbar = ({ userDisplayName, cartCount, logout }) => {
             className="btn btn-outline-danger btn-sm rounded-pill"
             onClick={handleLogout}
           >
-            Çıkış
+            Logout
           </button>
         </div>
       </div>
