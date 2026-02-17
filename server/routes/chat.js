@@ -12,6 +12,7 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Messages array is required" });
     }
 
+    // Fetch watch inventory
     let inventoryText = "No items found.";
     try {
       const result = await pool.query("SELECT * FROM watches LIMIT 50");
@@ -22,10 +23,19 @@ router.post("/", async (req, res) => {
       }
     } catch (_) {}
 
-    const systemPrompt = `You are a helpful assistant for a Seiko watch store app.
+    const systemPrompt = `You are a helpful assistant for the Seiko watch store app.
+
 Current watch inventory:
 ${inventoryText}
-Be concise, friendly, and helpful. Answer in the same language the user writes in.`;
+
+Your responsibilities:
+- Help users find watches from the inventory
+- Answer questions about Seiko watches
+- If the user asks for customer service, support, or a human agent, respond with:
+  "Please contact our customer service team at support@seikostore.com or call +90 212 555 0100. Our team is available Monday–Friday, 9am–6pm."
+- If a watch model is not in the inventory, say you don't have it and suggest similar ones
+- Be concise, friendly, and helpful
+- Always answer in the same language the user writes in`;
 
     const trimmedMessages = messages.slice(-20);
 
