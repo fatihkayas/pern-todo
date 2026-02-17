@@ -92,7 +92,7 @@ function SortableWatchCard({ watch, addToCart }) {
 
 // Main Store component
 const Store = ({ watches: initialWatches, addToCart }) => {
-  const [watches, setWatches] = useState(initialWatches);
+  const [watches, setWatches] = useState(Array.isArray(initialWatches) ? initialWatches : []);
   const [search, setSearch] = useState("");
 
   // Update when parent changes

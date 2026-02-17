@@ -15,17 +15,18 @@ function App() {
   const userDisplayName = keycloak.tokenParsed?.preferred_username || "Müşteri";
 
   useEffect(() => {
-    fetch("http://localhost:5000/watches")
-      .then((res) => res.json())
-      .then((data) => {
-        setWatches(data);
-        toast.success(`${data.length} saat yüklendi ✅`);
-      })
-      .catch((err) => {
-        console.error("Veri hatası:", err);
-        toast.error("Saatler yüklenemedi ❌");
-      });
-  }, []);
+  fetch("http://localhost:5000/watches")
+    .then((res) => res.json())
+    .then((data) => {
+      setWatches(Array.isArray(data) ? data : []);
+      toast.success(`${Array.isArray(data) ? data.length : 0} watches loaded ✅`);
+    })
+    .catch((err) => {
+      console.error("Veri hatası:", err);
+      setWatches([]);
+      toast.error("Watches could not be loaded ❌");
+    });
+}, []);
 
   const addToCart = (watch) => {
     setCart([...cart, watch]);
