@@ -1,5 +1,3 @@
-import Contact from "./pages/Contact";
-import Returns from "./pages/Returns";
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
@@ -9,114 +7,42 @@ import Navbar from "./components/Navbar";
 import ChatWidget from "./components/ChatWidget";
 import Store from "./pages/Store";
 import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Returns from "./pages/Returns";
 import { ThemeProvider } from "./context/ThemeContext";
 
 function App() {
   const [watches, setWatches] = useState([]);
-  const [cart, setCart] = useState([]);
   const userDisplayName = keycloak.tokenParsed?.preferred_username || "Müşteri";
 
   useEffect(() => {
-  fetch("http://localhost:5000/watches")
-    .then((res) => res.json())
-    .then((data) => {
-      setWatches(Array.isArray(data) ? data : []);
-      toast.success(`${Array.isArray(data) ? data.length : 0} watches loaded ✅`);
-    })
-    .catch((err) => {
-      console.error("Veri hatası:", err);
-      setWatches([]);
-      toast.error("Watches could not be loaded ❌");
-    });
-}, []);
-
-  const addToCart = (watch) => {
-    setCart([...cart, watch]);
-    toast.success(`${watch.watch_name} sepete eklendi! 🛒`);
-  };
-
-  const removeFromCart = (index) => {
-    const removed = cart[index];
-    setCart(cart.filter((_, i) => i !== index));
-    toast(`${removed.watch_name} sepetten çıkarıldı`, { icon: "🗑️" });
-  };
+    // KRİTİK: HTTPS ve 5443 portu!
+    fetch("https://localhost:5443/watches")
+      .then((res) => {
+        if(!res.ok) throw new Error("Bağlantı reddedildi");
+        return res.json();
+      })
+      .then((data) => {
+        setWatches(Array.isArray(data) ? data : []);
+        if(data.length > 0) toast.success("Saatler başarıyla yüklendi! ✅");
+      })
+      .catch((err) => {
+        console.error("Fetch Hatası:", err);
+        toast.error("Bağlantı hatası: Port 5443'ü kontrol edin. ❌");
+      });
+  }, []);
 
   return (
     <ThemeProvider>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: { borderRadius: "10px", fontFamily: "Arial" },
-        }}
-      />
+      <Toaster position="top-right" />
       <Router>
-        <Navbar
-          userDisplayName={userDisplayName}
-          cartCount={cart.length}
-          logout={() => keycloak.logout()}
-        />
+        <Navbar userDisplayName={userDisplayName} cartCount={0} logout={() => keycloak.logout()} />
         <Routes>
-          <Route
-            path="/"
-            element={<Store watches={watches} addToCart={addToCart} />}
-          />
+          <Route path="/" element={<Store watches={watches} addToCart={() => {}} />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/returns" element={<Returns />} />
         </Routes>
-
-        {/* Sepet Modalı */}
-        <div
-          className="modal fade"
-          id="cartModal"
-          tabIndex="-1"
-          aria-hidden="true"
-        >
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content rounded-4 border-0">
-              <div className="modal-header bg-dark text-white">
-                <h5 className="modal-title">Sepetim ({cart.length})</h5>
-                <button
-                  type="button"
-                  className="btn-close btn-close-white"
-                  data-bs-dismiss="modal"
-                ></button>
-              </div>
-              <div className="modal-body">
-                {cart.length === 0 ? (
-                  <p className="text-muted text-center">Sepetiniz boş</p>
-                ) : (
-                  <>
-                    {cart.map((item, index) => (
-                      <div
-                        key={index}
-                        className="d-flex justify-content-between align-items-center mb-2 p-2 border-bottom"
-                      >
-                        <span>{item.watch_name}</span>
-                        <button
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => removeFromCart(index)}
-                        >
-                          Sil
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      className="btn btn-primary w-100 mt-3"
-                      onClick={() => {
-                        toast.success("Siparişiniz alındı! 🎉");
-                      }}
-                    >
-                      Ödemeye Geç
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
         <ChatWidget />
       </Router>
     </ThemeProvider>

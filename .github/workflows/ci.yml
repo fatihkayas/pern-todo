@@ -1,7 +1,4 @@
 name: CI Pipeline
-permissions:
-  contents: read
-  packages: write
 
 on:
   push:
@@ -59,7 +56,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: client
-        run: npm install --legacy-peer-deps
+        run: npm ci
 
       - name: Build React app
         working-directory: client

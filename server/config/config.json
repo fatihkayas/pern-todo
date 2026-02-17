@@ -1,9 +1,9 @@
 {
   "development": {
     "username": "postgres",
-    "password": "null",
+    "password": "your_password",
     "database": "jwtauth",
-    "host": "localhost",
+    "host": "db",
     "dialect": "postgres"
   },
   "production": {
