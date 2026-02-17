@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import keycloak from "./keycloak";
-
 import Navbar from "./components/Navbar";
+import ChatWidget from "./components/ChatWidget";
 import Store from "./pages/Store";
-import About from "./pages/About";  // ✅ Import the About component
+import About from "./pages/About";
 
 function App() {
   const [watches, setWatches] = useState([]);
   const [cart, setCart] = useState([]);
-
   const userDisplayName = keycloak.tokenParsed?.preferred_username || "Müşteri";
 
   useEffect(() => {
@@ -24,18 +23,15 @@ function App() {
 
   return (
     <Router>
-      <Navbar 
-        userDisplayName={userDisplayName} 
-        cartCount={cart.length} 
-        logout={() => keycloak.logout()} 
+      <Navbar
+        userDisplayName={userDisplayName}
+        cartCount={cart.length}
+        logout={() => keycloak.logout()}
       />
-      
       <Routes>
         <Route path="/" element={<Store watches={watches} addToCart={addToCart} />} />
         <Route path="/about" element={<About />} />
       </Routes>
-
-      {/* Sepet Modalı */}
       <div className="modal fade" id="cartModal" tabIndex="-1" aria-hidden="true">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content rounded-4 border-0">
@@ -61,6 +57,7 @@ function App() {
           </div>
         </div>
       </div>
+      <ChatWidget />
     </Router>
   );
 }

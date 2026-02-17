@@ -1,5 +1,4 @@
 services:
-  # 1. Veritabanı (Postgres) 🐘
   db:
     image: postgres:15-alpine
     container_name: seiko_db
@@ -12,7 +11,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # 2. Kimlik Yönetimi (Keycloak) 🔑
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     container_name: keycloak_server
@@ -27,12 +25,20 @@ services:
     depends_on:
       - db
 
-  # 3. Backend Servisi ⚙️
+  ollama:
+    image: ollama/ollama:latest
+    container_name: seiko_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
   backend:
     image: localhost/seiko-backend:latest
     container_name: seiko_backend
     depends_on:
       - db
+      - ollama
     ports:
       - "5000:5000"
     environment:
@@ -41,8 +47,9 @@ services:
       DB_HOST: db
       DB_PORT: 5432
       DB_DATABASE: jwtauth
+      OLLAMA_URL: http://seiko_ollama:11434
+      OLLAMA_MODEL: llama3.2
 
-  # 4. Frontend Servisi (Mağaza) ⌚
   frontend:
     image: localhost/seiko-frontend:latest
     container_name: seiko_frontend
@@ -55,7 +62,6 @@ services:
       BROWSER: none
       CHOKIDAR_USEPOLLING: true
 
-  # 5. Database Admin Panel (Adminer) 🎛️
   adminer:
     image: adminer
     container_name: seiko_adminer
@@ -68,3 +74,4 @@ services:
 
 volumes:
   postgres_data:
+  ollama_data:
