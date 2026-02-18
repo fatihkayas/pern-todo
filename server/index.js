@@ -8,6 +8,8 @@ const pool = require("./db");
 require("dotenv").config();
 
 const chatRouter = require("./routes/chat");
+const checkoutRouter = require("./routes/checkout");
+
 
 app.use(helmet());
 // ÖNEMLİ: Sadece bu iki adrese tam izin veriyoruz
@@ -29,6 +31,7 @@ app.get("/watches", async (req, res) => {
 });
 
 app.use("/api/chat", chatRouter);
+app.use("/api/checkout", checkoutRouter);
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 
 app.listen(5000, () => console.log("Backend 5000 portunda hazır."));
