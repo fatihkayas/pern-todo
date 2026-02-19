@@ -30,6 +30,7 @@ app.get("/api/watches", async (req, res) => {
   }
 });
 
+app.use("/api/admin", require("./routes/admin"));
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/orders", require("./routes/orders"));
 app.use("/api/chat", chatRouter);

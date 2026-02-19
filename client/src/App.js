@@ -10,6 +10,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Returns from "./pages/Returns";
 import ProductDetail from "./pages/ProductDetail";
+import AdminPanel from "./pages/AdminPanel";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -104,6 +105,7 @@ function App() {
           <Route path="/returns" element={<Returns />} />
           <Route path="/watch/:id" element={<ProductDetail addToCart={addToCart} />} />
           <Route path="/login" element={customer ? <Navigate to="/" /> : <Login onLogin={handleLogin} />} />
+          <Route path="/admin" element={<AdminPanel />} />
           <Route path="/register" element={customer ? <Navigate to="/" /> : <Register onLogin={handleLogin} />} />
         </Routes>
         <ChatWidget />
@@ -113,3 +115,4 @@ function App() {
 }
 
 export default App;
+
