@@ -20,7 +20,7 @@ app.use(cors({
 app.use(express.json());
 app.use(morgan("dev"));
 
-app.get("/watches", async (req, res) => {
+app.get("/api/watches", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM watches ORDER BY watch_id DESC");
     res.json(result.rows);
@@ -30,6 +30,7 @@ app.get("/watches", async (req, res) => {
   }
 });
 
+app.use("/api/orders", require("./routes/orders"));
 app.use("/api/chat", chatRouter);
 app.use("/api/checkout", checkoutRouter);
 app.get("/health", (req, res) => res.json({ status: "ok" }));
