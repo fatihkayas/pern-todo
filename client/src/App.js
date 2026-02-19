@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
-import keycloak from "./keycloak";
 import Navbar from "./components/Navbar";
 import ChatWidget from "./components/ChatWidget";
+import CartSidebar from "./components/CartSidebar";
 import Store from "./pages/Store";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -15,47 +15,74 @@ import { ThemeProvider } from "./context/ThemeContext";
 function App() {
   const [watches, setWatches] = useState([]);
   const [cart, setCart] = useState([]);
-  const userDisplayName = keycloak.tokenParsed?.preferred_username || "User";
+  const [cartOpen, setCartOpen] = useState(false);
+  const userDisplayName = "Misafir";
 
   useEffect(() => {
-    fetch("https://localhost:5443/watches")
-      .then((res) => res.json())
+    fetch("/api/watches")
+      .then((res) => {
+        if (!res.ok) throw new Error("Bağlantı reddedildi");
+        return res.json();
+      })
       .then((data) => {
         setWatches(Array.isArray(data) ? data : []);
-        toast.success(`${data.length} watches loaded ✅`);
+        if (data.length > 0) toast.success("Saatler başarıyla yüklendi! ✅");
       })
       .catch((err) => {
-        console.error("Fetch error:", err);
-        setWatches([]);
-        toast.error("Failed to load watches ❌");
+        console.error("Fetch Hatası:", err);
+        toast.error("Bağlantı hatası: Backend erişilemiyor ❌");
       });
   }, []);
 
   const addToCart = (watch) => {
-    setCart([...cart, watch]);
-    toast.success(`${watch.watch_name} added to cart! 🛒`);
+    setCart((prev) => {
+      const existing = prev.find((item) => item.watch_id === watch.watch_id);
+      if (existing) {
+        toast.success(`${watch.watch_name} adedi artırıldı`);
+        return prev.map((item) =>
+          item.watch_id === watch.watch_id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      }
+      toast.success(`${watch.watch_name} sepete eklendi ✅`);
+      return [...prev, { ...watch, quantity: 1 }];
+    });
+    setCartOpen(true);
   };
 
-  const removeFromCart = (index) => {
-    const removed = cart[index];
-    setCart(cart.filter((_, i) => i !== index));
-    toast(`${removed.watch_name} removed`, { icon: "🗑️" });
+  const removeFromCart = (watch_id) => {
+    setCart((prev) => prev.filter((item) => item.watch_id !== watch_id));
   };
+
+  const updateQuantity = (watch_id, quantity) => {
+    if (quantity < 1) return removeFromCart(watch_id);
+    setCart((prev) =>
+      prev.map((item) =>
+        item.watch_id === watch_id ? { ...item, quantity } : item
+      )
+    );
+  };
+
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <ThemeProvider>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: { borderRadius: "10px", fontFamily: "Arial" },
-        }}
-      />
+      <Toaster position="top-right" />
       <Router>
         <Navbar
           userDisplayName={userDisplayName}
-          cartCount={cart.length}
-          logout={() => keycloak.logout()}
+          cartCount={cartCount}
+          logout={() => {}}
+          onCartClick={() => setCartOpen(true)}
+        />
+        <CartSidebar
+          cart={cart}
+          isOpen={cartOpen}
+          onClose={() => setCartOpen(false)}
+          removeFromCart={removeFromCart}
+          updateQuantity={updateQuantity}
+          onOrderSuccess={() => setCart([])}
         />
         <Routes>
           <Route path="/" element={<Store watches={watches} addToCart={addToCart} />} />
