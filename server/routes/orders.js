@@ -54,3 +54,24 @@ router.get("/:id", async (req, res) => {
 });
 
 module.exports = router;
+
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
+// Bu rota ödeme işlemini başlatmak için bir 'Secret' anahtar oluşturur
+router.post("/create-payment-intent", async (req, res) => {
+  const { amount } = req.body; // Müşterinin ödeyeceği tutar
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount, // Kuruş cinsinden (örn: 5000 = 50.00$)
+      currency: "usd", // Para birimi
+    });
+
+    // İstemciye (Frontend) bu gizli anahtarı gönderiyoruz
+    res.send({
+      clientSecret: paymentIntent.client_secret,
+    });
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
