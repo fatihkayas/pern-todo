@@ -13,7 +13,10 @@ function CartSidebar({ cart, isOpen, onClose, removeFromCart, updateQuantity, on
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + localStorage.getItem("token")
+    },
         body: JSON.stringify({
           items: cart.map((item) => ({
             watch_id: item.watch_id,

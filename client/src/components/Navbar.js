@@ -49,7 +49,7 @@ const Navbar = ({ userDisplayName, cartCount, logout, onCartClick }) => {
 
           {userDisplayName ? (
             <>
-              <span className="small text-secondary">👋 {userDisplayName}</span>
+              <span className="small text-secondary">👋 {userDisplayName}</span><Link to="/orders" className="btn btn-outline-dark btn-sm rounded-pill">📦 Siparişlerim</Link>
               <button className="btn btn-outline-danger btn-sm rounded-pill" onClick={logout}>
                 Çıkış
               </button>
