@@ -1,19 +1,29 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../db");
+const jwt = require("jsonwebtoken");
+const JWT_SECRET = process.env.JWT_SECRET || "seiko_secret_key_change_in_prod";
 
 router.post("/", async (req, res) => {
   const { items, shipping_address } = req.body;
   if (!items || items.length === 0) {
     return res.status(400).json({ error: "Sepet bos" });
   }
+  let customerId = null;
+  const auth = req.headers.authorization;
+  if (auth && auth.startsWith("Bearer ")) {
+    try {
+      const decoded = jwt.verify(auth.split(" ")[1], JWT_SECRET);
+      customerId = decoded.customer_id;
+    } catch {}
+  }
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const total_amount = items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
     const orderResult = await client.query(
-      "INSERT INTO orders (total_amount, status, shipping_address) VALUES ($1, $2, $3) RETURNING order_id",
-      [total_amount, "pending", shipping_address || ""]
+      "INSERT INTO orders (total_amount, status, shipping_address, customer_id) VALUES ($1, $2, $3, $4) RETURNING order_id",
+      [total_amount, "pending", shipping_address || "", customerId]
     );
     const order_id = orderResult.rows[0].order_id;
     for (const item of items) {
@@ -38,6 +48,33 @@ router.post("/", async (req, res) => {
   }
 });
 
+router.get("/my", async (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Token gerekli" });
+  }
+  try {
+    const decoded = jwt.verify(auth.split(" ")[1], JWT_SECRET);
+    const result = await pool.query(`
+      SELECT o.*, json_agg(json_build_object(
+        'watch_name', w.watch_name,
+        'quantity', oi.quantity,
+        'unit_price', oi.unit_price,
+        'subtotal', oi.subtotal
+      )) as items
+      FROM orders o
+      LEFT JOIN order_items oi ON o.order_id = oi.order_id
+      LEFT JOIN watches w ON oi.watch_id = w.watch_id
+      WHERE o.customer_id = $1
+      GROUP BY o.order_id
+      ORDER BY o.order_date DESC
+    `, [decoded.customer_id]);
+    res.json(result.rows);
+  } catch {
+    res.status(401).json({ error: "Gecersiz token" });
+  }
+});
+
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -54,24 +91,3 @@ router.get("/:id", async (req, res) => {
 });
 
 module.exports = router;
-
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-
-// Bu rota ödeme işlemini başlatmak için bir 'Secret' anahtar oluşturur
-router.post("/create-payment-intent", async (req, res) => {
-  const { amount } = req.body; // Müşterinin ödeyeceği tutar
-
-  try {
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount, // Kuruş cinsinden (örn: 5000 = 50.00$)
-      currency: "usd", // Para birimi
-    });
-
-    // İstemciye (Frontend) bu gizli anahtarı gönderiyoruz
-    res.send({
-      clientSecret: paymentIntent.client_secret,
-    });
-  } catch (error) {
-    res.status(500).send({ error: error.message });
-  }
-});
