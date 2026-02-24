@@ -1,13 +1,28 @@
 # 🚀 Seiko Watch Store — Engineering Roadmap
 
 > **Project:** Tissot/Seiko Watch Store — AI-Native Cloud Commerce Platform
-> **Stack:** PERN (PostgreSQL, Express, React, Node.js)
+> **Stack:** PERN + TypeScript + AI + Observability + Multi-Cloud
 > **Started:** February 2026
-> **Goal:** Production-ready, AI-native, multi-cloud e-commerce platform
+> **Goal:** Production-grade, AI-native, multi-cloud e-commerce platform
+> **Discipline Rule:** No skipping steps. Each phase builds on the previous.
 
 ---
 
-## ✅ Current Status (February 2026)
+## 📦 Release Strategy
+
+| Version | Scope | Status |
+|---|---|---|
+| v0.9.0 | Phase 1 Complete — Commerce Core + Stripe + Security | ✅ Released |
+| v1.0.0 | TypeScript + Testing + API Contract | 🔄 In Progress |
+| v1.1.0 | Observability Stack (Prometheus + Grafana + Loki) | ⏳ Planned |
+| v2.0.0 | Azure Production Deployment | ⏳ Planned |
+| v2.1.0 | AWS Multi-Cloud Deployment | ⏳ Planned |
+| v3.0.0 | Kubernetes + GitOps | ⏳ Planned |
+| v4.0.0 | AI-Native Autonomous Platform | ⏳ Planned |
+
+---
+
+## ✅ Current Stack (v0.9.0)
 
 | Layer | Technology | Status |
 |---|---|---|
@@ -17,9 +32,10 @@
 | Auth | JWT (bcryptjs) | ✅ Running |
 | Containers | Podman + podman-compose | ✅ Running |
 | Reverse Proxy | Nginx + HTTPS (mkcert) | ✅ Running |
-| DB Admin | Adminer | ✅ Running |
-| AI Chatbot | Claude API (Anthropic) | ✅ Running |
-| Payments | Stripe (Test Mode) | ✅ Running |
+| Payments | Stripe (Payment Intents) | ✅ Running |
+| AI Chatbot | Claude API + Ollama | ✅ Running |
+| Validation | Zod (all endpoints) | ✅ Running |
+| Security | Helmet + Rate Limiting + CORS | ✅ Running |
 | Project Mgmt | Jira + GitHub | ✅ Running |
 
 ### Running Services
@@ -35,125 +51,109 @@ keycloak_server  → Keycloak (standby) :8080
 
 ---
 
-## ✅ Completed Features
+## ✅ Phase 1 — Commerce Core (RELEASED v0.9.0)
 
-### 🛍️ E-Commerce Core
+> Phase 1 officially closed.
+
+### Completed
 - [x] Product catalog — 28 Tissot watches with images
 - [x] Product detail pages
 - [x] Shopping cart (sidebar, quantity management)
 - [x] Drag & drop product reordering
-- [x] Dark mode
-- [x] Toast notifications (react-hot-toast)
-
-### 🔐 Authentication
-- [x] JWT-based registration & login
-- [x] bcryptjs password hashing
-- [x] Protected routes
-- [x] Admin role (is_admin flag)
-
-### 📦 Orders
-- [x] Order creation with customer_id
+- [x] Dark mode + Toast notifications
+- [x] JWT authentication (register, login, logout)
+- [x] Admin panel (dashboard, orders, inventory)
 - [x] Order history (My Orders page)
-- [x] Stock management on order
-
-### 🛠️ Admin Panel
-- [x] Dashboard (orders, revenue, customers, stock)
-- [x] Order status management
-- [x] Inventory management
-
-### 💳 Stripe Payment
-- [x] Stripe Payment Intent API
-- [x] Checkout page with Stripe Elements
+- [x] Stripe Payment Intents + Checkout page
 - [x] Order confirmation after payment
-- [x] Secure payment (card data never stored)
-
-### 🤖 AI Integration
-- [x] Claude API chatbot (floating widget)
-- [x] Conversation history
-- [x] Rate limiting
-- [x] Ollama local LLM (llama3.2)
-
-### 🔒 Security
+- [x] Claude API chatbot + Ollama local LLM
 - [x] HTTPS locally (mkcert)
-- [x] Helmet.js security headers
-- [x] CORS configuration
-- [x] Rate limiting (express-rate-limit)
+- [x] Helmet.js + CORS + Rate limiting
+- [x] Zod validation on all endpoints
 - [x] Parameterized SQL queries
-- [x] Environment variables (.env)
+- [x] Jira project setup + GitHub integration
 
 ---
 
-## 🗺️ Phases Overview
+## 🔄 Phase 2 — Engineering Maturity (v1.0.0) — CURRENT
 
-```
-Phase 1 → App Development      (Feb – Mar 2026)   ████████░░  80% done
-Phase 2 → TypeScript + Tests   (Mar – Apr 2026)   ░░░░░░░░░░  starting
-Phase 3 → CI/CD & DevOps       (Apr 2026)         ░░░░░░░░░░  planned
-Phase 4 → Azure Deployment     (May – Jun 2026)   ░░░░░░░░░░  planned
-Phase 5 → AWS Deployment       (Jul – Aug 2026)   ░░░░░░░░░░  planned
-Phase 6 → Kubernetes & GitOps  (Sep 2026)         ░░░░░░░░░░  planned
-Phase 7 → AI Native & MLOps    (Oct 2026+)        ░░░░░░░░░░  planned
-```
+> **Goal:** Move from functional app to production-grade architecture.
+> **Timeline:** March 2026
 
----
-
-## Phase 1 — App Development (Completing) ⚙️
-
-### Remaining
-- [ ] Stripe Webhook (payment confirmation via webhook)
-- [ ] Email confirmation after order
-- [x] Zod input validation on all endpoints
-- [ ] Global error handling middleware
-- [ ] Morgan request logging
-- [ ] Password reset flow
-
----
-
-## Phase 2 — TypeScript + Testing 🔷
-
-> **Focus:** Type safety and test coverage
-
-### 2.1 TypeScript Migration
-- [ ] Backend: migrate Express routes to TypeScript
-- [ ] Frontend: migrate React components to TypeScript (.tsx)
-- [ ] Shared types package (frontend + backend)
-- [ ] tsconfig.json setup
+### Sprint 1 — TypeScript Migration (Week 1–2)
+- [ ] Create `typescript-migration` branch
+- [ ] Install TypeScript + ts-node in backend
+- [ ] tsconfig.json setup (strict mode)
+- [ ] Convert `server/index.js` → `index.ts`
+- [ ] Convert `routes/auth.js` → `auth.ts`
+- [ ] Convert `routes/orders.js` → `orders.ts`
+- [ ] Convert `routes/stripe.js` → `stripe.ts`
+- [ ] Convert `routes/admin.js` → `admin.ts`
+- [ ] Shared DTO types (Request/Response interfaces)
+- [ ] Frontend: migrate components to TypeScript (.tsx)
 - [ ] Type-safe API responses
 
-### 2.2 Testing
+### Sprint 2 — Testing + Code Quality (Week 3–4)
 - [ ] Jest + Supertest — backend unit & integration tests
 - [ ] React Testing Library — frontend component tests
-- [ ] Stripe webhook testing (Stripe CLI)
-- [ ] Test coverage report (>80%)
-- [ ] Selenium / Playwright — E2E tests
-
-### 2.3 Code Quality
-- [ ] ESLint + Prettier enforcement
+- [ ] Test coverage report (target ≥ 70%)
+- [ ] Stripe webhook test coverage
+- [ ] Auth flow test coverage
+- [ ] ESLint + Prettier configuration
 - [ ] Husky pre-commit hooks
-- [ ] Conventional commits
-- [ ] API documentation (Swagger/OpenAPI)
+- [ ] Conventional commits enforcement
+- [ ] OpenAPI / Swagger documentation
+- [ ] Postman collection export
+- [ ] API versioning (/api/v1)
+
+**Deliverable:** Release v1.0.0
 
 ---
 
-## Phase 3 — CI/CD & DevOps 🔄
+## ⏳ Phase 3 — Observability & SRE (v1.1.0)
 
-> **Focus:** Automate everything
+> **Goal:** Make the system measurable and production-ready.
+> **Timeline:** April 2026
 
+### 3.1 Metrics
+- [ ] Prometheus /metrics endpoint
+- [ ] API latency (RED metrics — Rate, Errors, Duration)
+- [ ] Claude token usage metric
+- [ ] Order throughput metric
+- [ ] Stock level metric
+- [ ] Grafana dashboards
+
+### 3.2 Logging
+- [ ] Structured logging (Pino)
+- [ ] Correlation ID middleware
+- [ ] Loki + Promtail integration
+- [ ] ELK stack for analytics
+
+### 3.3 Alerting
+- [ ] Low stock alert
+- [ ] High error rate alert
+- [ ] Payment failure alert
+
+### 3.4 Reliability
+- [ ] Health check (/health)
+- [ ] Readiness check (/ready)
+- [ ] k6 load testing
+- [ ] SLO definition + error budget
+
+### 3.5 CI/CD
 - [ ] GitHub Actions: test pipeline on every push
 - [ ] GitHub Actions: Docker image build & push to GHCR
 - [ ] Dependency security scanning (Snyk + Trivy)
-- [ ] Health check endpoints (/health, /ready)
-- [ ] Prometheus metrics endpoint
-- [ ] Grafana dashboards (API latency, error rate, revenue)
-- [ ] Loki + Promtail log aggregation
-- [ ] Alerting rules (low stock, payment failures)
 - [ ] Staging environment
+
+**Deliverable:** Release v1.1.0
 
 ---
 
-## Phase 4 — Azure Deployment ☁️
+## ⏳ Phase 4 — Azure Production (v2.0.0)
 
-> **Focus:** First cloud deployment — Azure Container Apps
+> **Goal:** First cloud deployment — Azure Container Apps
+> **Timeline:** May–June 2026
 
 | Service | Azure Solution |
 |---|---|
@@ -163,20 +163,22 @@ Phase 7 → AI Native & MLOps    (Oct 2026+)        ░░░░░░░░░�
 | Secrets | Azure Key Vault |
 | CDN | Azure Front Door |
 | Monitoring | Azure Monitor + Application Insights |
-| Auth | Azure AD / Entra ID |
+| IaC | Terraform / Bicep |
 
 ### Learning Topics
 - Azure Resource Manager & Resource Groups
 - Azure DevOps Pipelines
 - Managed Identity (secretless auth)
-- Bicep / Terraform for IaC
 - AZ-900 → AZ-204 certification path
+
+**Deliverable:** Release v2.0.0
 
 ---
 
-## Phase 5 — AWS Deployment ☁️
+## ⏳ Phase 5 — AWS Multi-Cloud (v2.1.0)
 
-> **Focus:** Multi-cloud — AWS production deployment
+> **Goal:** Vendor-neutral portability
+> **Timeline:** July–August 2026
 
 | Service | AWS Solution |
 |---|---|
@@ -191,17 +193,20 @@ Phase 7 → AI Native & MLOps    (Oct 2026+)        ░░░░░░░░░�
 
 ### Learning Topics
 - IAM: users, roles, policies
-- VPC: subnets, security groups, NAT gateway
+- VPC: subnets, security groups
 - ECS Task Definitions & Services
-- CloudWatch alarms and dashboards
+- CloudWatch dashboards
 - AWS CDK or Terraform
-- AWS Cloud Practitioner → Solutions Architect certification
+- AWS Cloud Practitioner → Solutions Architect
+
+**Deliverable:** Release v2.1.0
 
 ---
 
-## Phase 6 — Kubernetes & GitOps ☸️
+## ⏳ Phase 6 — Kubernetes & GitOps (v3.0.0)
 
-> **Focus:** Container orchestration at scale
+> **Goal:** Container orchestration at scale
+> **Timeline:** September 2026
 
 - [ ] Minikube local setup (Podman driver)
 - [ ] Helm charts for all services
@@ -210,38 +215,47 @@ Phase 7 → AI Native & MLOps    (Oct 2026+)        ░░░░░░░░░�
 - [ ] ArgoCD or Flux GitOps
 - [ ] Horizontal Pod Autoscaler
 - [ ] OpenShift Sandbox (free tier)
-- [ ] Service Mesh: Istio or Linkerd
-- [ ] Distributed tracing: Jaeger / OpenTelemetry
+- [ ] Distributed tracing (Jaeger / OpenTelemetry)
+- [ ] Service Mesh: Istio or Linkerd (optional)
+
+**Deliverable:** Release v3.0.0
 
 ---
 
-## Phase 7 — AI Native & Advanced Tech 🤖
+## ⏳ Phase 7 — AI-Native Autonomous Platform (v4.0.0)
 
-> **Focus:** AI as an operational layer + modern technologies
+> **Goal:** Claude becomes an operational decision layer
+> **Timeline:** October 2026+
 
-### 7.1 Advanced AI Integration
-- [ ] Claude Tool Use — AI performs CRUD operations via chat
-- [ ] RAG pipeline with pgvector embeddings
-- [ ] Autonomous stock agent (Prometheus → Claude → reorder)
-- [ ] Natural language product search
-- [ ] Weekly business summary (Claude + cron job)
-- [ ] LLMOps: prompt versioning, A/B testing, cost monitoring
-- [ ] AgentOps: every tool-use decision logged
+### 7.1 RAG & Semantic Search
+- [ ] pgvector embeddings
+- [ ] Semantic product search
+- [ ] Context injection from DB
 
-### 7.2 Event-Driven Architecture
+### 7.2 Autonomous Stock Agent
+- [ ] Prometheus → webhook trigger
+- [ ] Claude Tool Use for CRUD operations
+- [ ] Automatic reorder calculation
+- [ ] Decision logging (AgentOps)
+
+### 7.3 LLMOps
+- [ ] Prompt versioning
+- [ ] Token cost monitoring
+- [ ] Model fallback (Claude → Ollama)
+- [ ] A/B prompt testing
+- [ ] AI decision observability
+
+### 7.4 Event-Driven Architecture
 - [ ] Kafka for order events
 - [ ] Event sourcing pattern
-- [ ] CQRS (Command Query Responsibility Segregation)
+- [ ] CQRS
 
-### 7.3 Modern Languages
+### 7.5 Modern Languages
 - [ ] Go — high-performance microservices
-- [ ] Rust — performance-critical components (optional)
 - [ ] GraphQL API layer
+- [ ] Rust — performance-critical components (optional)
 
-### 7.4 MLOps
-- [ ] Model serving with Ollama
-- [ ] Custom fine-tuned model for product recommendations
-- [ ] Vector search optimization
+**Deliverable:** Release v4.0.0
 
 ---
 
@@ -257,43 +271,48 @@ Phase 7 → AI Native & MLOps    (Oct 2026+)        ░░░░░░░░░�
 
 ---
 
-## 📚 Learning Priority Order
+## 📚 Technology Learning Order
 
-1. **TypeScript** — type-safe JavaScript (critical, do now)
+> No skipping. Each builds on the previous.
+
+1. **TypeScript** — type-safe JavaScript (now)
 2. **Jest + Testing** — professional quality assurance
-3. **GitHub Actions** — CI/CD automation
-4. **Terraform** — Infrastructure as Code
-5. **Azure** — first cloud deployment
-6. **AWS** — multi-cloud strategy
-7. **Kubernetes** — container orchestration
-8. **Go** — backend microservices
-9. **Kafka** — event-driven architecture
-10. **Rust** — performance-critical systems (future)
+3. **Prometheus + Grafana** — observability
+4. **GitHub Actions** — CI/CD automation
+5. **Terraform** — Infrastructure as Code
+6. **Azure** — first cloud deployment
+7. **AWS** — multi-cloud strategy
+8. **Kubernetes** — container orchestration
+9. **Go** — backend microservices
+10. **Kafka** — event-driven architecture
+11. **Rust** — performance-critical systems (future)
 
 ---
 
-## 📅 Updated Timeline
+## 📅 Timeline
 
-| Period | Phase | Goal |
-|---|---|---|
-| Feb 2026 | Phase 1 | ✅ Core app, auth, admin, Stripe |
-| Mar 2026 | Phase 2 | TypeScript migration, Jest tests |
-| Apr 2026 | Phase 3 | GitHub Actions, Prometheus, Grafana |
-| May–Jun 2026 | Phase 4 | Azure Container Apps, Terraform |
-| Jul–Aug 2026 | Phase 5 | AWS ECS, RDS, CloudFront |
-| Sep 2026 | Phase 6 | Kubernetes (AKS/EKS), ArgoCD |
-| Oct 2026+ | Phase 7 | AI Agent, Kafka, Go, MLOps |
+| Period | Phase | Release | Goal |
+|---|---|---|---|
+| Feb 2026 | Phase 1 | v0.9.0 | ✅ Core app, auth, admin, Stripe, AI |
+| Mar 2026 | Phase 2 | v1.0.0 | TypeScript migration, Jest tests |
+| Apr 2026 | Phase 3 | v1.1.0 | Prometheus, Grafana, GitHub Actions |
+| May–Jun 2026 | Phase 4 | v2.0.0 | Azure Container Apps, Terraform |
+| Jul–Aug 2026 | Phase 5 | v2.1.0 | AWS ECS, RDS, CloudFront |
+| Sep 2026 | Phase 6 | v3.0.0 | Kubernetes (AKS/EKS), ArgoCD |
+| Oct 2026+ | Phase 7 | v4.0.0 | AI Agent, Kafka, Go, MLOps |
 
 ---
 
 ## 💼 Why This Project Stands Out
 
 1. **Production thinking from day one** — security, observability, containerization built-in
-2. **AI integration with real impact** — Claude as operational layer, not a chatbot decoration
-3. **Multi-cloud strategy** — Azure + AWS with no vendor lock-in
-4. **Full payment system** — real Stripe integration, not a demo
-5. **Professional workflow** — Jira sprints, GitHub Actions, conventional commits
-6. **Cloud-native trajectory** — every decision made with Kubernetes in mind
+2. **Versioned releases** — professional delivery with clear milestones
+3. **AI integration with real impact** — Claude as operational layer, not decoration
+4. **Multi-cloud strategy** — Azure + AWS with no vendor lock-in
+5. **Full payment system** — real Stripe integration, not a demo
+6. **Professional workflow** — Jira sprints, GitHub Actions, conventional commits
+7. **Cloud-native trajectory** — every decision made with Kubernetes in mind
+8. **Disciplined learning path** — no skipping steps
 
 ---
 
