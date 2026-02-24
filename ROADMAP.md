@@ -81,17 +81,23 @@ keycloak_server  → Keycloak (standby) :8080
 > **Timeline:** March 2026
 
 ### Sprint 1 — TypeScript Migration (Week 1–2)
-- [ ] Create `typescript-migration` branch
-- [ ] Install TypeScript + ts-node in backend
-- [ ] tsconfig.json setup (strict mode)
-- [ ] Convert `server/index.js` → `index.ts`
-- [ ] Convert `routes/auth.js` → `auth.ts`
-- [ ] Convert `routes/orders.js` → `orders.ts`
-- [ ] Convert `routes/stripe.js` → `stripe.ts`
-- [ ] Convert `routes/admin.js` → `admin.ts`
-- [ ] Shared DTO types (Request/Response interfaces)
+- [x] Create `typescript-migration` branch
+- [x] Install TypeScript + ts-node in backend
+- [x] tsconfig.json setup (strict mode, ES2020, outDir: dist/)
+- [x] Convert `server/index.js` → `index.ts`
+- [x] Convert `routes/auth.js` → `auth.ts`
+- [x] Convert `routes/orders.js` → `orders.ts`
+- [x] Convert `routes/stripe.js` → `stripe.ts`
+- [x] Convert `routes/admin.js` → `admin.ts`
+- [x] Convert `routes/chat.js` → `chat.ts`
+- [x] Convert `middleware/validate.js` → `validate.ts`
+- [x] Convert `db.js` → `db.ts`, `schemas.js` → `schemas.ts`
+- [x] Shared DTO types (`server/types/index.ts` — Watch, Customer, Order, AuthPayload)
+- [x] Express Request extended with `customer?: AuthPayload` (`types/express.d.ts`)
+- [x] Dockerfile updated: `npm run build` → `node dist/index.js`
+- [x] Zero TypeScript type errors (`tsc --noEmit` clean)
+- [x] Container rebuilt and verified running (SCRUM-14)
 - [ ] Frontend: migrate components to TypeScript (.tsx)
-- [ ] Type-safe API responses
 
 ### Sprint 2 — Testing + Code Quality (Week 3–4)
 - [ ] Jest + Supertest — backend unit & integration tests
