@@ -13,10 +13,14 @@ const checkoutRouter = require("./routes/checkout");
 
 app.use(helmet());
 // ÖNEMLİ: Sadece bu iki adrese tam izin veriyoruz
-app.use(cors({ 
-  origin: ["https://localhost:8443", "http://localhost:3000"], 
-  credentials: true 
+app.use(cors({
+  origin: ["https://localhost:8443", "http://localhost:3000"],
+  credentials: true
 }));
+
+// Stripe webhook requires raw body — must be registered BEFORE express.json()
+app.use("/api/stripe/webhook", express.raw({ type: "application/json" }));
+
 app.use(express.json());
 app.use(morgan("dev"));
 

@@ -114,7 +114,7 @@ const Checkout = ({ cart, onOrderSuccess }) => {
           "Content-Type": "application/json",
           Authorization: "Bearer " + token,
         },
-        body: JSON.stringify({ amount: total }),
+        body: JSON.stringify({ amount: total, order_id: orderData.order_id }),
       });
       const payData = await payRes.json();
       if (!payRes.ok) throw new Error(payData.error);

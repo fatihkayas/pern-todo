@@ -1,7 +1,7 @@
 const { z } = require("zod");
 
 const registerSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   full_name: z.string().min(2),
   password: z.string().min(6),
   phone: z.string().optional(),
@@ -11,7 +11,7 @@ const registerSchema = z.object({
 });
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(1),
 });
 
@@ -19,9 +19,9 @@ const createOrderSchema = z.object({
   items: z
     .array(
       z.object({
-        watch_id: z.number().int().positive(),
-        quantity: z.number().int().positive(),
-        unit_price: z.number().positive(),
+        watch_id: z.coerce.number().int().positive(),
+        quantity: z.coerce.number().int().positive(),
+        unit_price: z.coerce.number().positive(),
       })
     )
     .min(1),
@@ -30,6 +30,7 @@ const createOrderSchema = z.object({
 
 const createPaymentIntentSchema = z.object({
   amount: z.number().positive(),
+  order_id: z.number().int().positive(),
   currency: z.string().length(3).optional().default("usd"),
 });
 
@@ -43,7 +44,7 @@ const updateOrderStatusSchema = z.object({
 });
 
 const updateStockSchema = z.object({
-  stock_quantity: z.number().int().min(0),
+  stock_quantity: z.coerce.number().int().min(0),
 });
 
 module.exports = {
