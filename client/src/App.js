@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
+import Checkout from "./pages/Checkout";
 import Navbar from "./components/Navbar";
 import ChatWidget from "./components/ChatWidget";
 import CartSidebar from "./components/CartSidebar";
@@ -106,6 +107,7 @@ function App() {
           <Route path="/returns" element={<Returns />} />
           <Route path="/watch/:id" element={<ProductDetail addToCart={addToCart} />} />
           <Route path="/login" element={customer ? <Navigate to="/" /> : <Login onLogin={handleLogin} />} />
+          <Route path="/checkout" element={<Checkout cart={cart} onOrderSuccess={() => setCart([])} />} />
           <Route path="/orders" element={<MyOrders />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/register" element={customer ? <Navigate to="/" /> : <Register onLogin={handleLogin} />} />

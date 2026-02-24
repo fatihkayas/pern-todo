@@ -1,45 +1,26 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 function CartSidebar({ cart, isOpen, onClose, removeFromCart, updateQuantity, onOrderSuccess }) {
-  const [loading, setLoading] = useState(false);
-  const [orderDone, setOrderDone] = useState(null);
-
+  const navigate = useNavigate();
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  const handleOrder = async () => {
+  const handleCheckout = () => {
     if (cart.length === 0) return;
-    setLoading(true);
-    try {
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + localStorage.getItem("token")
-    },
-        body: JSON.stringify({
-          items: cart.map((item) => ({
-            watch_id: item.watch_id,
-            quantity: item.quantity,
-            unit_price: item.price,
-          })),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setOrderDone(data.order_id);
-      onOrderSuccess();
-      toast.success(`Sipariş #${data.order_id} oluşturuldu! 🎉`);
-    } catch (err) {
-      toast.error("Sipariş hatası: " + err.message);
-    } finally {
-      setLoading(false);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please login to checkout");
+      navigate("/login");
+      onClose();
+      return;
     }
+    onClose();
+    navigate("/checkout");
   };
 
   return (
     <>
-      {/* Overlay */}
       {isOpen && (
         <div
           onClick={onClose}
@@ -50,7 +31,6 @@ function CartSidebar({ cart, isOpen, onClose, removeFromCart, updateQuantity, on
         />
       )}
 
-      {/* Sidebar */}
       <div
         style={{
           position: "fixed", top: 0, right: 0, height: "100%", width: "380px",
@@ -68,15 +48,7 @@ function CartSidebar({ cart, isOpen, onClose, removeFromCart, updateQuantity, on
 
         {/* Items */}
         <div style={{ flex: 1, overflowY: "auto", padding: "1rem" }}>
-          {orderDone && (
-            <div className="alert alert-success">
-              ✅ Sipariş #{orderDone} tamamlandı!
-              <button className="btn btn-sm btn-success ms-2" onClick={() => { setOrderDone(null); onClose(); }}>
-                Kapat
-              </button>
-            </div>
-          )}
-          {cart.length === 0 && !orderDone && (
+          {cart.length === 0 && (
             <p className="text-muted text-center mt-4">Sepetiniz boş</p>
           )}
           {cart.map((item) => (
@@ -115,11 +87,10 @@ function CartSidebar({ cart, isOpen, onClose, removeFromCart, updateQuantity, on
               <strong>${total.toFixed(2)}</strong>
             </div>
             <button
-              className="btn btn-dark w-100"
-              onClick={handleOrder}
-              disabled={loading}
+              className="btn btn-dark w-100 rounded-pill"
+              onClick={handleCheckout}
             >
-              {loading ? "İşleniyor..." : "Siparişi Tamamla"}
+              Proceed to Checkout →
             </button>
           </div>
         )}
