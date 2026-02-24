@@ -11,12 +11,29 @@ const chatRouter = require("./routes/chat");
 const checkoutRouter = require("./routes/checkout");
 
 
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 app.use(helmet());
 // ÖNEMLİ: Sadece bu iki adrese tam izin veriyoruz
 app.use(cors({
   origin: ["https://localhost:8443", "http://localhost:3000"],
   credentials: true
 }));
+
+app.use("/api", limiter);
+app.use("/api/auth", authLimiter);
 
 // Stripe webhook requires raw body — must be registered BEFORE express.json()
 app.use("/api/stripe/webhook", express.raw({ type: "application/json" }));
