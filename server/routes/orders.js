@@ -2,13 +2,12 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db");
 const jwt = require("jsonwebtoken");
+const validate = require("../middleware/validate");
+const { createOrderSchema } = require("../schemas");
 const JWT_SECRET = process.env.JWT_SECRET || "seiko_secret_key_change_in_prod";
 
-router.post("/", async (req, res) => {
+router.post("/", validate(createOrderSchema), async (req, res) => {
   const { items, shipping_address } = req.body;
-  if (!items || items.length === 0) {
-    return res.status(400).json({ error: "Sepet bos" });
-  }
   let customerId = null;
   const auth = req.headers.authorization;
   if (auth && auth.startsWith("Bearer ")) {

@@ -3,15 +3,14 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const pool = require("../db");
+const validate = require("../middleware/validate");
+const { registerSchema, loginSchema } = require("../schemas");
 
 const JWT_SECRET = process.env.JWT_SECRET || "seiko_secret_key_change_in_prod";
 
 // POST /api/auth/register
-router.post("/register", async (req, res) => {
+router.post("/register", validate(registerSchema), async (req, res) => {
   const { email, full_name, password, phone, address, city, country } = req.body;
-  if (!email || !full_name || !password) {
-    return res.status(400).json({ error: "Email, isim ve şifre zorunludur" });
-  }
   try {
     const exists = await pool.query("SELECT customer_id FROM customers WHERE email = $1", [email]);
     if (exists.rows.length > 0) {
@@ -32,11 +31,8 @@ router.post("/register", async (req, res) => {
 });
 
 // POST /api/auth/login
-router.post("/login", async (req, res) => {
+router.post("/login", validate(loginSchema), async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email ve şifre zorunludur" });
-  }
   try {
     const result = await pool.query("SELECT * FROM customers WHERE email = $1", [email]);
     if (result.rows.length === 0) {

@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db");
 const jwt = require("jsonwebtoken");
+const validate = require("../middleware/validate");
+const { updateOrderStatusSchema, updateStockSchema } = require("../schemas");
 
 const JWT_SECRET = process.env.JWT_SECRET || "seiko_secret_key_change_in_prod";
 
@@ -53,12 +55,8 @@ router.get("/orders", adminAuth, async (req, res) => {
 });
 
 // PUT /api/admin/orders/:id/status - Sipariş durumu güncelle
-router.put("/orders/:id/status", adminAuth, async (req, res) => {
+router.put("/orders/:id/status", adminAuth, validate(updateOrderStatusSchema), async (req, res) => {
   const { status } = req.body;
-  const validStatuses = ["pending", "processing", "shipped", "delivered", "cancelled"];
-  if (!validStatuses.includes(status)) {
-    return res.status(400).json({ error: "Geçersiz durum" });
-  }
   try {
     const result = await pool.query(
       "UPDATE orders SET status = $1 WHERE order_id = $2 RETURNING *",
@@ -82,9 +80,8 @@ router.get("/watches", adminAuth, async (req, res) => {
 });
 
 // PUT /api/admin/watches/:id/stock - Stok güncelle
-router.put("/watches/:id/stock", adminAuth, async (req, res) => {
+router.put("/watches/:id/stock", adminAuth, validate(updateStockSchema), async (req, res) => {
   const { stock_quantity } = req.body;
-  if (stock_quantity < 0) return res.status(400).json({ error: "Stok negatif olamaz" });
   try {
     const result = await pool.query(
       "UPDATE watches SET stock_quantity = $1 WHERE watch_id = $2 RETURNING *",

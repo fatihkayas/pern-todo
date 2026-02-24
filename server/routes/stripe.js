@@ -2,15 +2,12 @@ const express = require("express");
 const router = express.Router();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const pool = require("../db");
-const jwt = require("jsonwebtoken");
-const JWT_SECRET = process.env.JWT_SECRET || "seiko_secret_key_change_in_prod";
+const validate = require("../middleware/validate");
+const { createPaymentIntentSchema, confirmOrderSchema } = require("../schemas");
 
 // POST /api/stripe/create-payment-intent
-router.post("/create-payment-intent", async (req, res) => {
-  const { amount, currency = "usd" } = req.body;
-  if (!amount || amount <= 0) {
-    return res.status(400).json({ error: "Invalid amount" });
-  }
+router.post("/create-payment-intent", validate(createPaymentIntentSchema), async (req, res) => {
+  const { amount, currency } = req.body;
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // cents
@@ -25,7 +22,7 @@ router.post("/create-payment-intent", async (req, res) => {
 });
 
 // POST /api/stripe/confirm-order - Ödeme sonrası siparişi güncelle
-router.post("/confirm-order", async (req, res) => {
+router.post("/confirm-order", validate(confirmOrderSchema), async (req, res) => {
   const { payment_intent_id, order_id } = req.body;
   try {
     const paymentIntent = await stripe.paymentIntents.retrieve(payment_intent_id);

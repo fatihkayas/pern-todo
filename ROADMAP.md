@@ -102,7 +102,7 @@ Phase 7 → AI Native & MLOps    (Oct 2026+)        ░░░░░░░░░�
 ### Remaining
 - [ ] Stripe Webhook (payment confirmation via webhook)
 - [ ] Email confirmation after order
-- [ ] Zod input validation on all endpoints
+- [x] Zod input validation on all endpoints
 - [ ] Global error handling middleware
 - [ ] Morgan request logging
 - [ ] Password reset flow
