@@ -21,7 +21,7 @@ const mockCompare = bcrypt.compare as jest.Mock;
 
 const JWT_SECRET = "seiko_secret_key_change_in_prod";
 
-describe("POST /api/auth/register", () => {
+describe("POST /api/v1/auth/register", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("registers a new user and returns token", async () => {
@@ -31,7 +31,7 @@ describe("POST /api/auth/register", () => {
         rows: [{ customer_id: 1, email: "test@test.com", full_name: "Test User" }],
       }); // inserted user
 
-    const res = await request(app).post("/api/auth/register").send({
+    const res = await request(app).post("/api/v1/auth/register").send({
       email: "test@test.com",
       full_name: "Test User",
       password: "password123",
@@ -46,7 +46,7 @@ describe("POST /api/auth/register", () => {
   });
 
   it("returns 400 for invalid email", async () => {
-    const res = await request(app).post("/api/auth/register").send({
+    const res = await request(app).post("/api/v1/auth/register").send({
       email: "not-valid",
       full_name: "Test User",
       password: "password123",
@@ -57,7 +57,7 @@ describe("POST /api/auth/register", () => {
   });
 
   it("returns 400 for short password", async () => {
-    const res = await request(app).post("/api/auth/register").send({
+    const res = await request(app).post("/api/v1/auth/register").send({
       email: "test@test.com",
       full_name: "Test User",
       password: "123",
@@ -70,7 +70,7 @@ describe("POST /api/auth/register", () => {
   it("returns 409 for duplicate email", async () => {
     mockQuery.mockResolvedValueOnce({ rows: [{ customer_id: 99 }] }); // email exists
 
-    const res = await request(app).post("/api/auth/register").send({
+    const res = await request(app).post("/api/v1/auth/register").send({
       email: "existing@test.com",
       full_name: "Existing User",
       password: "password123",
@@ -81,7 +81,7 @@ describe("POST /api/auth/register", () => {
   });
 });
 
-describe("POST /api/auth/login", () => {
+describe("POST /api/v1/auth/login", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("logs in with valid credentials and returns token", async () => {
@@ -97,7 +97,7 @@ describe("POST /api/auth/login", () => {
     });
     mockCompare.mockResolvedValueOnce(true);
 
-    const res = await request(app).post("/api/auth/login").send({
+    const res = await request(app).post("/api/v1/auth/login").send({
       email: "test@test.com",
       password: "password123",
     });
@@ -119,7 +119,7 @@ describe("POST /api/auth/login", () => {
     });
     mockCompare.mockResolvedValueOnce(false);
 
-    const res = await request(app).post("/api/auth/login").send({
+    const res = await request(app).post("/api/v1/auth/login").send({
       email: "test@test.com",
       password: "wrongpassword",
     });
@@ -130,7 +130,7 @@ describe("POST /api/auth/login", () => {
   it("returns 401 for non-existent user", async () => {
     mockQuery.mockResolvedValueOnce({ rows: [] });
 
-    const res = await request(app).post("/api/auth/login").send({
+    const res = await request(app).post("/api/v1/auth/login").send({
       email: "nobody@test.com",
       password: "password123",
     });
@@ -139,14 +139,14 @@ describe("POST /api/auth/login", () => {
   });
 
   it("returns 400 for missing password", async () => {
-    const res = await request(app).post("/api/auth/login").send({ email: "test@test.com" });
+    const res = await request(app).post("/api/v1/auth/login").send({ email: "test@test.com" });
 
     expect(res.status).toBe(400);
     expect(res.body).toHaveProperty("error", "Validation failed");
   });
 
   it("returns 400 for invalid email format", async () => {
-    const res = await request(app).post("/api/auth/login").send({
+    const res = await request(app).post("/api/v1/auth/login").send({
       email: "bad-email",
       password: "password123",
     });
@@ -155,26 +155,26 @@ describe("POST /api/auth/login", () => {
   });
 });
 
-describe("GET /api/auth/me", () => {
+describe("GET /api/v1/auth/me", () => {
   it("returns decoded user for a valid JWT", async () => {
     const token = jwt.sign({ customer_id: 1, email: "test@test.com" }, JWT_SECRET, {
       expiresIn: "1h",
     });
 
-    const res = await request(app).get("/api/auth/me").set("Authorization", `Bearer ${token}`);
+    const res = await request(app).get("/api/v1/auth/me").set("Authorization", `Bearer ${token}`);
 
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ customer_id: 1, email: "test@test.com" });
   });
 
   it("returns 401 when no Authorization header", async () => {
-    const res = await request(app).get("/api/auth/me");
+    const res = await request(app).get("/api/v1/auth/me");
     expect(res.status).toBe(401);
   });
 
   it("returns 401 for tampered token", async () => {
     const res = await request(app)
-      .get("/api/auth/me")
+      .get("/api/v1/auth/me")
       .set("Authorization", "Bearer this.is.invalid");
 
     expect(res.status).toBe(401);
@@ -187,7 +187,7 @@ describe("GET /api/auth/me", () => {
       { expiresIn: "-1s" } // already expired
     );
 
-    const res = await request(app).get("/api/auth/me").set("Authorization", `Bearer ${token}`);
+    const res = await request(app).get("/api/v1/auth/me").set("Authorization", `Bearer ${token}`);
 
     expect(res.status).toBe(401);
   });

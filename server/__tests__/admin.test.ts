@@ -22,13 +22,13 @@ describe("Admin auth middleware", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("returns 401 with no Authorization header", async () => {
-    const res = await request(app).get("/api/admin/orders");
+    const res = await request(app).get("/api/v1/admin/orders");
     expect(res.status).toBe(401);
   });
 
   it("returns 401 for a tampered/invalid token", async () => {
     const res = await request(app)
-      .get("/api/admin/orders")
+      .get("/api/v1/admin/orders")
       .set("Authorization", "Bearer invalid.token.here");
     expect(res.status).toBe(401);
   });
@@ -37,7 +37,7 @@ describe("Admin auth middleware", () => {
     mockQuery.mockResolvedValueOnce({ rows: [{ is_admin: false }] });
 
     const res = await request(app)
-      .get("/api/admin/orders")
+      .get("/api/v1/admin/orders")
       .set("Authorization", `Bearer ${makeAdminToken()}`);
 
     expect(res.status).toBe(403);
@@ -47,16 +47,16 @@ describe("Admin auth middleware", () => {
     mockQuery.mockResolvedValueOnce({ rows: [] }); // no customer found
 
     const res = await request(app)
-      .get("/api/admin/orders")
+      .get("/api/v1/admin/orders")
       .set("Authorization", `Bearer ${makeAdminToken()}`);
 
     expect(res.status).toBe(403);
   });
 });
 
-// ─── GET /api/admin/orders ─────────────────────────────────────────────────────
+// ─── GET /api/v1/admin/orders ─────────────────────────────────────────────────────
 
-describe("GET /api/admin/orders", () => {
+describe("GET /api/v1/admin/orders", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("returns all orders for an admin user", async () => {
@@ -67,7 +67,7 @@ describe("GET /api/admin/orders", () => {
       }); // orders query
 
     const res = await request(app)
-      .get("/api/admin/orders")
+      .get("/api/v1/admin/orders")
       .set("Authorization", `Bearer ${makeAdminToken()}`);
 
     expect(res.status).toBe(200);
@@ -76,9 +76,9 @@ describe("GET /api/admin/orders", () => {
   });
 });
 
-// ─── PUT /api/admin/orders/:id/status ─────────────────────────────────────────
+// ─── PUT /api/v1/admin/orders/:id/status ─────────────────────────────────────────
 
-describe("PUT /api/admin/orders/:id/status", () => {
+describe("PUT /api/v1/admin/orders/:id/status", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("updates order status to processing", async () => {
@@ -87,7 +87,7 @@ describe("PUT /api/admin/orders/:id/status", () => {
       .mockResolvedValueOnce({ rows: [{ order_id: 1, status: "processing" }] });
 
     const res = await request(app)
-      .put("/api/admin/orders/1/status")
+      .put("/api/v1/admin/orders/1/status")
       .set("Authorization", `Bearer ${makeAdminToken()}`)
       .send({ status: "processing" });
 
@@ -101,7 +101,7 @@ describe("PUT /api/admin/orders/:id/status", () => {
       .mockResolvedValueOnce({ rows: [] }); // no rows updated
 
     const res = await request(app)
-      .put("/api/admin/orders/999/status")
+      .put("/api/v1/admin/orders/999/status")
       .set("Authorization", `Bearer ${makeAdminToken()}`)
       .send({ status: "shipped" });
 
@@ -112,7 +112,7 @@ describe("PUT /api/admin/orders/:id/status", () => {
     mockQuery.mockResolvedValueOnce({ rows: [{ is_admin: true }] });
 
     const res = await request(app)
-      .put("/api/admin/orders/1/status")
+      .put("/api/v1/admin/orders/1/status")
       .set("Authorization", `Bearer ${makeAdminToken()}`)
       .send({ status: "invalid_status" });
 
@@ -128,7 +128,7 @@ describe("PUT /api/admin/orders/:id/status", () => {
         .mockResolvedValueOnce({ rows: [{ order_id: 1, status }] });
 
       const res = await request(app)
-        .put("/api/admin/orders/1/status")
+        .put("/api/v1/admin/orders/1/status")
         .set("Authorization", `Bearer ${makeAdminToken()}`)
         .send({ status });
 
@@ -137,9 +137,9 @@ describe("PUT /api/admin/orders/:id/status", () => {
   });
 });
 
-// ─── GET /api/admin/watches ────────────────────────────────────────────────────
+// ─── GET /api/v1/admin/watches ────────────────────────────────────────────────────
 
-describe("GET /api/admin/watches", () => {
+describe("GET /api/v1/admin/watches", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("returns all watches for an admin user", async () => {
@@ -151,7 +151,7 @@ describe("GET /api/admin/watches", () => {
     });
 
     const res = await request(app)
-      .get("/api/admin/watches")
+      .get("/api/v1/admin/watches")
       .set("Authorization", `Bearer ${makeAdminToken()}`);
 
     expect(res.status).toBe(200);
@@ -159,9 +159,9 @@ describe("GET /api/admin/watches", () => {
   });
 });
 
-// ─── PUT /api/admin/watches/:id/stock ─────────────────────────────────────────
+// ─── PUT /api/v1/admin/watches/:id/stock ─────────────────────────────────────────
 
-describe("PUT /api/admin/watches/:id/stock", () => {
+describe("PUT /api/v1/admin/watches/:id/stock", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("updates watch stock quantity", async () => {
@@ -170,7 +170,7 @@ describe("PUT /api/admin/watches/:id/stock", () => {
       .mockResolvedValueOnce({ rows: [{ watch_id: 1, stock_quantity: 20 }] });
 
     const res = await request(app)
-      .put("/api/admin/watches/1/stock")
+      .put("/api/v1/admin/watches/1/stock")
       .set("Authorization", `Bearer ${makeAdminToken()}`)
       .send({ stock_quantity: 20 });
 
@@ -184,7 +184,7 @@ describe("PUT /api/admin/watches/:id/stock", () => {
       .mockResolvedValueOnce({ rows: [{ watch_id: 1, stock_quantity: 0 }] });
 
     const res = await request(app)
-      .put("/api/admin/watches/1/stock")
+      .put("/api/v1/admin/watches/1/stock")
       .set("Authorization", `Bearer ${makeAdminToken()}`)
       .send({ stock_quantity: 0 });
 
@@ -195,7 +195,7 @@ describe("PUT /api/admin/watches/:id/stock", () => {
     mockQuery.mockResolvedValueOnce({ rows: [{ is_admin: true }] });
 
     const res = await request(app)
-      .put("/api/admin/watches/1/stock")
+      .put("/api/v1/admin/watches/1/stock")
       .set("Authorization", `Bearer ${makeAdminToken()}`)
       .send({ stock_quantity: -5 });
 
@@ -209,7 +209,7 @@ describe("PUT /api/admin/watches/:id/stock", () => {
       .mockResolvedValueOnce({ rows: [] });
 
     const res = await request(app)
-      .put("/api/admin/watches/999/stock")
+      .put("/api/v1/admin/watches/999/stock")
       .set("Authorization", `Bearer ${makeAdminToken()}`)
       .send({ stock_quantity: 5 });
 
@@ -217,9 +217,9 @@ describe("PUT /api/admin/watches/:id/stock", () => {
   });
 });
 
-// ─── GET /api/admin/stats ──────────────────────────────────────────────────────
+// ─── GET /api/v1/admin/stats ──────────────────────────────────────────────────────
 
-describe("GET /api/admin/stats", () => {
+describe("GET /api/v1/admin/stats", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("returns dashboard statistics", async () => {
@@ -231,7 +231,7 @@ describe("GET /api/admin/stats", () => {
       .mockResolvedValueOnce({ rows: [{ total: "28", low_stock: "2" }] }); // watches
 
     const res = await request(app)
-      .get("/api/admin/stats")
+      .get("/api/v1/admin/stats")
       .set("Authorization", `Bearer ${makeAdminToken()}`);
 
     expect(res.status).toBe(200);

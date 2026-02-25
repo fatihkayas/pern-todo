@@ -27,7 +27,7 @@ const makeMockClient = (overrides?: Partial<Record<string, jest.Mock>>) => {
   return client;
 };
 
-describe("POST /api/orders", () => {
+describe("POST /api/v1/orders", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("creates an order for authenticated user (status 201)", async () => {
@@ -40,7 +40,7 @@ describe("POST /api/orders", () => {
       .mockResolvedValueOnce(undefined); // COMMIT
 
     const res = await request(app)
-      .post("/api/orders")
+      .post("/api/v1/orders")
       .set("Authorization", `Bearer ${makeAuthToken()}`)
       .send({
         items: [{ watch_id: 1, quantity: 2, unit_price: 299.99 }],
@@ -61,7 +61,7 @@ describe("POST /api/orders", () => {
       .mockResolvedValueOnce(undefined); // COMMIT
 
     const res = await request(app)
-      .post("/api/orders")
+      .post("/api/v1/orders")
       .send({ items: [{ watch_id: 2, quantity: 1, unit_price: 599.99 }] });
 
     expect(res.status).toBe(201);
@@ -69,14 +69,14 @@ describe("POST /api/orders", () => {
   });
 
   it("returns 400 for empty items array (Zod validation)", async () => {
-    const res = await request(app).post("/api/orders").send({ items: [] });
+    const res = await request(app).post("/api/v1/orders").send({ items: [] });
 
     expect(res.status).toBe(400);
     expect(res.body).toHaveProperty("error", "Validation failed");
   });
 
   it("returns 400 for missing items field", async () => {
-    const res = await request(app).post("/api/orders").send({});
+    const res = await request(app).post("/api/v1/orders").send({});
 
     expect(res.status).toBe(400);
     expect(res.body).toHaveProperty("error", "Validation failed");
@@ -84,7 +84,7 @@ describe("POST /api/orders", () => {
 
   it("returns 400 for non-numeric watch_id that cannot be coerced", async () => {
     const res = await request(app)
-      .post("/api/orders")
+      .post("/api/v1/orders")
       .send({
         items: [{ watch_id: "abc", quantity: 1, unit_price: 299.99 }],
       });
@@ -94,7 +94,7 @@ describe("POST /api/orders", () => {
 
   it("returns 400 for zero quantity", async () => {
     const res = await request(app)
-      .post("/api/orders")
+      .post("/api/v1/orders")
       .send({
         items: [{ watch_id: 1, quantity: 0, unit_price: 299.99 }],
       });
@@ -112,7 +112,7 @@ describe("POST /api/orders", () => {
       .mockResolvedValueOnce(undefined); // COMMIT
 
     const res = await request(app)
-      .post("/api/orders")
+      .post("/api/v1/orders")
       .send({
         items: [{ watch_id: "3", quantity: "1", unit_price: "340.00" }],
       });

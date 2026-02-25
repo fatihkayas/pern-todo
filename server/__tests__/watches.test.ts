@@ -11,7 +11,7 @@ import pool from "../db";
 
 const mockQuery = pool.query as jest.Mock;
 
-describe("GET /api/watches", () => {
+describe("GET /api/v1/watches", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -23,7 +23,7 @@ describe("GET /api/watches", () => {
     ];
     mockQuery.mockResolvedValueOnce({ rows: mockWatches });
 
-    const res = await request(app).get("/api/watches");
+    const res = await request(app).get("/api/v1/watches");
 
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
@@ -34,7 +34,7 @@ describe("GET /api/watches", () => {
   it("returns empty array when no watches in DB", async () => {
     mockQuery.mockResolvedValueOnce({ rows: [] });
 
-    const res = await request(app).get("/api/watches");
+    const res = await request(app).get("/api/v1/watches");
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
@@ -43,7 +43,7 @@ describe("GET /api/watches", () => {
   it("returns 500 on database error", async () => {
     mockQuery.mockRejectedValueOnce(new Error("DB connection failed"));
 
-    const res = await request(app).get("/api/watches");
+    const res = await request(app).get("/api/v1/watches");
 
     expect(res.status).toBe(500);
     expect(res.body).toHaveProperty("error", "Database error");

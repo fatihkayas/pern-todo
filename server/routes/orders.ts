@@ -8,6 +8,49 @@ import { Order, OrderItem } from "../types";
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "seiko_secret_key_change_in_prod";
 
+/**
+ * @swagger
+ * /orders:
+ *   post:
+ *     summary: Create a new order
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [items]
+ *             properties:
+ *               items:
+ *                 type: array
+ *                 minItems: 1
+ *                 items:
+ *                   type: object
+ *                   required: [watch_id, quantity, unit_price]
+ *                   properties:
+ *                     watch_id: { type: integer }
+ *                     quantity: { type: integer, minimum: 1 }
+ *                     unit_price: { type: number }
+ *               shipping_address: { type: string }
+ *     responses:
+ *       201:
+ *         description: Order created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 order_id: { type: integer }
+ *                 total_amount: { type: number }
+ *                 status: { type: string }
+ *       400:
+ *         description: Validation failed
+ *       500:
+ *         description: Server error
+ */
 // POST /api/orders
 router.post("/", validate(createOrderSchema), async (req: Request, res: Response) => {
   const { items, shipping_address } = req.body as {
@@ -58,6 +101,20 @@ router.post("/", validate(createOrderSchema), async (req: Request, res: Response
   }
 });
 
+/**
+ * @swagger
+ * /orders/my:
+ *   get:
+ *     summary: Get authenticated customer's orders
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Array of orders with items
+ *       401:
+ *         description: Missing or invalid token
+ */
 // GET /api/orders/my
 router.get("/my", async (req: Request, res: Response) => {
   const auth = req.headers.authorization;
@@ -88,6 +145,29 @@ router.get("/my", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /orders/{id}:
+ *   get:
+ *     summary: Get a single order by ID
+ *     tags: [Orders]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Order with item details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Order'
+ *       404:
+ *         description: Order not found
+ *       500:
+ *         description: Server error
+ */
 // GET /api/orders/:id
 router.get("/:id", async (req: Request, res: Response) => {
   try {

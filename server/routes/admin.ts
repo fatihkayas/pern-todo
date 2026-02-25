@@ -33,6 +33,22 @@ const adminAuth = async (req: Request, res: Response, next: NextFunction): Promi
   }
 };
 
+/**
+ * @swagger
+ * /admin/orders:
+ *   get:
+ *     summary: Get all orders with customer and item details
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Array of orders
+ *       401:
+ *         description: Missing or invalid token
+ *       403:
+ *         description: Not an admin
+ */
 // GET /api/admin/orders
 router.get("/orders", adminAuth, async (_req: Request, res: Response) => {
   try {
@@ -57,6 +73,44 @@ router.get("/orders", adminAuth, async (_req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/orders/{id}/status:
+ *   put:
+ *     summary: Update order status
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [pending, processing, shipped, delivered, cancelled]
+ *     responses:
+ *       200:
+ *         description: Updated order
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Order'
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Order not found
+ */
 // PUT /api/admin/orders/:id/status
 router.put(
   "/orders/:id/status",
@@ -80,6 +134,28 @@ router.put(
   }
 );
 
+/**
+ * @swagger
+ * /admin/watches:
+ *   get:
+ *     summary: Get all watches (admin view)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Array of watches ordered by name
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Watch'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Not an admin
+ */
 // GET /api/admin/watches
 router.get("/watches", adminAuth, async (_req: Request, res: Response) => {
   try {
@@ -90,6 +166,42 @@ router.get("/watches", adminAuth, async (_req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/watches/{id}/stock:
+ *   put:
+ *     summary: Update watch stock quantity
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [stock_quantity]
+ *             properties:
+ *               stock_quantity: { type: integer, minimum: 0 }
+ *     responses:
+ *       200:
+ *         description: Updated watch
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Watch'
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Watch not found
+ */
 // PUT /api/admin/watches/:id/stock
 router.put(
   "/watches/:id/stock",
@@ -113,6 +225,45 @@ router.put(
   }
 );
 
+/**
+ * @swagger
+ * /admin/stats:
+ *   get:
+ *     summary: Get dashboard statistics
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Aggregated stats for orders, customers, revenue, and watches
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 orders:
+ *                   type: object
+ *                   properties:
+ *                     total: { type: string }
+ *                     pending: { type: string }
+ *                 customers:
+ *                   type: object
+ *                   properties:
+ *                     total: { type: string }
+ *                 revenue:
+ *                   type: object
+ *                   properties:
+ *                     total: { type: string }
+ *                 watches:
+ *                   type: object
+ *                   properties:
+ *                     total: { type: string }
+ *                     low_stock: { type: string }
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Not an admin
+ */
 // GET /api/admin/stats
 router.get("/stats", adminAuth, async (_req: Request, res: Response) => {
   try {

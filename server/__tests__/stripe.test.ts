@@ -39,7 +39,7 @@ const stripeInstance = new MockStripe("") as unknown as {
   webhooks: { constructEvent: jest.Mock };
 };
 
-describe("POST /api/stripe/create-payment-intent", () => {
+describe("POST /api/v1/stripe/create-payment-intent", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("creates a payment intent and returns clientSecret", async () => {
@@ -49,7 +49,7 @@ describe("POST /api/stripe/create-payment-intent", () => {
     });
 
     const res = await request(app)
-      .post("/api/stripe/create-payment-intent")
+      .post("/api/v1/stripe/create-payment-intent")
       .send({ amount: 299.99, order_id: 1 });
 
     expect(res.status).toBe(200);
@@ -57,28 +57,32 @@ describe("POST /api/stripe/create-payment-intent", () => {
   });
 
   it("returns 400 for missing amount (Zod validation)", async () => {
-    const res = await request(app).post("/api/stripe/create-payment-intent").send({ order_id: 1 });
+    const res = await request(app)
+      .post("/api/v1/stripe/create-payment-intent")
+      .send({ order_id: 1 });
 
     expect(res.status).toBe(400);
     expect(res.body).toHaveProperty("error", "Validation failed");
   });
 
   it("returns 400 for missing order_id (Zod validation)", async () => {
-    const res = await request(app).post("/api/stripe/create-payment-intent").send({ amount: 100 });
+    const res = await request(app)
+      .post("/api/v1/stripe/create-payment-intent")
+      .send({ amount: 100 });
 
     expect(res.status).toBe(400);
   });
 
   it("returns 400 for negative amount", async () => {
     const res = await request(app)
-      .post("/api/stripe/create-payment-intent")
+      .post("/api/v1/stripe/create-payment-intent")
       .send({ amount: -10, order_id: 1 });
 
     expect(res.status).toBe(400);
   });
 });
 
-describe("POST /api/stripe/webhook", () => {
+describe("POST /api/v1/stripe/webhook", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("processes payment_intent.succeeded and updates order status", async () => {
@@ -94,7 +98,7 @@ describe("POST /api/stripe/webhook", () => {
     mockQuery.mockResolvedValueOnce({ rows: [] });
 
     const res = await request(app)
-      .post("/api/stripe/webhook")
+      .post("/api/v1/stripe/webhook")
       .set("content-type", "application/json")
       .set("stripe-signature", "valid_sig")
       .send(Buffer.from(JSON.stringify({})));
@@ -110,7 +114,7 @@ describe("POST /api/stripe/webhook", () => {
 
   it("returns 400 when stripe-signature header is missing", async () => {
     const res = await request(app)
-      .post("/api/stripe/webhook")
+      .post("/api/v1/stripe/webhook")
       .set("content-type", "application/json")
       .send(Buffer.from("{}"));
 
@@ -123,7 +127,7 @@ describe("POST /api/stripe/webhook", () => {
     });
 
     const res = await request(app)
-      .post("/api/stripe/webhook")
+      .post("/api/v1/stripe/webhook")
       .set("content-type", "application/json")
       .set("stripe-signature", "bad_sig")
       .send(Buffer.from("{}"));
@@ -138,7 +142,7 @@ describe("POST /api/stripe/webhook", () => {
     });
 
     const res = await request(app)
-      .post("/api/stripe/webhook")
+      .post("/api/v1/stripe/webhook")
       .set("content-type", "application/json")
       .set("stripe-signature", "valid_sig")
       .send(Buffer.from("{}"));
@@ -148,7 +152,7 @@ describe("POST /api/stripe/webhook", () => {
   });
 });
 
-describe("POST /api/stripe/confirm-order", () => {
+describe("POST /api/v1/stripe/confirm-order", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("confirms an order after successful payment", async () => {
@@ -158,7 +162,7 @@ describe("POST /api/stripe/confirm-order", () => {
     });
     mockQuery.mockResolvedValueOnce({ rows: [] });
 
-    const res = await request(app).post("/api/stripe/confirm-order").send({
+    const res = await request(app).post("/api/v1/stripe/confirm-order").send({
       payment_intent_id: "pi_test_123",
       order_id: 1,
     });
@@ -173,7 +177,7 @@ describe("POST /api/stripe/confirm-order", () => {
       status: "requires_payment_method",
     });
 
-    const res = await request(app).post("/api/stripe/confirm-order").send({
+    const res = await request(app).post("/api/v1/stripe/confirm-order").send({
       payment_intent_id: "pi_test_123",
       order_id: 1,
     });
@@ -183,7 +187,7 @@ describe("POST /api/stripe/confirm-order", () => {
   });
 
   it("returns 400 for missing payment_intent_id", async () => {
-    const res = await request(app).post("/api/stripe/confirm-order").send({ order_id: 1 });
+    const res = await request(app).post("/api/v1/stripe/confirm-order").send({ order_id: 1 });
 
     expect(res.status).toBe(400);
   });
