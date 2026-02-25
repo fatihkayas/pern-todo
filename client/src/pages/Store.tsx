@@ -1,30 +1,33 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
+  DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent,
 } from "@dnd-kit/core";
 import {
   arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Watch } from "../types";
 
-// Google Drive link dönüştürücü
-function fixImageUrl(url) {
+function fixImageUrl(url: string | undefined): string {
   if (!url) return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400";
   const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
   if (match) return `https://drive.google.com/uc?export=view&id=${match[1]}`;
   return url;
 }
 
-function SortableWatchCard({ watch, addToCart }) {
-  const navigate = useNavigate();
-  const {
-    attributes, listeners, setNodeRef, transform, transition, isDragging,
-  } = useSortable({ id: watch.watch_id });
+interface SortableWatchCardProps {
+  watch: Watch;
+  addToCart: (watch: Watch) => void;
+}
 
-  const style = {
+function SortableWatchCard({ watch, addToCart }: SortableWatchCardProps) {
+  const navigate = useNavigate();
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: watch.watch_id });
+
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: transition ?? undefined,
     opacity: isDragging ? 0.5 : 1,
   };
 
@@ -38,7 +41,6 @@ function SortableWatchCard({ watch, addToCart }) {
         onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,0,0,0.12)"; }}
         onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
       >
-        {/* Drag handle */}
         <div
           {...attributes}
           {...listeners}
@@ -48,16 +50,12 @@ function SortableWatchCard({ watch, addToCart }) {
           ⠿ drag to reorder
         </div>
 
-        {/* Image - tıklayınca detay sayfasına git */}
-        <div
-          className="bg-light p-4 text-center"
-          onClick={() => navigate(`/watch/${watch.watch_id}`)}
-        >
+        <div className="bg-light p-4 text-center" onClick={() => navigate(`/watch/${watch.watch_id}`)}>
           <img
             src={imageUrl}
             className="img-fluid"
             style={{ maxHeight: "180px", objectFit: "contain" }}
-            onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400"; }}
+            onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400"; }}
             alt={watch.watch_name}
           />
         </div>
@@ -87,8 +85,13 @@ function SortableWatchCard({ watch, addToCart }) {
   );
 }
 
-const Store = ({ watches: initialWatches, addToCart }) => {
-  const [watches, setWatches] = useState(Array.isArray(initialWatches) ? initialWatches : []);
+interface StoreProps {
+  watches: Watch[];
+  addToCart: (watch: Watch) => void;
+}
+
+const Store = ({ watches: initialWatches, addToCart }: StoreProps) => {
+  const [watches, setWatches] = useState<Watch[]>(Array.isArray(initialWatches) ? initialWatches : []);
   const [search, setSearch] = useState("");
 
   React.useEffect(() => {
@@ -97,15 +100,15 @@ const Store = ({ watches: initialWatches, addToCart }) => {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (active.id !== over?.id) {
       setWatches((items) => {
         const oldIndex = items.findIndex((w) => w.watch_id === active.id);
-        const newIndex = items.findIndex((w) => w.watch_id === over.id);
+        const newIndex = items.findIndex((w) => w.watch_id === over?.id);
         return arrayMove(items, oldIndex, newIndex);
       });
     }
@@ -114,7 +117,7 @@ const Store = ({ watches: initialWatches, addToCart }) => {
   const filtered = watches.filter(
     (w) =>
       w.watch_name?.toLowerCase().includes(search.toLowerCase()) ||
-      w.brand?.toLowerCase().includes(search.toLowerCase())
+      w.brand?.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { Order, OrderStatus } from "../types";
 
-const STATUS_COLORS = {
+const STATUS_COLORS: Record<OrderStatus, string> = {
   pending: "warning",
   processing: "info",
   shipped: "primary",
@@ -10,7 +11,7 @@ const STATUS_COLORS = {
   cancelled: "danger",
 };
 
-const STATUS_LABELS = {
+const STATUS_LABELS: Record<OrderStatus, string> = {
   pending: "⏳ Bekliyor",
   processing: "⚙️ İşleniyor",
   shipped: "🚚 Kargoda",
@@ -20,7 +21,7 @@ const STATUS_LABELS = {
 
 const MyOrders = () => {
   const navigate = useNavigate();
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("token");
 
@@ -38,7 +39,7 @@ const MyOrders = () => {
         toast.error("Siparişler yüklenemedi");
         setLoading(false);
       });
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) return (
     <div className="text-center mt-5">
@@ -68,7 +69,7 @@ const MyOrders = () => {
                   <h6 className="fw-bold mb-0">Sipariş #{order.order_id}</h6>
                   <small className="text-muted">
                     {new Date(order.order_date).toLocaleDateString("tr-TR", {
-                      year: "numeric", month: "long", day: "numeric"
+                      year: "numeric", month: "long", day: "numeric",
                     })}
                   </small>
                 </div>
@@ -77,7 +78,6 @@ const MyOrders = () => {
                 </span>
               </div>
 
-              {/* Items */}
               <div className="border rounded-3 p-3 mb-3 bg-light">
                 {order.items?.filter(Boolean).map((item, i) => (
                   <div key={i} className="d-flex justify-content-between align-items-center py-1">

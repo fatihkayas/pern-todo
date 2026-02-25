@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { Watch, Order, OrderStatus, AdminStats } from "../types";
 
-const STATUS_COLORS = {
+const STATUS_COLORS: Record<OrderStatus, string> = {
   pending: "warning",
   processing: "info",
   shipped: "primary",
@@ -12,20 +13,19 @@ const STATUS_COLORS = {
 
 const AdminPanel = () => {
   const navigate = useNavigate();
-  const [stats, setStats] = useState(null);
-  const [orders, setOrders] = useState([]);
-  const [watches, setWatches] = useState([]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [watches, setWatches] = useState<Watch[]>([]);
   const [tab, setTab] = useState("dashboard");
   const [loading, setLoading] = useState(true);
 
   const token = localStorage.getItem("token");
-
   const authHeaders = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
   useEffect(() => {
     if (!token) { navigate("/login"); return; }
     loadData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = async () => {
     setLoading(true);
@@ -39,14 +39,14 @@ const AdminPanel = () => {
       setStats(await statsRes.json());
       setOrders(await ordersRes.json());
       setWatches(await watchesRes.json());
-    } catch (err) {
+    } catch (_err) {
       toast.error("Veri yüklenemedi");
     } finally {
       setLoading(false);
     }
   };
 
-  const updateOrderStatus = async (orderId, status) => {
+  const updateOrderStatus = async (orderId: number, status: OrderStatus) => {
     try {
       const res = await fetch(`/api/admin/orders/${orderId}/status`, {
         method: "PUT", headers: authHeaders,
@@ -60,14 +60,14 @@ const AdminPanel = () => {
     }
   };
 
-  const updateStock = async (watchId, stock_quantity) => {
+  const updateStock = async (watchId: number, stockQuantity: number) => {
     try {
       const res = await fetch(`/api/admin/watches/${watchId}/stock`, {
         method: "PUT", headers: authHeaders,
-        body: JSON.stringify({ stock_quantity: parseInt(stock_quantity) }),
+        body: JSON.stringify({ stock_quantity: stockQuantity }),
       });
       if (!res.ok) throw new Error();
-      setWatches((prev) => prev.map((w) => w.watch_id === watchId ? { ...w, stock_quantity } : w));
+      setWatches((prev) => prev.map((w) => w.watch_id === watchId ? { ...w, stock_quantity: stockQuantity } : w));
       toast.success("Stok güncellendi");
     } catch {
       toast.error("Stok güncelleme hatası");
@@ -82,9 +82,8 @@ const AdminPanel = () => {
     <div className="container-fluid px-4">
       <h2 className="fw-bold mb-4">🛠️ Admin Paneli</h2>
 
-      {/* Tabs */}
       <ul className="nav nav-tabs mb-4">
-        {["dashboard", "orders", "inventory"].map((t) => (
+        {(["dashboard", "orders", "inventory"] as const).map((t) => (
           <li className="nav-item" key={t}>
             <button className={`nav-link ${tab === t ? "active fw-bold" : ""}`} onClick={() => setTab(t)}>
               {t === "dashboard" ? "📊 Dashboard" : t === "orders" ? "📦 Siparişler" : "⌚ Stok"}
@@ -93,7 +92,6 @@ const AdminPanel = () => {
         ))}
       </ul>
 
-      {/* DASHBOARD */}
       {tab === "dashboard" && stats && (
         <div className="row g-4">
           <div className="col-md-3">
@@ -131,19 +129,13 @@ const AdminPanel = () => {
         </div>
       )}
 
-      {/* ORDERS */}
       {tab === "orders" && (
         <div className="card border-0 shadow-sm rounded-4">
           <div className="card-body p-0">
             <table className="table table-hover mb-0 rounded-4 overflow-hidden">
               <thead className="table-dark">
                 <tr>
-                  <th>#ID</th>
-                  <th>Müşteri</th>
-                  <th>Ürünler</th>
-                  <th>Toplam</th>
-                  <th>Tarih</th>
-                  <th>Durum</th>
+                  <th>#ID</th><th>Müşteri</th><th>Ürünler</th><th>Toplam</th><th>Tarih</th><th>Durum</th>
                 </tr>
               </thead>
               <tbody>
@@ -156,9 +148,7 @@ const AdminPanel = () => {
                     </td>
                     <td>
                       {order.items?.filter(Boolean).map((item, i) => (
-                        <div key={i} style={{ fontSize: 12 }}>
-                          {item.watch_name} x{item.quantity}
-                        </div>
+                        <div key={i} style={{ fontSize: 12 }}>{item.watch_name} x{item.quantity}</div>
                       ))}
                     </td>
                     <td className="fw-bold">${parseFloat(order.total_amount).toFixed(2)}</td>
@@ -167,10 +157,10 @@ const AdminPanel = () => {
                       <select
                         className={`form-select form-select-sm border-0 bg-${STATUS_COLORS[order.status]} bg-opacity-25`}
                         value={order.status}
-                        onChange={(e) => updateOrderStatus(order.order_id, e.target.value)}
+                        onChange={(e) => updateOrderStatus(order.order_id, e.target.value as OrderStatus)}
                         style={{ fontSize: 12, minWidth: 120 }}
                       >
-                        {["pending", "processing", "shipped", "delivered", "cancelled"].map((s) => (
+                        {(["pending", "processing", "shipped", "delivered", "cancelled"] as OrderStatus[]).map((s) => (
                           <option key={s} value={s}>{s}</option>
                         ))}
                       </select>
@@ -183,18 +173,13 @@ const AdminPanel = () => {
         </div>
       )}
 
-      {/* INVENTORY */}
       {tab === "inventory" && (
         <div className="card border-0 shadow-sm rounded-4">
           <div className="card-body p-0">
             <table className="table table-hover mb-0">
               <thead className="table-dark">
                 <tr>
-                  <th>Saat</th>
-                  <th>Model Kodu</th>
-                  <th>Fiyat</th>
-                  <th>Stok</th>
-                  <th>Güncelle</th>
+                  <th>Saat</th><th>Model Kodu</th><th>Fiyat</th><th>Stok</th><th>Güncelle</th>
                 </tr>
               </thead>
               <tbody>
@@ -210,8 +195,13 @@ const AdminPanel = () => {
   );
 };
 
-function WatchStockRow({ watch, onUpdate }) {
-  const [stock, setStock] = useState(watch.stock_quantity);
+interface WatchStockRowProps {
+  watch: Watch;
+  onUpdate: (watchId: number, stockQuantity: number) => void;
+}
+
+function WatchStockRow({ watch, onUpdate }: WatchStockRowProps) {
+  const [stock, setStock] = useState<number>(watch.stock_quantity);
   return (
     <tr>
       <td>
@@ -221,9 +211,7 @@ function WatchStockRow({ watch, onUpdate }) {
       <td style={{ fontSize: 12 }}>{watch.model_code}</td>
       <td>${watch.price}</td>
       <td>
-        <span className={`badge ${parseInt(stock) < 3 ? "bg-danger" : "bg-success"}`}>
-          {stock} adet
-        </span>
+        <span className={`badge ${stock < 3 ? "bg-danger" : "bg-success"}`}>{stock} adet</span>
       </td>
       <td>
         <div className="d-flex gap-2 align-items-center">
@@ -233,12 +221,9 @@ function WatchStockRow({ watch, onUpdate }) {
             style={{ width: 70 }}
             value={stock}
             min={0}
-            onChange={(e) => setStock(e.target.value)}
+            onChange={(e) => setStock(Number(e.target.value))}
           />
-          <button
-            className="btn btn-sm btn-dark"
-            onClick={() => onUpdate(watch.watch_id, stock)}
-          >
+          <button className="btn btn-sm btn-dark" onClick={() => onUpdate(watch.watch_id, stock)}>
             Kaydet
           </button>
         </div>

@@ -2,7 +2,14 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 
-const Navbar = ({ userDisplayName, cartCount, logout, onCartClick }) => {
+interface NavbarProps {
+  userDisplayName: string | null;
+  cartCount: number;
+  logout: () => void;
+  onCartClick: () => void;
+}
+
+const Navbar = ({ userDisplayName, cartCount, logout, onCartClick }: NavbarProps) => {
   const { isDark, toggle } = useTheme();
   const navigate = useNavigate();
 
@@ -11,11 +18,7 @@ const Navbar = ({ userDisplayName, cartCount, logout, onCartClick }) => {
       navigate("/login");
       return;
     }
-    if (cartCount === 0) {
-      onCartClick && onCartClick();
-    } else {
-      onCartClick && onCartClick();
-    }
+    onCartClick();
   };
 
   return (
@@ -37,7 +40,6 @@ const Navbar = ({ userDisplayName, cartCount, logout, onCartClick }) => {
             {isDark ? "☀️" : "🌙"}
           </button>
 
-          {/* Cart */}
           <div className="position-relative" style={{ cursor: "pointer" }} onClick={handleCart}>
             <span style={{ fontSize: "1.5rem" }}>🛒</span>
             {cartCount > 0 && (
@@ -49,7 +51,8 @@ const Navbar = ({ userDisplayName, cartCount, logout, onCartClick }) => {
 
           {userDisplayName ? (
             <>
-              <span className="small text-secondary">👋 {userDisplayName}</span><Link to="/orders" className="btn btn-outline-dark btn-sm rounded-pill">📦 Siparişlerim</Link>
+              <span className="small text-secondary">👋 {userDisplayName}</span>
+              <Link to="/orders" className="btn btn-outline-dark btn-sm rounded-pill">📦 Siparişlerim</Link>
               <button className="btn btn-outline-danger btn-sm rounded-pill" onClick={logout}>
                 Çıkış
               </button>

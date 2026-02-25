@@ -16,33 +16,34 @@ import AdminPanel from "./pages/AdminPanel";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import { ThemeProvider } from "./context/ThemeContext";
+import { Watch, CartItem, Customer } from "./types";
 
 function App() {
-  const [watches, setWatches] = useState([]);
-  const [cart, setCart] = useState([]);
+  const [watches, setWatches] = useState<Watch[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
-  const [customer, setCustomer] = useState(() => {
+  const [customer, setCustomer] = useState<Customer | null>(() => {
     const saved = localStorage.getItem("customer");
-    return saved ? JSON.parse(saved) : null;
+    return saved ? (JSON.parse(saved) as Customer) : null;
   });
 
   useEffect(() => {
-    fetch("/api/watches")
+    fetch("/api/v1/watches")
       .then((res) => {
-        if (!res.ok) throw new Error("Bağlantı reddedildi");
+        if (!res.ok) throw new Error("Connection refused");
         return res.json();
       })
-      .then((data) => {
+      .then((data: Watch[]) => {
         setWatches(Array.isArray(data) ? data : []);
-        if (data.length > 0) toast.success("Saatler başarıyla yüklendi! ✅");
+        if (data.length > 0) toast.success("Watches loaded successfully! ✅");
       })
-      .catch((err) => {
-        console.error("Fetch Hatası:", err);
-        toast.error("Bağlantı hatası: Backend erişilemiyor ❌");
+      .catch((err: Error) => {
+        console.error("Fetch error:", err);
+        toast.error("Connection error: Backend unreachable ❌");
       });
   }, []);
 
-  const handleLogin = (customerData) => {
+  const handleLogin = (customerData: Customer) => {
     setCustomer(customerData);
   };
 
@@ -51,32 +52,32 @@ function App() {
     localStorage.removeItem("customer");
     setCustomer(null);
     setCart([]);
-    toast.success("Çıkış yapıldı. Görüşürüz! 👋");
+    toast.success("Logged out. See you soon! 👋");
   };
 
-  const addToCart = (watch) => {
+  const addToCart = (watch: Watch) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.watch_id === watch.watch_id);
       if (existing) {
-        toast.success(`${watch.watch_name} adedi artırıldı`);
+        toast.success(`${watch.watch_name} quantity increased`);
         return prev.map((item) =>
           item.watch_id === watch.watch_id ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-      toast.success(`${watch.watch_name} sepete eklendi ✅`);
+      toast.success(`${watch.watch_name} added to cart ✅`);
       return [...prev, { ...watch, quantity: 1 }];
     });
     setCartOpen(true);
   };
 
-  const removeFromCart = (watch_id) => {
+  const removeFromCart = (watch_id: number) => {
     setCart((prev) => prev.filter((item) => item.watch_id !== watch_id));
   };
 
-  const updateQuantity = (watch_id, quantity) => {
+  const updateQuantity = (watch_id: number, quantity: number) => {
     if (quantity < 1) return removeFromCart(watch_id);
     setCart((prev) =>
-      prev.map((item) => item.watch_id === watch_id ? { ...item, quantity } : item)
+      prev.map((item) => (item.watch_id === watch_id ? { ...item, quantity } : item))
     );
   };
 
@@ -119,4 +120,3 @@ function App() {
 }
 
 export default App;
-

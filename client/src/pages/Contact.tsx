@@ -1,13 +1,21 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 
+interface ContactForm {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
 const Contact = () => {
-  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [form, setForm] = useState<ContactForm>({ name: "", email: "", subject: "", message: "" });
   const [sending, setSending] = useState(false);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.message) {
       toast.error("Please fill in all required fields.");
@@ -29,12 +37,7 @@ const Contact = () => {
 
   return (
     <div style={{ fontFamily: "'Georgia', serif" }}>
-      {/* Hero */}
-      <div style={{
-        background: "linear-gradient(135deg, #0a0a0a, #1a1a2e)",
-        padding: "80px 20px",
-        textAlign: "center",
-      }}>
+      <div style={{ background: "linear-gradient(135deg, #0a0a0a, #1a1a2e)", padding: "80px 20px", textAlign: "center" }}>
         <p style={{ color: "#d4af37", letterSpacing: "6px", fontSize: "11px", textTransform: "uppercase", marginBottom: "16px" }}>Get In Touch</p>
         <h1 style={{ color: "#fff", fontSize: "clamp(36px, 6vw, 64px)", fontWeight: "300", marginBottom: "16px" }}>
           Contact <span style={{ color: "#d4af37", fontStyle: "italic" }}>Us</span>
@@ -44,7 +47,6 @@ const Contact = () => {
         </p>
       </div>
 
-      {/* Info Cards */}
       <div style={{ background: "#d4af37", padding: "40px 20px" }}>
         <div className="container">
           <div className="row">
@@ -59,7 +61,6 @@ const Contact = () => {
         </div>
       </div>
 
-      {/* Form */}
       <div style={{ background: "#fafaf8", padding: "100px 20px" }}>
         <div className="container">
           <div className="row justify-content-center">
@@ -69,56 +70,37 @@ const Contact = () => {
                   Send a Message
                 </h2>
 
-                <div className="mb-4">
-                  <label style={{ fontSize: "11px", letterSpacing: "2px", textTransform: "uppercase", color: "#888", marginBottom: "8px", display: "block" }}>
-                    Name *
-                  </label>
-                  <input
-                    type="text" name="name" value={form.name} onChange={handleChange}
-                    placeholder="Your full name"
-                    style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: "2px", padding: "14px 16px", fontSize: "15px", outline: "none", fontFamily: "Georgia, serif" }}
-                    onFocus={e => e.target.style.borderColor = "#d4af37"}
-                    onBlur={e => e.target.style.borderColor = "#e0e0e0"}
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label style={{ fontSize: "11px", letterSpacing: "2px", textTransform: "uppercase", color: "#888", marginBottom: "8px", display: "block" }}>
-                    Email *
-                  </label>
-                  <input
-                    type="email" name="email" value={form.email} onChange={handleChange}
-                    placeholder="your@email.com"
-                    style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: "2px", padding: "14px 16px", fontSize: "15px", outline: "none", fontFamily: "Georgia, serif" }}
-                    onFocus={e => e.target.style.borderColor = "#d4af37"}
-                    onBlur={e => e.target.style.borderColor = "#e0e0e0"}
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label style={{ fontSize: "11px", letterSpacing: "2px", textTransform: "uppercase", color: "#888", marginBottom: "8px", display: "block" }}>
-                    Subject
-                  </label>
-                  <input
-                    type="text" name="subject" value={form.subject} onChange={handleChange}
-                    placeholder="How can we help?"
-                    style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: "2px", padding: "14px 16px", fontSize: "15px", outline: "none", fontFamily: "Georgia, serif" }}
-                    onFocus={e => e.target.style.borderColor = "#d4af37"}
-                    onBlur={e => e.target.style.borderColor = "#e0e0e0"}
-                  />
-                </div>
+                {(["name", "email", "subject"] as const).map((field) => (
+                  <div key={field} className="mb-4">
+                    <label style={{ fontSize: "11px", letterSpacing: "2px", textTransform: "uppercase", color: "#888", marginBottom: "8px", display: "block" }}>
+                      {field === "name" ? "Name *" : field === "email" ? "Email *" : "Subject"}
+                    </label>
+                    <input
+                      type={field === "email" ? "email" : "text"}
+                      name={field}
+                      value={form[field]}
+                      onChange={handleChange}
+                      placeholder={field === "name" ? "Your full name" : field === "email" ? "your@email.com" : "How can we help?"}
+                      style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: "2px", padding: "14px 16px", fontSize: "15px", outline: "none", fontFamily: "Georgia, serif" }}
+                      onFocus={(e) => (e.target.style.borderColor = "#d4af37")}
+                      onBlur={(e) => (e.target.style.borderColor = "#e0e0e0")}
+                    />
+                  </div>
+                ))}
 
                 <div className="mb-4">
                   <label style={{ fontSize: "11px", letterSpacing: "2px", textTransform: "uppercase", color: "#888", marginBottom: "8px", display: "block" }}>
                     Message *
                   </label>
                   <textarea
-                    name="message" value={form.message} onChange={handleChange}
+                    name="message"
+                    value={form.message}
+                    onChange={handleChange}
                     placeholder="Tell us more..."
                     rows={5}
                     style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: "2px", padding: "14px 16px", fontSize: "15px", outline: "none", fontFamily: "Georgia, serif", resize: "vertical" }}
-                    onFocus={e => e.target.style.borderColor = "#d4af37"}
-                    onBlur={e => e.target.style.borderColor = "#e0e0e0"}
+                    onFocus={(e) => (e.target.style.borderColor = "#d4af37")}
+                    onBlur={(e) => (e.target.style.borderColor = "#e0e0e0")}
                   />
                 </div>
 
@@ -129,8 +111,7 @@ const Contact = () => {
                     width: "100%", background: sending ? "#ccc" : "#0a0a0a",
                     color: "#d4af37", border: "none", padding: "16px",
                     fontSize: "12px", letterSpacing: "3px", textTransform: "uppercase",
-                    cursor: sending ? "not-allowed" : "pointer", borderRadius: "2px",
-                    transition: "all 0.3s ease",
+                    cursor: sending ? "not-allowed" : "pointer", borderRadius: "2px", transition: "all 0.3s ease",
                   }}
                 >
                   {sending ? "Sending..." : "Send Message →"}

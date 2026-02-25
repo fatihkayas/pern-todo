@@ -1,14 +1,22 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 
+interface ReturnForm {
+  orderId: string;
+  email: string;
+  reason: string;
+  details: string;
+}
+
 const Returns = () => {
-  const [form, setForm] = useState({ orderId: "", email: "", reason: "", details: "" });
+  const [form, setForm] = useState<ReturnForm>({ orderId: "", email: "", reason: "", details: "" });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.orderId || !form.email || !form.reason) {
       toast.error("Please fill in all required fields.");
@@ -29,21 +37,13 @@ const Returns = () => {
   ];
 
   const reasons = [
-    "Changed my mind",
-    "Wrong size / fit",
-    "Defective or damaged",
-    "Not as described",
-    "Received wrong item",
-    "Other",
+    "Changed my mind", "Wrong size / fit", "Defective or damaged",
+    "Not as described", "Received wrong item", "Other",
   ];
 
   return (
     <div style={{ fontFamily: "'Georgia', serif" }}>
-      {/* Hero */}
-      <div style={{
-        background: "linear-gradient(135deg, #0a0a0a, #1a1a2e)",
-        padding: "80px 20px", textAlign: "center",
-      }}>
+      <div style={{ background: "linear-gradient(135deg, #0a0a0a, #1a1a2e)", padding: "80px 20px", textAlign: "center" }}>
         <p style={{ color: "#d4af37", letterSpacing: "6px", fontSize: "11px", textTransform: "uppercase", marginBottom: "16px" }}>Hassle-Free</p>
         <h1 style={{ color: "#fff", fontSize: "clamp(36px, 6vw, 64px)", fontWeight: "300", marginBottom: "16px" }}>
           Returns & <span style={{ color: "#d4af37", fontStyle: "italic" }}>Refunds</span>
@@ -53,15 +53,12 @@ const Returns = () => {
         </p>
       </div>
 
-      {/* Policy badges */}
       <div style={{ background: "#d4af37", padding: "32px 20px" }}>
         <div className="container">
           <div className="row text-center">
             {[
-              { icon: "📅", text: "30-Day Returns" },
-              { icon: "🚚", text: "Free Return Shipping" },
-              { icon: "💳", text: "Full Refund" },
-              { icon: "⚡", text: "5-Day Processing" },
+              { icon: "📅", text: "30-Day Returns" }, { icon: "🚚", text: "Free Return Shipping" },
+              { icon: "💳", text: "Full Refund" }, { icon: "⚡", text: "5-Day Processing" },
             ].map((b, i) => (
               <div key={i} className="col-6 col-md-3 mb-2 mb-md-0">
                 <span style={{ fontSize: "20px" }}>{b.icon}</span>
@@ -72,7 +69,6 @@ const Returns = () => {
         </div>
       </div>
 
-      {/* Steps */}
       <div style={{ background: "#fafaf8", padding: "80px 20px" }}>
         <div className="container">
           <div className="text-center mb-5">
@@ -82,11 +78,8 @@ const Returns = () => {
           <div className="row">
             {steps.map((s, i) => (
               <div key={i} className="col-md-3 mb-4 text-center">
-                <div style={{
-                  background: "#fff", borderRadius: "4px", padding: "40px 24px",
-                  boxShadow: "0 4px 24px rgba(0,0,0,0.06)", height: "100%",
-                }}>
-                  <div style={{ fontSize: "36px", fontWeight: "700", color: "#d4af37", marginBottom: "16px", fontFamily: "Georgia" }}>{s.num}</div>
+                <div style={{ background: "#fff", borderRadius: "4px", padding: "40px 24px", boxShadow: "0 4px 24px rgba(0,0,0,0.06)", height: "100%" }}>
+                  <div style={{ fontSize: "36px", fontWeight: "700", color: "#d4af37", marginBottom: "16px" }}>{s.num}</div>
                   <h5 style={{ color: "#0a0a0a", fontWeight: "600", marginBottom: "12px" }}>{s.title}</h5>
                   <p style={{ color: "#888", fontSize: "14px", lineHeight: "1.7", margin: 0 }}>{s.desc}</p>
                 </div>
@@ -96,7 +89,6 @@ const Returns = () => {
         </div>
       </div>
 
-      {/* Form */}
       <div style={{ background: "#0a0a0a", padding: "80px 20px" }}>
         <div className="container">
           <div className="row justify-content-center">
@@ -122,18 +114,20 @@ const Returns = () => {
                     Start a Return
                   </h2>
 
-                  {[
-                    { label: "Order ID *", name: "orderId", type: "text", placeholder: "e.g. ORD-12345" },
-                    { label: "Email Address *", name: "email", type: "email", placeholder: "Email used at purchase" },
-                  ].map((f) => (
-                    <div key={f.name} className="mb-4">
-                      <label style={{ fontSize: "11px", letterSpacing: "2px", textTransform: "uppercase", color: "#888", marginBottom: "8px", display: "block" }}>{f.label}</label>
+                  {(["orderId", "email"] as const).map((field) => (
+                    <div key={field} className="mb-4">
+                      <label style={{ fontSize: "11px", letterSpacing: "2px", textTransform: "uppercase", color: "#888", marginBottom: "8px", display: "block" }}>
+                        {field === "orderId" ? "Order ID *" : "Email Address *"}
+                      </label>
                       <input
-                        type={f.type} name={f.name} value={form[f.name]} onChange={handleChange}
-                        placeholder={f.placeholder}
+                        type={field === "email" ? "email" : "text"}
+                        name={field}
+                        value={form[field]}
+                        onChange={handleChange}
+                        placeholder={field === "orderId" ? "e.g. ORD-12345" : "Email used at purchase"}
                         style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "2px", padding: "14px 16px", fontSize: "15px", color: "#fff", outline: "none", fontFamily: "Georgia, serif" }}
-                        onFocus={e => e.target.style.borderColor = "#d4af37"}
-                        onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                        onFocus={(e) => (e.target.style.borderColor = "#d4af37")}
+                        onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                       />
                     </div>
                   ))}
@@ -141,10 +135,12 @@ const Returns = () => {
                   <div className="mb-4">
                     <label style={{ fontSize: "11px", letterSpacing: "2px", textTransform: "uppercase", color: "#888", marginBottom: "8px", display: "block" }}>Reason *</label>
                     <select
-                      name="reason" value={form.reason} onChange={handleChange}
+                      name="reason"
+                      value={form.reason}
+                      onChange={handleChange}
                       style={{ width: "100%", background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "2px", padding: "14px 16px", fontSize: "15px", color: form.reason ? "#fff" : "#888", outline: "none", fontFamily: "Georgia, serif" }}
-                      onFocus={e => e.target.style.borderColor = "#d4af37"}
-                      onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                      onFocus={(e) => (e.target.style.borderColor = "#d4af37")}
+                      onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                     >
                       <option value="">Select a reason...</option>
                       {reasons.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -154,12 +150,14 @@ const Returns = () => {
                   <div className="mb-4">
                     <label style={{ fontSize: "11px", letterSpacing: "2px", textTransform: "uppercase", color: "#888", marginBottom: "8px", display: "block" }}>Additional Details</label>
                     <textarea
-                      name="details" value={form.details} onChange={handleChange}
+                      name="details"
+                      value={form.details}
+                      onChange={handleChange}
                       placeholder="Any additional information..."
                       rows={4}
                       style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "2px", padding: "14px 16px", fontSize: "15px", color: "#fff", outline: "none", fontFamily: "Georgia, serif", resize: "vertical" }}
-                      onFocus={e => e.target.style.borderColor = "#d4af37"}
-                      onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                      onFocus={(e) => (e.target.style.borderColor = "#d4af37")}
+                      onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                     />
                   </div>
 
@@ -170,8 +168,7 @@ const Returns = () => {
                       width: "100%", background: loading ? "#555" : "#d4af37",
                       color: "#0a0a0a", border: "none", padding: "16px",
                       fontSize: "12px", letterSpacing: "3px", textTransform: "uppercase",
-                      cursor: loading ? "not-allowed" : "pointer", borderRadius: "2px",
-                      fontWeight: "700", transition: "all 0.3s ease",
+                      cursor: loading ? "not-allowed" : "pointer", borderRadius: "2px", fontWeight: "700",
                     }}
                   >
                     {loading ? "Submitting..." : "Submit Return Request →"}

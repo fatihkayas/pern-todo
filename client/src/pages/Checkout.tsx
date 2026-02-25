@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import toast from "react-hot-toast";
+import { CartItem } from "../types";
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY as string);
 
-function CheckoutForm({ orderId, onSuccess }) {
+interface CheckoutFormProps {
+  orderId: number;
+  onSuccess: (orderId: number) => void;
+}
+
+function CheckoutForm({ orderId, onSuccess }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
     setLoading(true);
@@ -21,22 +27,18 @@ function CheckoutForm({ orderId, onSuccess }) {
         redirect: "if_required",
       });
       if (error) {
-        toast.error(error.message);
+        toast.error(error.message ?? "Payment error");
         setLoading(false);
         return;
       }
-      if (paymentIntent.status === "succeeded") {
-        // Confirm order on backend
+      if (paymentIntent?.status === "succeeded") {
         const res = await fetch("/api/stripe/confirm-order", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: "Bearer " + localStorage.getItem("token"),
           },
-          body: JSON.stringify({
-            payment_intent_id: paymentIntent.id,
-            order_id: orderId,
-          }),
+          body: JSON.stringify({ payment_intent_id: paymentIntent.id, order_id: orderId }),
         });
         const data = await res.json();
         if (data.success) {
@@ -44,7 +46,7 @@ function CheckoutForm({ orderId, onSuccess }) {
           onSuccess(orderId);
         }
       }
-    } catch (err) {
+    } catch (_err) {
       toast.error("Payment failed");
     } finally {
       setLoading(false);
@@ -70,31 +72,32 @@ function CheckoutForm({ orderId, onSuccess }) {
   );
 }
 
-const Checkout = ({ cart, onOrderSuccess }) => {
+interface CheckoutProps {
+  cart: CartItem[];
+  onOrderSuccess: () => void;
+}
+
+const Checkout = ({ cart, onOrderSuccess }: CheckoutProps) => {
   const navigate = useNavigate();
   const [clientSecret, setClientSecret] = useState("");
-  const [orderId, setOrderId] = useState(null);
-  const [step, setStep] = useState("confirm"); // confirm | payment | success
+  const [orderId, setOrderId] = useState<number | null>(null);
+  const [step, setStep] = useState<"confirm" | "payment" | "success">("confirm");
   const [loading, setLoading] = useState(false);
   const token = localStorage.getItem("token");
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const total = cart.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
 
   useEffect(() => {
     if (!token) navigate("/login");
     if (cart.length === 0) navigate("/");
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const createOrder = async () => {
     setLoading(true);
     try {
-      // Create order in DB
       const orderRes = await fetch("/api/orders", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify({
           items: cart.map((item) => ({
             watch_id: item.watch_id,
@@ -107,13 +110,9 @@ const Checkout = ({ cart, onOrderSuccess }) => {
       if (!orderRes.ok) throw new Error(orderData.error);
       setOrderId(orderData.order_id);
 
-      // Create payment intent
       const payRes = await fetch("/api/stripe/create-payment-intent", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify({ amount: total, order_id: orderData.order_id }),
       });
       const payData = await payRes.json();
@@ -121,47 +120,41 @@ const Checkout = ({ cart, onOrderSuccess }) => {
       setClientSecret(payData.clientSecret);
       setStep("payment");
     } catch (err) {
-      toast.error(err.message);
+      toast.error((err as Error).message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSuccess = (oid) => {
+  const handleSuccess = (_oid: number) => {
     setStep("success");
-    onOrderSuccess && onOrderSuccess();
+    onOrderSuccess?.();
   };
 
   return (
     <div className="container mt-4" style={{ maxWidth: 600 }}>
       <h3 className="fw-bold mb-4">💳 Checkout</h3>
 
-      {/* Step: Confirm Order */}
       {step === "confirm" && (
         <div className="card border-0 shadow-sm rounded-4 p-4">
           <h5 className="fw-bold mb-3">Order Summary</h5>
           {cart.map((item) => (
             <div key={item.watch_id} className="d-flex justify-content-between py-2 border-bottom">
               <span>{item.watch_name} x{item.quantity}</span>
-              <span>${(item.price * item.quantity).toFixed(2)}</span>
+              <span>${(Number(item.price) * item.quantity).toFixed(2)}</span>
             </div>
           ))}
           <div className="d-flex justify-content-between mt-3 fw-bold fs-5">
             <span>Total</span>
             <span>${total.toFixed(2)}</span>
           </div>
-          <button
-            className="btn btn-dark w-100 rounded-pill mt-4"
-            onClick={createOrder}
-            disabled={loading}
-          >
+          <button className="btn btn-dark w-100 rounded-pill mt-4" onClick={createOrder} disabled={loading}>
             {loading ? "Processing..." : "Proceed to Payment →"}
           </button>
         </div>
       )}
 
-      {/* Step: Payment */}
-      {step === "payment" && clientSecret && (
+      {step === "payment" && clientSecret && orderId !== null && (
         <div className="card border-0 shadow-sm rounded-4 p-4">
           <h5 className="fw-bold mb-3">Payment Details</h5>
           <div className="alert alert-info small mb-3">
@@ -173,7 +166,6 @@ const Checkout = ({ cart, onOrderSuccess }) => {
         </div>
       )}
 
-      {/* Step: Success */}
       {step === "success" && (
         <div className="card border-0 shadow-sm rounded-4 p-4 text-center">
           <div style={{ fontSize: 64 }}>🎉</div>

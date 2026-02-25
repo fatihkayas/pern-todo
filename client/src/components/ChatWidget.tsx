@@ -2,8 +2,12 @@ import React, { useState, useRef, useEffect } from "react";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-const styles = {
-  // Floating button
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
+
+const styles: { [key: string]: React.CSSProperties } = {
   toggleBtn: {
     position: "fixed",
     bottom: "24px",
@@ -23,7 +27,6 @@ const styles = {
     zIndex: 1000,
     transition: "background 0.2s",
   },
-  // Chat window
   window: {
     position: "fixed",
     bottom: "90px",
@@ -122,14 +125,13 @@ const styles = {
 
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: "Hi! I'm your Seiko store assistant. How can I help you today?" },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const bottomRef = useRef(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -138,13 +140,12 @@ export default function ChatWidget() {
     const text = input.trim();
     if (!text || loading) return;
 
-    const userMsg = { role: "user", content: text };
+    const userMsg: Message = { role: "user", content: text };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setInput("");
     setLoading(true);
 
-    // Add empty assistant message to stream into
     setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
     try {
@@ -152,18 +153,16 @@ export default function ChatWidget() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: updatedMessages.map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
+          messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
         }),
       });
 
       if (!response.ok) throw new Error("Chat request failed");
 
-      const reader = response.body.getReader();
+      const reader = response.body!.getReader();
       const decoder = new TextDecoder();
 
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -176,7 +175,7 @@ export default function ChatWidget() {
           if (data === "[DONE]") break;
 
           try {
-            const parsed = JSON.parse(data);
+            const parsed = JSON.parse(data) as { text?: string };
             if (parsed.text) {
               setMessages((prev) => {
                 const updated = [...prev];
@@ -190,7 +189,7 @@ export default function ChatWidget() {
           } catch (_) {}
         }
       }
-    } catch (err) {
+    } catch (_err) {
       setMessages((prev) => {
         const updated = [...prev];
         updated[updated.length - 1] = {
@@ -204,7 +203,7 @@ export default function ChatWidget() {
     }
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
@@ -213,7 +212,6 @@ export default function ChatWidget() {
 
   return (
     <>
-      {/* Floating toggle button */}
       <button
         style={styles.toggleBtn}
         onClick={() => setOpen((o) => !o)}
@@ -222,22 +220,16 @@ export default function ChatWidget() {
         {open ? "✕" : "💬"}
       </button>
 
-      {/* Chat window */}
       {open && (
         <div style={styles.window}>
-          {/* Header */}
           <div style={styles.header}>
             <span>⌚</span>
             <span>Seiko Assistant</span>
           </div>
 
-          {/* Messages */}
           <div style={styles.messages}>
             {messages.map((msg, i) => (
-              <div
-                key={i}
-                style={msg.role === "user" ? styles.userMsg : styles.assistantMsg}
-              >
+              <div key={i} style={msg.role === "user" ? styles.userMsg : styles.assistantMsg}>
                 {msg.content || (
                   <span>
                     <span style={styles.typingDot} />
@@ -250,7 +242,6 @@ export default function ChatWidget() {
             <div ref={bottomRef} />
           </div>
 
-          {/* Input */}
           <div style={styles.inputRow}>
             <input
               style={styles.input}

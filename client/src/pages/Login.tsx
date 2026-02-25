@@ -1,13 +1,23 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
+import { Customer } from "../types";
 
-const Login = ({ onLogin }) => {
+interface LoginProps {
+  onLogin: (customer: Customer) => void;
+}
+
+interface LoginForm {
+  email: string;
+  password: string;
+}
+
+const Login = ({ onLogin }: LoginProps) => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState<LoginForm>({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
@@ -24,7 +34,7 @@ const Login = ({ onLogin }) => {
       toast.success(`Hoş geldin, ${data.customer.full_name}! 👋`);
       navigate("/");
     } catch (err) {
-      toast.error(err.message);
+      toast.error((err as Error).message);
     } finally {
       setLoading(false);
     }
@@ -59,11 +69,7 @@ const Login = ({ onLogin }) => {
               required
             />
           </div>
-          <button
-            type="submit"
-            className="btn btn-dark w-100 rounded-pill"
-            disabled={loading}
-          >
+          <button type="submit" className="btn btn-dark w-100 rounded-pill" disabled={loading}>
             {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
           </button>
         </form>

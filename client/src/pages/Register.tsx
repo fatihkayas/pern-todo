@@ -1,17 +1,33 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
+import { Customer } from "../types";
 
-const Register = ({ onLogin }) => {
+interface RegisterProps {
+  onLogin: (customer: Customer) => void;
+}
+
+interface RegisterForm {
+  email: string;
+  full_name: string;
+  password: string;
+  password2: string;
+  phone: string;
+  address: string;
+  city: string;
+  country: string;
+}
+
+const Register = ({ onLogin }: RegisterProps) => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<RegisterForm>({
     email: "", full_name: "", password: "", password2: "",
-    phone: "", address: "", city: "", country: ""
+    phone: "", address: "", city: "", country: "",
   });
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (form.password !== form.password2) {
       toast.error("Şifreler eşleşmiyor");
@@ -32,13 +48,14 @@ const Register = ({ onLogin }) => {
       toast.success(`Hoş geldin, ${data.customer.full_name}! 🎉`);
       navigate("/");
     } catch (err) {
-      toast.error(err.message);
+      toast.error((err as Error).message);
     } finally {
       setLoading(false);
     }
   };
 
-  const update = (field) => (e) => setForm({ ...form, [field]: e.target.value });
+  const update = (field: keyof RegisterForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    setForm({ ...form, [field]: e.target.value });
 
   return (
     <div className="container" style={{ maxWidth: 480, marginTop: 60, marginBottom: 60 }}>
@@ -46,7 +63,6 @@ const Register = ({ onLogin }) => {
         <h3 className="text-center fw-bold mb-1">⌚ Kayıt Ol</h3>
         <p className="text-center text-muted small mb-4">Yeni hesap oluşturun</p>
 
-        {/* Step indicator */}
         <div className="d-flex justify-content-center gap-2 mb-4">
           <span className={`badge rounded-pill ${step === 1 ? "bg-dark" : "bg-secondary"}`}>1. Hesap Bilgileri</span>
           <span className={`badge rounded-pill ${step === 2 ? "bg-dark" : "bg-secondary"}`}>2. Adres Bilgileri</span>
@@ -75,8 +91,7 @@ const Register = ({ onLogin }) => {
                 <input type="password" className="form-control rounded-pill" placeholder="••••••••"
                   value={form.password2} onChange={update("password2")} required />
               </div>
-              <button type="button" className="btn btn-dark w-100 rounded-pill"
-                onClick={() => setStep(2)}>
+              <button type="button" className="btn btn-dark w-100 rounded-pill" onClick={() => setStep(2)}>
                 Devam Et →
               </button>
             </>

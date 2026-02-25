@@ -41,7 +41,6 @@ const About = () => {
         overflow: "hidden",
         padding: "80px 20px",
       }}>
-        {/* Background decoration */}
         <div style={{
           position: "absolute", top: "10%", left: "5%",
           width: "300px", height: "300px", borderRadius: "50%",
@@ -159,15 +158,16 @@ const About = () => {
           <div className="row">
             {values.map((v, i) => (
               <div key={i} className="col-md-6 mb-4">
-                <div style={{
-                  border: "1px solid rgba(212,175,55,0.2)",
-                  borderRadius: "4px",
-                  padding: "40px",
-                  transition: "all 0.3s ease",
-                  cursor: "default",
-                }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(212,175,55,0.6)"}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(212,175,55,0.2)"}
+                <div
+                  style={{
+                    border: "1px solid rgba(212,175,55,0.2)",
+                    borderRadius: "4px",
+                    padding: "40px",
+                    transition: "all 0.3s ease",
+                    cursor: "default",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(212,175,55,0.6)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(212,175,55,0.2)")}
                 >
                   <div style={{ fontSize: "32px", marginBottom: "16px" }}>{v.icon}</div>
                   <h4 style={{ color: "#d4af37", fontWeight: "400", marginBottom: "12px", letterSpacing: "1px" }}>{v.title}</h4>
@@ -189,15 +189,16 @@ const About = () => {
           <div className="row justify-content-center">
             {team.map((t, i) => (
               <div key={i} className="col-md-4 mb-4 text-center">
-                <div style={{
-                  background: "#fff",
-                  borderRadius: "4px",
-                  padding: "48px 32px",
-                  boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-                  transition: "transform 0.3s ease",
-                }}
-                  onMouseEnter={e => e.currentTarget.style.transform = "translateY(-8px)"}
-                  onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+                <div
+                  style={{
+                    background: "#fff",
+                    borderRadius: "4px",
+                    padding: "48px 32px",
+                    boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+                    transition: "transform 0.3s ease",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-8px)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
                 >
                   <div style={{
                     width: "80px", height: "80px", borderRadius: "50%",
@@ -226,16 +227,18 @@ const About = () => {
         <p style={{ color: "rgba(0,0,0,0.6)", marginBottom: "32px", fontSize: "16px" }}>
           Explore our collection of precision-crafted watches
         </p>
-        <a href="/" style={{
-          background: "#0a0a0a", color: "#d4af37",
-          padding: "16px 48px", borderRadius: "2px",
-          textDecoration: "none", fontSize: "12px",
-          letterSpacing: "3px", textTransform: "uppercase",
-          display: "inline-block",
-          transition: "all 0.3s ease",
-        }}
-          onMouseEnter={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#0a0a0a"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "#0a0a0a"; e.currentTarget.style.color = "#d4af37"; }}
+        <a
+          href="/"
+          style={{
+            background: "#0a0a0a", color: "#d4af37",
+            padding: "16px 48px", borderRadius: "2px",
+            textDecoration: "none", fontSize: "12px",
+            letterSpacing: "3px", textTransform: "uppercase",
+            display: "inline-block",
+            transition: "all 0.3s ease",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#0a0a0a"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "#0a0a0a"; e.currentTarget.style.color = "#d4af37"; }}
         >
           Shop Now
         </a>

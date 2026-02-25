@@ -1,10 +1,20 @@
-import React, { useState } from "react";
+import React from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { CartItem } from "../types";
 
-function CartSidebar({ cart, isOpen, onClose, removeFromCart, updateQuantity, onOrderSuccess }) {
+interface CartSidebarProps {
+  cart: CartItem[];
+  isOpen: boolean;
+  onClose: () => void;
+  removeFromCart: (watch_id: number) => void;
+  updateQuantity: (watch_id: number, quantity: number) => void;
+  onOrderSuccess: () => void;
+}
+
+function CartSidebar({ cart, isOpen, onClose, removeFromCart, updateQuantity, onOrderSuccess }: CartSidebarProps) {
   const navigate = useNavigate();
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const total = cart.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
 
   const handleCheckout = () => {
     if (cart.length === 0) return;
@@ -40,13 +50,11 @@ function CartSidebar({ cart, isOpen, onClose, removeFromCart, updateQuantity, on
           display: "flex", flexDirection: "column",
         }}
       >
-        {/* Header */}
         <div className="d-flex justify-content-between align-items-center p-3 border-bottom">
           <h5 className="mb-0">🛒 Sepetim ({cart.reduce((s, i) => s + i.quantity, 0)})</h5>
           <button className="btn btn-sm btn-outline-secondary" onClick={onClose}>✕</button>
         </div>
 
-        {/* Items */}
         <div style={{ flex: 1, overflowY: "auto", padding: "1rem" }}>
           {cart.length === 0 && (
             <p className="text-muted text-center mt-4">Sepetiniz boş</p>
@@ -57,7 +65,7 @@ function CartSidebar({ cart, isOpen, onClose, removeFromCart, updateQuantity, on
                 src={item.image_url}
                 alt={item.watch_name}
                 style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8 }}
-                onError={(e) => { e.target.src = "https://via.placeholder.com/60"; }}
+                onError={(e) => { (e.target as HTMLImageElement).src = "https://via.placeholder.com/60"; }}
               />
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600 }}>{item.watch_name}</div>
@@ -71,7 +79,7 @@ function CartSidebar({ cart, isOpen, onClose, removeFromCart, updateQuantity, on
                 </div>
               </div>
               <div>
-                <div style={{ fontWeight: 700 }}>${(item.price * item.quantity).toFixed(2)}</div>
+                <div style={{ fontWeight: 700 }}>${(Number(item.price) * item.quantity).toFixed(2)}</div>
                 <button className="btn btn-sm btn-link text-danger p-0 mt-1"
                   onClick={() => removeFromCart(item.watch_id)}>Sil</button>
               </div>
@@ -79,7 +87,6 @@ function CartSidebar({ cart, isOpen, onClose, removeFromCart, updateQuantity, on
           ))}
         </div>
 
-        {/* Footer */}
         {cart.length > 0 && (
           <div className="p-3 border-top">
             <div className="d-flex justify-content-between mb-3">
