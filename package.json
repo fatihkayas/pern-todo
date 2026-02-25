@@ -1,5 +1,23 @@
 {
+  "name": "seiko-watch-store",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "prepare": "husky"
+  },
   "dependencies": {
     "react-router-dom": "^7.13.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.2"
+  },
+  "lint-staged": {
+    "server/**/*.ts": [
+      "bash -c 'cd server && npx eslint --fix \"$@\"' --",
+      "bash -c 'cd server && npx prettier --write \"$@\"' --"
+    ]
   }
 }

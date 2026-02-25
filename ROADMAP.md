@@ -100,14 +100,14 @@ keycloak_server  → Keycloak (standby) :8080
 - [ ] Frontend: migrate components to TypeScript (.tsx)
 
 ### Sprint 2 — Testing + Code Quality (Week 3–4)
-- [ ] Jest + Supertest — backend unit & integration tests
+- [x] Jest + Supertest — backend unit & integration tests (83 tests, 86% coverage — SCRUM-15)
 - [ ] React Testing Library — frontend component tests
-- [ ] Test coverage report (target ≥ 70%)
-- [ ] Stripe webhook test coverage
-- [ ] Auth flow test coverage
-- [ ] ESLint + Prettier configuration
-- [ ] Husky pre-commit hooks
-- [ ] Conventional commits enforcement
+- [x] Test coverage report (target ≥ 70%) — achieved 86% (SCRUM-15)
+- [x] Stripe webhook test coverage (SCRUM-15)
+- [x] Auth flow test coverage (SCRUM-15)
+- [x] ESLint + Prettier configuration (SCRUM-15)
+- [x] Husky pre-commit hooks (type-check + lint-staged — SCRUM-15)
+- [x] Conventional commits enforcement (commitlint — SCRUM-15)
 - [ ] OpenAPI / Swagger documentation
 - [ ] Postman collection export
 - [ ] API versioning (/api/v1)

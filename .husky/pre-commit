@@ -1,0 +1,1 @@
+cd server && npm run type-check && cd .. && npx lint-staged

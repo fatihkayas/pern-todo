@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import pool from "../db";
 import validate from "../middleware/validate";
 import { createOrderSchema } from "../schemas";
-import { Order, OrderItem, Watch } from "../types";
+import { Order, OrderItem } from "../types";
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "seiko_secret_key_change_in_prod";
@@ -29,10 +29,7 @@ router.post("/", validate(createOrderSchema), async (req: Request, res: Response
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const total_amount = items.reduce(
-      (sum, item) => sum + item.unit_price * item.quantity,
-      0
-    );
+    const total_amount = items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
     const orderResult = await client.query<Pick<Order, "order_id">>(
       "INSERT INTO orders (total_amount, status, shipping_address, customer_id) VALUES ($1, $2, $3, $4) RETURNING order_id",
       [total_amount, "pending", shipping_address ?? "", customerId]
