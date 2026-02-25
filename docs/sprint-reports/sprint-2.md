@@ -2,7 +2,7 @@
 
 **Sprint:** Phase 2, Sprint 2
 **Branch:** `main`
-**Status:** In Progress
+**Status:** Complete ✅
 
 ---
 
@@ -78,29 +78,62 @@ Tests:       78 passed, 78 total
 
 ---
 
-## Remaining Tasks
+### SCRUM-18 — Frontend TypeScript Migration
 
-| Task | Status |
+**Date:** 2026-02-25
+
+#### What was done
+- Installed TypeScript + type packages in `client/`:
+  - `typescript`, `@types/react`, `@types/react-dom`, `@types/node`
+  - `@types/jest`, `@testing-library/dom` (for type-check support)
+- Created `client/tsconfig.json` (strict mode, `react-jsx`, `esnext` module)
+- Created `client/src/types.ts` — shared interfaces:
+  - `Watch`, `CartItem`, `Customer`, `OrderStatus`, `OrderItem`, `Order`, `AdminStats`
+- Migrated all 21 source files from `.js` → `.tsx`/`.ts`:
+  - `src/index.tsx`, `src/App.tsx`, `src/App.test.tsx`
+  - `src/reportWebVitals.ts`, `src/keycloak.ts`, `src/setupTests.ts`
+  - `src/context/ThemeContext.tsx`
+  - `src/components/Navbar.tsx`, `CartSidebar.tsx`, `ChatWidget.tsx`
+  - `src/pages/About.tsx`, `Contact.tsx`, `Help.tsx`, `Returns.tsx`
+  - `src/pages/Store.tsx`, `ProductDetail.tsx`
+  - `src/pages/Login.tsx`, `Register.tsx`
+  - `src/pages/MyOrders.tsx`, `AdminPanel.tsx`, `Checkout.tsx`
+- Removed all 21 old `.js` source files via `git rm`
+- `npx tsc --noEmit` → 0 errors
+- `npm run build` → Compiled successfully (116.86 kB gzipped)
+
+#### Key typing decisions
+| Decision | Reason |
+|----------|--------|
+| `price: string` in `Watch` | PostgreSQL DECIMAL returns as string; use `Number(item.price)` for math |
+| `customer_id: number \| null` in `Order` | Anonymous checkout supported |
+| `(e.target as HTMLImageElement).src` | onError handler needs cast |
+| `keycloak.ts` excluded from tsconfig | Uses ESM exports field incompatible with `moduleResolution: node` |
+| `fetch("/api/v1/watches")` | Updated from `/api/watches` to match API versioning |
+
+#### Files changed
+| File | Change |
 |------|--------|
-| Frontend `.tsx` migration | Pending |
+| `client/tsconfig.json` | New |
+| `client/src/types.ts` | New — shared TypeScript interfaces |
+| `client/src/*.tsx` / `*.ts` | 21 files migrated (old `.js` removed) |
+| `client/package.json` | Added TypeScript + `@types` dev dependencies |
+
+#### Build result
+```
+Compiled successfully.
+116.86 kB (+9.15 kB)  build/static/js/main.efd60a7c.js
+```
 
 ---
 
-## Next Up — Frontend TypeScript Migration
+## Sprint 2 — Complete ✅
 
-Files to migrate (19 total):
-- `src/index.js` → `index.tsx`
-- `src/App.js` → `App.tsx`
-- `src/reportWebVitals.js` → `reportWebVitals.ts`
-- `src/keycloak.js` → `keycloak.ts`
-- `src/context/ThemeContext.js` → `ThemeContext.tsx`
-- `src/components/Navbar.js` → `Navbar.tsx`
-- `src/components/CartSidebar.js` → `CartSidebar.tsx`
-- `src/components/ChatWidget.js` → `ChatWidget.tsx`
-- `src/pages/About.js`, `Contact.js`, `Help.js`, `Returns.js` → `.tsx`
-- `src/pages/Store.js` → `Store.tsx`
-- `src/pages/ProductDetail.js` → `ProductDetail.tsx`
-- `src/pages/Login.js`, `Register.js` → `.tsx`
-- `src/pages/MyOrders.js` → `MyOrders.tsx`
-- `src/pages/AdminPanel.js` → `AdminPanel.tsx`
-- `src/pages/Checkout.js` → `Checkout.tsx`
+All tasks completed:
+
+| Task | Ticket | Status |
+|------|--------|--------|
+| Jest + ESLint + Prettier + Husky | SCRUM-15 | ✅ Done |
+| OpenAPI Docs + API Versioning | SCRUM-16 | ✅ Done |
+| Postman Collection | SCRUM-17 | ✅ Done |
+| Frontend TypeScript Migration | SCRUM-18 | ✅ Done |

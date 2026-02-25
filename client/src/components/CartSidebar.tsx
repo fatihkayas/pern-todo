@@ -11,7 +11,7 @@ interface CartSidebarProps {
   updateQuantity: (watch_id: number, quantity: number) => void;
   onOrderSuccess: () => void;
 }
-
+//
 function CartSidebar({ cart, isOpen, onClose, removeFromCart, updateQuantity, onOrderSuccess }: CartSidebarProps) {
   const navigate = useNavigate();
   const total = cart.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
