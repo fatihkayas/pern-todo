@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Watch } from "../types";
@@ -22,7 +22,7 @@ const ProductDetail = ({ addToCart }: ProductDetailProps) => {
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
-    fetch(`/api/watches`)
+    fetch(`/api/v1/watches`)
       .then((res) => res.json())
       .then((data: Watch[]) => {
         const found = data.find((w) => String(w.watch_id) === id);

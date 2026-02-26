@@ -32,7 +32,7 @@ function CheckoutForm({ orderId, onSuccess }: CheckoutFormProps) {
         return;
       }
       if (paymentIntent?.status === "succeeded") {
-        const res = await fetch("/api/stripe/confirm-order", {
+        const res = await fetch("/api/v1/stripe/confirm-order", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -95,7 +95,7 @@ const Checkout = ({ cart, onOrderSuccess }: CheckoutProps) => {
   const createOrder = async () => {
     setLoading(true);
     try {
-      const orderRes = await fetch("/api/orders", {
+      const orderRes = await fetch("/api/v1/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify({
@@ -110,7 +110,7 @@ const Checkout = ({ cart, onOrderSuccess }: CheckoutProps) => {
       if (!orderRes.ok) throw new Error(orderData.error);
       setOrderId(orderData.order_id);
 
-      const payRes = await fetch("/api/stripe/create-payment-intent", {
+      const payRes = await fetch("/api/v1/stripe/create-payment-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify({ amount: total, order_id: orderData.order_id }),

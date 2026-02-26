@@ -27,7 +27,7 @@ const MyOrders = () => {
 
   useEffect(() => {
     if (!token) { navigate("/login"); return; }
-    fetch("/api/orders/my", {
+    fetch("/api/v1/orders/my", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
