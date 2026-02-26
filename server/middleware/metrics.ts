@@ -45,4 +45,33 @@ export function metricsMiddleware(req: Request, res: Response, next: NextFunctio
   next();
 }
 
+// --- Business metrics ---
+
+// Orders
+export const ordersCreatedTotal = new client.Counter({
+  name: "orders_created_total",
+  help: "Total number of orders successfully created",
+  registers: [register],
+});
+
+export const ordersRevenueDollars = new client.Counter({
+  name: "orders_revenue_dollars_total",
+  help: "Cumulative revenue from created orders in dollars",
+  registers: [register],
+});
+
+// Ollama chat
+export const chatRequestsTotal = new client.Counter({
+  name: "ollama_chat_requests_total",
+  help: "Total number of Ollama chat requests",
+  registers: [register],
+});
+
+export const chatDurationMs = new client.Histogram({
+  name: "ollama_chat_duration_ms",
+  help: "Ollama chat response duration in milliseconds",
+  buckets: [100, 250, 500, 1000, 2500, 5000, 10000],
+  registers: [register],
+});
+
 export { register };

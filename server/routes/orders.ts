@@ -4,6 +4,7 @@ import pool from "../db";
 import validate from "../middleware/validate";
 import { createOrderSchema } from "../schemas";
 import { Order, OrderItem } from "../types";
+import { ordersCreatedTotal, ordersRevenueDollars } from "../middleware/metrics";
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "seiko_secret_key_change_in_prod";
@@ -91,6 +92,8 @@ router.post("/", validate(createOrderSchema), async (req: Request, res: Response
       );
     }
     await client.query("COMMIT");
+    ordersCreatedTotal.inc();
+    ordersRevenueDollars.inc(total_amount);
     res.status(201).json({ order_id, total_amount, status: "pending" });
   } catch (err) {
     await client.query("ROLLBACK");

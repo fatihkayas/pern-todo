@@ -8,6 +8,7 @@ import "dotenv/config";
 
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger";
+import client from "prom-client";
 import { metricsMiddleware, register } from "./middleware/metrics";
 import chatRouter from "./routes/chat";
 import checkoutRouter from "./routes/checkout";
@@ -15,6 +16,23 @@ import stripeRouter from "./routes/stripe";
 import adminRouter from "./routes/admin";
 import authRouter from "./routes/auth";
 import ordersRouter from "./routes/orders";
+
+// Stock gauge — async collect queries DB on every Prometheus scrape
+new client.Gauge({
+  name: "watches_low_stock_total",
+  help: "Number of watches with stock_quantity below threshold (< 3)",
+  registers: [register],
+  async collect() {
+    try {
+      const result = await pool.query<{ count: string }>(
+        "SELECT COUNT(*) AS count FROM watches WHERE stock_quantity < 3"
+      );
+      this.set(parseInt(result.rows[0].count, 10));
+    } catch {
+      // DB may not be ready yet — skip silently
+    }
+  },
+});
 
 const app = express();
 

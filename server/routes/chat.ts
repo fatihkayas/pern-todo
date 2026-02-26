@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import pool from "../db";
+import { chatRequestsTotal, chatDurationMs } from "../middleware/metrics";
 
 const router = express.Router();
 
@@ -7,6 +8,8 @@ const OLLAMA_URL = process.env.OLLAMA_URL || "http://host.containers.internal:11
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2";
 
 router.post("/", async (req: Request, res: Response) => {
+  chatRequestsTotal.inc();
+  const chatStart = Date.now();
   try {
     const { messages } = req.body as {
       messages?: { role: string; content: string }[];
@@ -90,6 +93,7 @@ Your responsibilities:
         }
       }
     }
+    chatDurationMs.observe(Date.now() - chatStart);
     res.end();
   } catch (err) {
     console.error("Chat error:", (err as Error).message);
