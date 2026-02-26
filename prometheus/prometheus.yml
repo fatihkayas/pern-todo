@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: seiko-backend
+    static_configs:
+      - targets:
+          - seiko_backend:5000
+    metrics_path: /metrics
