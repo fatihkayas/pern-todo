@@ -8,6 +8,7 @@ import "dotenv/config";
 
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger";
+import { metricsMiddleware, register } from "./middleware/metrics";
 import chatRouter from "./routes/chat";
 import checkoutRouter from "./routes/checkout";
 import stripeRouter from "./routes/stripe";
@@ -47,6 +48,7 @@ app.use("/api/v1/stripe/webhook", express.raw({ type: "application/json" }));
 
 app.use(express.json());
 app.use(morgan("dev"));
+app.use(metricsMiddleware);
 
 /**
  * @swagger
@@ -88,6 +90,11 @@ app.use("/api/v1/chat", chatRouter);
 app.use("/api/v1/checkout", checkoutRouter);
 
 app.get("/health", (_req: Request, res: Response) => res.json({ status: "ok" }));
+
+app.get("/metrics", async (_req: Request, res: Response) => {
+  res.setHeader("Content-Type", register.contentType);
+  res.end(await register.metrics());
+});
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
