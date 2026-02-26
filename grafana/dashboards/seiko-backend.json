@@ -1,0 +1,126 @@
+{
+  "title": "Seiko Backend",
+  "uid": "seiko-backend",
+  "schemaVersion": 38,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Request Rate (req/s)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[1m])) by (route)",
+          "legendFormat": "{{route}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Error Rate (%)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "100 * sum(rate(http_requests_total{status_code=~\"5..\"}[1m])) / sum(rate(http_requests_total[1m]))",
+          "legendFormat": "error %"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "P95 Latency (ms)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_ms_bucket[5m])) by (le, route))",
+          "legendFormat": "p95 {{route}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Orders Created",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 8, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "orders_created_total",
+          "legendFormat": "orders"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Revenue ($)",
+      "type": "stat",
+      "gridPos": { "x": 18, "y": 8, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "orders_revenue_dollars_total",
+          "legendFormat": "revenue"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Low Stock Watches",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 12, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "watches_low_stock_total",
+          "legendFormat": "low stock"
+        }
+      ],
+      "options": {
+        "thresholds": {
+          "steps": [
+            { "value": 0, "color": "green" },
+            { "value": 3, "color": "yellow" },
+            { "value": 10, "color": "red" }
+          ]
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Chat Requests",
+      "type": "stat",
+      "gridPos": { "x": 18, "y": 12, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "ollama_chat_requests_total",
+          "legendFormat": "chat requests"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Node.js Heap Used (MB)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "nodejs_heap_size_used_bytes / 1024 / 1024",
+          "legendFormat": "heap MB"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Event Loop Lag (ms)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "nodejs_eventloop_lag_seconds * 1000",
+          "legendFormat": "lag ms"
+        }
+      ]
+    }
+  ]
+}
