@@ -39,6 +39,7 @@ jobs:
         env:
           NODE_ENV: test
           STRIPE_SECRET_KEY: sk_test_fakekeyfortestingonly00000000
+          STRIPE_WEBHOOK_SECRET: whsec_fakesecretfortestingonly000000
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
