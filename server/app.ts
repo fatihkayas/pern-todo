@@ -2,7 +2,6 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import express, { Request, Response } from "express";
 import cors from "cors";
-import morgan from "morgan";
 import pool from "./db";
 import "dotenv/config";
 
@@ -10,6 +9,7 @@ import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger";
 import client from "prom-client";
 import { metricsMiddleware, register } from "./middleware/metrics";
+import { httpLogger, correlationMiddleware } from "./middleware/logger";
 import chatRouter from "./routes/chat";
 import checkoutRouter from "./routes/checkout";
 import stripeRouter from "./routes/stripe";
@@ -65,7 +65,8 @@ app.use("/api/v1/auth", authLimiter);
 app.use("/api/v1/stripe/webhook", express.raw({ type: "application/json" }));
 
 app.use(express.json());
-app.use(morgan("dev"));
+app.use(correlationMiddleware);
+app.use(httpLogger);
 app.use(metricsMiddleware);
 
 /**
@@ -108,6 +109,15 @@ app.use("/api/v1/chat", chatRouter);
 app.use("/api/v1/checkout", checkoutRouter);
 
 app.get("/health", (_req: Request, res: Response) => res.json({ status: "ok" }));
+
+app.get("/ready", async (_req: Request, res: Response) => {
+  try {
+    await pool.query("SELECT 1");
+    res.json({ status: "ready" });
+  } catch {
+    res.status(503).json({ status: "unavailable", reason: "database unreachable" });
+  }
+});
 
 app.get("/metrics", async (_req: Request, res: Response) => {
   res.setHeader("Content-Type", register.contentType);
