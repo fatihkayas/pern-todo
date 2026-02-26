@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Bağımlılıkları yükle
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Client kodunu kopyala
 COPY . .
