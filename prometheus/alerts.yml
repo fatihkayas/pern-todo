@@ -1,0 +1,86 @@
+groups:
+  - name: seiko.availability
+    rules:
+      # Backend has been unreachable for > 1 minute
+      - alert: BackendDown
+        expr: up{job="seiko-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Seiko backend is down"
+          description: "The seiko-backend scrape target has been unreachable for more than 1 minute."
+
+  - name: seiko.errors
+    rules:
+      # 5xx error rate > 5% over a 5-minute window
+      - alert: HighErrorRate
+        expr: >
+          (
+            sum(rate(http_requests_total{status_code=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total[5m]))
+          ) * 100 > 5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High HTTP 5xx error rate"
+          description: "5xx error rate is {{ printf \"%.1f\" $value }}% — above the 5% threshold for 2+ minutes."
+
+      # p95 latency > 1 second over a 5-minute window
+      - alert: HighLatency
+        expr: >
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_ms_bucket[5m])) by (le)
+          ) > 1000
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High p95 latency"
+          description: "p95 request latency is {{ printf \"%.0f\" $value }}ms — above the 1000ms threshold."
+
+  - name: seiko.business
+    rules:
+      # More than 5 watches below the low-stock threshold
+      - alert: LowWatchStock
+        expr: watches_low_stock_total > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low watch stock alert"
+          description: "{{ $value }} watches have stock_quantity < 3. Reorder may be needed."
+
+      # All watches below threshold (critical — store cannot fulfil orders)
+      - alert: CriticalWatchStock
+        expr: watches_low_stock_total > 15
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical stock depletion"
+          description: "{{ $value }} watches are critically low on stock. Immediate reorder required."
+
+  - name: seiko.resources
+    rules:
+      # Node.js heap > 400 MB
+      - alert: HighHeapUsage
+        expr: nodejs_heap_size_used_bytes > 400 * 1024 * 1024
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Node.js heap usage high"
+          description: "Heap used is {{ printf \"%.0f\" $value | humanize1024 }} — above 400 MB for 5+ minutes. Possible memory leak."
+
+      # Event loop lag > 100ms
+      - alert: EventLoopLag
+        expr: nodejs_eventloop_lag_seconds * 1000 > 100
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Node.js event loop lag"
+          description: "Event loop lag is {{ printf \"%.0f\" $value }}ms — above 100ms. Backend may be CPU-bound."
