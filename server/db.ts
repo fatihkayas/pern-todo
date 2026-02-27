@@ -7,6 +7,8 @@ const pool = new Pool({
   host: process.env.DB_HOST || "db",
   port: Number(process.env.DB_PORT) || 5432,
   database: process.env.DB_DATABASE || "jwtauth",
+  // Azure PostgreSQL Flexible Server requires SSL; local/test containers do not
+  ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
 });
 
 export default pool;
