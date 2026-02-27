@@ -127,7 +127,8 @@ module frontend 'modules/containerApp.bicep' = {
     maxReplicas: 2
     secrets: []
     envVars: [
-      { name: 'BROWSER', value: 'none' }
+      { name: 'BROWSER',                        value: 'none' }
+      { name: 'DANGEROUSLY_DISABLE_HOST_CHECK', value: 'true' }
     ]
   }
 }
