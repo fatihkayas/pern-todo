@@ -22,3 +22,6 @@ README.md
 
 # Test coverage output
 server/coverage/
+
+# Bicep compiled ARM output (source of truth is .bicep files)
+infra/*.json
