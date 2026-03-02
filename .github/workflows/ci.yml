@@ -123,6 +123,55 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # ── AWS: push to ECR + force new ECS deployment (main only) ─────
+  deploy-aws:
+    name: Deploy to AWS
+    runs-on: ubuntu-latest
+    needs: [docker]
+    if: github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: read
+      id-token: write   # Required for OIDC login to AWS
+
+    steps:
+      - name: Configure AWS credentials (OIDC — no stored keys)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Login to GHCR (to pull built images)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Retag GHCR images → ECR and push
+        run: |
+          SHA=${{ github.sha }}
+          ECR=${{ steps.login-ecr.outputs.registry }}
+          OWNER=${{ github.repository_owner }}
+
+          for SVC in seiko-backend seiko-frontend; do
+            docker pull ghcr.io/${OWNER}/${SVC}:${SHA}
+            docker tag  ghcr.io/${OWNER}/${SVC}:${SHA} ${ECR}/${SVC}:${SHA}
+            docker tag  ghcr.io/${OWNER}/${SVC}:${SHA} ${ECR}/${SVC}:latest
+            docker push ${ECR}/${SVC}:${SHA}
+            docker push ${ECR}/${SVC}:latest
+          done
+
+      - name: Force new ECS deployment (backend + frontend)
+        run: |
+          CLUSTER=seiko-cluster
+          aws ecs update-service --cluster ${CLUSTER} --service seiko-backend  --force-new-deployment
+          aws ecs update-service --cluster ${CLUSTER} --service seiko-frontend --force-new-deployment
+
   # ── Azure: push to ACR + deploy to Container Apps (main only) ──
   deploy:
     name: Deploy to Azure
@@ -184,7 +233,7 @@ jobs:
   summary:
     name: Pipeline Summary
     runs-on: ubuntu-latest
-    needs: [backend, frontend]
+    needs: [backend, frontend, docker, deploy-aws]
     if: always()
 
     steps:
@@ -195,3 +244,5 @@ jobs:
           echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Backend | ${{ needs.backend.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend | ${{ needs.frontend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker | ${{ needs.docker.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy AWS | ${{ needs.deploy-aws.result }} |" >> $GITHUB_STEP_SUMMARY
