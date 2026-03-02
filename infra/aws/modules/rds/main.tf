@@ -29,6 +29,14 @@ resource "aws_db_subnet_group" "main" {
   tags = { Name = "${var.app_name}-db-subnet-group" }
 }
 
+# Public subnet group used during migration bootstrap — kept to avoid destroy/recreate RDS
+resource "aws_db_subnet_group" "public_migration" {
+  name       = "${var.app_name}-db-public-subnet-group"
+  subnet_ids = var.public_subnet_ids
+
+  tags = { Name = "${var.app_name}-db-public-subnet-group" }
+}
+
 # Parameter Group — PostgreSQL 15 defaults
 resource "aws_db_parameter_group" "main" {
   name   = "${var.app_name}-pg15"
@@ -51,14 +59,14 @@ resource "aws_db_instance" "main" {
   username = "psqladmin"
   password = var.db_password
 
-  db_subnet_group_name   = aws_db_subnet_group.main.name
+  db_subnet_group_name   = aws_db_subnet_group.public_migration.name
   vpc_security_group_ids = [aws_security_group.rds.id]
   parameter_group_name   = aws_db_parameter_group.main.name
 
-  multi_az               = false   # single-AZ for cost — enable for production
-  publicly_accessible    = false
-  deletion_protection    = false
-  skip_final_snapshot    = true
+  multi_az                = false
+  publicly_accessible     = false
+  deletion_protection     = false
+  skip_final_snapshot     = true
   backup_retention_period = 7
 
   tags = { Name = "${var.app_name}-postgres" }
