@@ -149,7 +149,7 @@ export default function ChatWidget() {
     setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
     try {
-      const postRes = await fetch(`${API_URL}/api/chat`, {
+      const postRes = await fetch(`${API_URL}/api/v1/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -165,7 +165,7 @@ export default function ChatWidget() {
       let text = "";
       for (let i = 0; i < 120; i++) {
         await new Promise((r) => setTimeout(r, 1000));
-        const pollRes = await fetch(`${API_URL}/api/chat/${runId}`);
+        const pollRes = await fetch(`${API_URL}/api/v1/chat/${runId}`);
         const poll = (await pollRes.json()) as { status: string; text?: string };
         if (poll.status === "COMPLETED" || poll.status === "FAILED") {
           text = poll.text ?? "Sorry, something went wrong. Please try again.";

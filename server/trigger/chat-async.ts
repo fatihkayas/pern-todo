@@ -10,7 +10,7 @@ export type ChatPayload = {
 
 export const chatAsync = task({
   id: "chat-async",
-  maxDuration: 120,
+  maxDuration: 300,
   run: async (payload: ChatPayload) => {
     const { messages } = payload;
 
@@ -53,6 +53,7 @@ Your responsibilities:
         messages: [{ role: "system", content: systemPrompt }, ...trimmedMessages],
         stream: false,
       }),
+      signal: AbortSignal.timeout(240_000),
     });
 
     if (!response.ok) throw new Error(`Ollama error: ${response.statusText}`);
