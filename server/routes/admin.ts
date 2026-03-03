@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import pool from "../db";
 import validate from "../middleware/validate";
 import { updateOrderStatusSchema, updateStockSchema } from "../schemas";
+import { tasks } from "@trigger.dev/sdk/v3";
 import { AuthPayload } from "../types";
 
 const router = express.Router();
@@ -218,7 +219,26 @@ router.put(
         res.status(404).json({ error: "Saat bulunamadı" });
         return;
       }
-      res.json(result.rows[0]);
+      const watch = result.rows[0] as {
+        watch_id: number;
+        watch_name: string;
+        brand: string;
+        stock_quantity: number;
+      };
+
+      // Fire low-stock alert if stock drops below 5
+      if (watch.stock_quantity < 5) {
+        tasks
+          .trigger("low-stock-alert", {
+            watchId: watch.watch_id,
+            watchName: watch.watch_name,
+            brand: watch.brand,
+            stockQuantity: watch.stock_quantity,
+          })
+          .catch((e) => console.error("low-stock-alert trigger failed:", e));
+      }
+
+      res.json(watch);
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
     }

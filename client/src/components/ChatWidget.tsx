@@ -149,7 +149,7 @@ export default function ChatWidget() {
     setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
     try {
-      const response = await fetch(`${API_URL}/api/chat`, {
+      const postRes = await fetch(`${API_URL}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -157,38 +157,27 @@ export default function ChatWidget() {
         }),
       });
 
-      if (!response.ok) throw new Error("Chat request failed");
+      if (!postRes.ok) throw new Error("Chat request failed");
 
-      const reader = response.body!.getReader();
-      const decoder = new TextDecoder();
+      const { runId } = (await postRes.json()) as { runId: string };
 
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split("\n").filter((l) => l.startsWith("data: "));
-
-        for (const line of lines) {
-          const data = line.replace("data: ", "");
-          if (data === "[DONE]") break;
-
-          try {
-            const parsed = JSON.parse(data) as { text?: string };
-            if (parsed.text) {
-              setMessages((prev) => {
-                const updated = [...prev];
-                updated[updated.length - 1] = {
-                  role: "assistant",
-                  content: updated[updated.length - 1].content + parsed.text,
-                };
-                return updated;
-              });
-            }
-          } catch (_) {}
+      // Poll until the job completes
+      let text = "";
+      for (let i = 0; i < 120; i++) {
+        await new Promise((r) => setTimeout(r, 1000));
+        const pollRes = await fetch(`${API_URL}/api/chat/${runId}`);
+        const poll = (await pollRes.json()) as { status: string; text?: string };
+        if (poll.status === "COMPLETED" || poll.status === "FAILED") {
+          text = poll.text ?? "Sorry, something went wrong. Please try again.";
+          break;
         }
       }
+
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = { role: "assistant", content: text || "No response received." };
+        return updated;
+      });
     } catch (_err) {
       setMessages((prev) => {
         const updated = [...prev];

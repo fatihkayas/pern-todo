@@ -35,3 +35,6 @@ infra/aws/*.tfvars
 infra/aws/crash.log
 infra/aws/override.tf
 infra/aws/override.tf.json
+
+# Trigger.dev build cache
+server/.trigger/

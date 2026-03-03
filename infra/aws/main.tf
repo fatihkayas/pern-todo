@@ -37,7 +37,7 @@ module "alb" {
 # Backend SG: allow 5000 from ALB
 resource "aws_security_group" "backend" {
   name        = "${var.app_name}-backend-sg"
-  description = "Backend ECS tasks — allow from ALB on port 5000"
+  description = "Backend ECS tasks - allow from ALB on port 5000"
   vpc_id      = module.vpc.vpc_id
 
   ingress {
@@ -60,7 +60,7 @@ resource "aws_security_group" "backend" {
 # Frontend SG: allow 3000 from ALB
 resource "aws_security_group" "frontend" {
   name        = "${var.app_name}-frontend-sg"
-  description = "Frontend ECS tasks — allow from ALB on port 3000"
+  description = "Frontend ECS tasks - allow from ALB on port 3000"
   vpc_id      = module.vpc.vpc_id
 
   ingress {
@@ -96,6 +96,7 @@ module "rds" {
   app_name           = var.app_name
   db_password        = var.db_password
   private_subnet_ids = module.vpc.private_subnet_ids
+  public_subnet_ids  = module.vpc.public_subnet_ids   # TEMPORARY for migration access
   vpc_id             = module.vpc.vpc_id
   backend_sg_id      = aws_security_group.backend.id
 }
@@ -106,9 +107,9 @@ module "cloudwatch" {
   source           = "./modules/cloudwatch"
   app_name         = var.app_name
   region           = var.region
-  ecs_cluster_name = "${var.app_name}-cluster"   # known before ECS apply
+  ecs_cluster_name = "${var.app_name}-cluster" # known before ECS apply
   alb_arn_suffix   = module.alb.alb_arn_suffix
-  rds_identifier   = "${var.app_name}-postgres"  # known before RDS apply
+  rds_identifier   = "${var.app_name}-postgres" # known before RDS apply
 }
 
 # ── ECS Fargate ───────────────────────────────────────────────────────────────
