@@ -236,14 +236,37 @@ Tracing    → Jaeger                  (distributed tracing — Phase 5, microse
 
 ## 🗺️ Roadmap
 
-| Phase | Timeline | Focus | Status |
-|---|---|---|---|
-| Phase 1 | Feb–Mar 2026 | Security hardening · Claude RAG · pgvector · Trigger.dev · TypeScript | ✅ Active |
-| Phase 2 | Apr 2026 | Observability stack · AI stock agent · CI/CD pipeline | 🔜 Next |
-| Phase 3 | May–Jun 2026 | AWS production: ECS, RDS, CloudFront, Terraform modules | 📋 Planned |
-| Phase 4 | Jul–Aug 2026 | Azure multi-cloud: AKS, Azure Monitor, Key Vault | 📋 Planned |
-| Phase 5 | Sep–Oct 2026 | Kubernetes: EKS/AKS, Helm, GitOps (ArgoCD), Jaeger | 📋 Planned |
-| Phase 6 | Nov 2026+ | AgentOps, LLMOps, contextual memory, prompt versioning | 📋 Planned |
+| Phase | Focus | Status |
+|---|---|---|
+| **v0.9 – v1.1** | Core app · Auth · Stripe · TypeScript migration · 78 tests · OpenAPI · CI/CD · Prometheus/Grafana · k6 | ✅ Done |
+| **v2.0** | Azure production (Bicep IaC · Container Apps · PostgreSQL Flexible · OIDC) | ✅ Done |
+| **v2.1** | Trigger.dev background jobs · Async Ollama chat · Resend transactional email | ✅ Done |
+| **v3.0 — Event-Driven Integration Platform** | Redpanda (Kafka) · Go integration microservice · Adapter pattern · ServiceNow mock | 🔜 Next |
+| **v3.1 — Resilience Layer** | Retry + exponential backoff · Circuit breaker (gobreaker) · Idempotency keys · Dead letter queue | 📋 Planned |
+| **v3.2 — Integration Observability** | `integration_processed_total` · `integration_failed_total` · Grafana integration dashboard · Error rate alerts | 📋 Planned |
+| **v3.3 — Chaos Engineering** | Mock ServiceNow failure · Kafka broker stop · Network delay simulation · Recovery testing | 📋 Planned |
+| **v3.4 — AI Log Analyzer** | Trigger.dev task: collect failure logs → Claude analysis → Jira issue → suggested fix | 📋 Planned |
+| **v4.0 — Multi-Cloud Kafka** | AWS MSK (Terraform) · Azure EventHub · Failover simulation · DB switch strategy | 📋 Planned |
+| **v4.1 — SRE Layer** | SLO definition · Error budget tracking · Alert escalation · Integration health endpoints | 📋 Planned |
+| **v4.2 — Integration CI Tests** | Spin up compose in GHA · Produce Kafka event · Assert DB consumption · Fail on timeout | 📋 Planned |
+| **v5.0 — Kubernetes** | EKS/AKS · Helm charts · GitOps (ArgoCD) · Jaeger distributed tracing | 📋 Planned |
+
+### 🔥 Enterprise Integration Platform Vision
+
+```
+PERN App  →  Event-Driven  →  Integration Platform  →  Enterprise SRE
+```
+
+| Capability Added | Technology |
+|---|---|
+| Event-driven architecture | Redpanda (Kafka-compatible) |
+| Go microservice | Go integration-service |
+| Adapter pattern | ServiceNow · Stripe · CRM adapters |
+| Resilience engineering | Retry · Circuit breaker · DLQ |
+| Chaos engineering | Failure simulation + recovery |
+| AI-augmented ops | Claude log analysis → Jira automation |
+| Cloud messaging | AWS MSK · Azure EventHub |
+| SRE practices | SLO · Error budget · Escalation |
 
 ---
 
