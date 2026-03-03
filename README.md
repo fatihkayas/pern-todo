@@ -1,23 +1,24 @@
 <div align="center">
 
 # ⌚ Seiko Watch Store
-### AI-Native Cloud Commerce Platform — PERN Stack
+### AI-Native Multi-Cloud Commerce Platform — PERN Stack
 
 [![CI](https://img.shields.io/github/actions/workflow/status/fatihkayas/pern-todo/ci.yml?label=CI&logo=github-actions&logoColor=white&style=flat-square)](https://github.com/fatihkayas/pern-todo)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://postgresql.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://reactjs.org)
-[![Docker](https://img.shields.io/badge/Podman-Ready-892CA0?style=flat-square&logo=podman&logoColor=white)](https://podman.io)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://typescriptlang.org)
 [![Claude AI](https://img.shields.io/badge/Claude-AI%20Agent-CC785C?style=flat-square&logo=anthropic&logoColor=white)](https://anthropic.com)
-[![Kubernetes](https://img.shields.io/badge/Kubernetes-Ready-326CE5?style=flat-square&logo=kubernetes&logoColor=white)](https://kubernetes.io)
+[![Terraform](https://img.shields.io/badge/Terraform-IaC-7B42BC?style=flat-square&logo=terraform&logoColor=white)](https://terraform.io)
 [![AWS](https://img.shields.io/badge/AWS-Planned-FF9900?style=flat-square&logo=amazonaws&logoColor=white)](https://aws.amazon.com)
 [![Azure](https://img.shields.io/badge/Azure-Planned-0078D4?style=flat-square&logo=microsoftazure&logoColor=white)](https://azure.microsoft.com)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-Ready-326CE5?style=flat-square&logo=kubernetes&logoColor=white)](https://kubernetes.io)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 **A production-oriented, security-first, cloud-ready commerce platform** built with the PERN stack,  
-evolving into a fully observable, AI-native, multi-cloud system with autonomous LLM agents.
+evolving into a fully observable, AI-native, event-driven, multi-cloud system with autonomous LLM agents and modular Terraform infrastructure.
 
-[Architecture](#-architecture) · [AI Agent](#-ai-agent--llm-integration) · [Security](#-security) · [Observability](#-observability) · [Roadmap](#-roadmap) · [Setup](#-getting-started)
+[Architecture](#-architecture) · [AI Agent](#-ai-agent--llm-integration) · [Infrastructure](#-infrastructure-as-code) · [Security](#-security) · [Observability](#-observability) · [Roadmap](#-roadmap) · [Setup](#-getting-started)
 
 </div>
 
@@ -29,9 +30,10 @@ evolving into a fully observable, AI-native, multi-cloud system with autonomous 
 
 This is an **engineering platform** that simulates the architecture of a real production system — built and evolved intentionally to demonstrate:
 
-- **Security by design** — OWASP Top 10 coverage across frontend and backend
+- **Security by design** — OWASP Top 10 coverage across frontend, backend, and infrastructure
 - **Observability-first** — Prometheus, Grafana, Loki, ELK, and Splunk integration
-- **AI as an operational layer** — Claude LLM agent with Tool Use, RAG, and autonomous decision-making
+- **AI as an operational layer** — Claude LLM agent with Tool Use, RAG, pgvector, and async Trigger.dev jobs
+- **Infrastructure-as-Code** — Modular Terraform for AWS (VPC, ECS, RDS, ALB, Secrets, CloudWatch)
 - **Cloud portability** — AWS and Azure deployment with no vendor lock-in
 - **Container orchestration** — Kubernetes-ready, OpenShift-compatible
 
@@ -42,7 +44,7 @@ This is an **engineering platform** that simulates the architecture of a real pr
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         CLIENT LAYER                            │
-│   React SPA  ·  HttpOnly Cookies  ·  CSP  ·  DOMPurify (XSS)  │
+│   React SPA · TypeScript · HttpOnly Cookies · CSP · DOMPurify  │
 └──────────────────────────┬──────────────────────────────────────┘
                            │ HTTPS
 ┌──────────────────────────▼──────────────────────────────────────┐
@@ -52,8 +54,8 @@ This is an **engineering platform** that simulates the architecture of a real pr
                            │
 ┌──────────────────────────▼──────────────────────────────────────┐
 │                     BACKEND — Express API                       │
-│   Keycloak OIDC  ·  RBAC  ·  Zod Validation  ·  Helmet.js     │
-│   Parameterized SQL  ·  Rate Limiting  ·  Morgan Logger         │
+│   Keycloak OIDC  ·  RBAC  ·  Zod Validation  ·  Helmet.js      │
+│   Parameterized SQL  ·  Rate Limiting  ·  Trigger.dev Async     │
 └──────────┬───────────────┬───────────────────┬──────────────────┘
            │               │                   │
 ┌──────────▼─────┐  ┌──────▼──────┐  ┌────────▼────────────────┐
@@ -63,10 +65,10 @@ This is an **engineering platform** that simulates the architecture of a real pr
 └────────────────┘  └─────────────┘  └─────────────────────────┘
            │
 ┌──────────▼──────────────────────────────────────────────────────┐
-│                    CLOUD / ORCHESTRATION                        │
-│   AWS (ECS · EKS · RDS · CloudFront)                           │
-│   Azure (Container Apps · AKS · PostgreSQL · Front Door)       │
-│   Kubernetes · OpenShift · Terraform (IaC)                     │
+│                INFRASTRUCTURE AS CODE (Terraform)               │
+│   AWS: VPC · ALB · ECS Fargate · RDS · Secrets · CloudWatch    │
+│   Azure: Container Apps · AKS · PostgreSQL · Front Door         │
+│   Kubernetes · OpenShift · Helm · ArgoCD                        │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -74,8 +76,8 @@ This is an **engineering platform** that simulates the architecture of a real pr
 
 | Service | Technology | Port |
 |---|---|---|
-| Frontend | React 18 | `3000` |
-| Backend API | Node.js + Express | `5000` |
+| Frontend | React 18 + TypeScript | `3000` |
+| Backend API | Node.js 20 + Express | `5000` |
 | Auth Server | Keycloak (OIDC) | `8080` |
 | Database | PostgreSQL 15 + pgvector | `5432` |
 | DB Admin | Adminer | `8081` |
@@ -88,15 +90,24 @@ This is an **engineering platform** that simulates the architecture of a real pr
 
 ## 🤖 AI Agent & LLM Integration
 
-This project uses **Claude (Anthropic)** not as a chatbot decoration — but as an **operational layer** with real system impact.
+Claude is used not as a chatbot decoration — but as an **operational layer** with real system impact.
 
 ### Current: Secure RAG Chatbot
 - Backend proxy pattern — API keys never exposed to client
-- System prompt injection with live todo/product context
+- System prompt injection with live product context
 - Conversation history (last 20 messages) per session
 - PostgreSQL-persisted chat history
 - Keycloak JWT-protected `/api/chat` endpoint
 - Rate limiting: 10 req/min per user
+
+### Async AI Jobs — Trigger.dev
+
+| Trigger File | Purpose |
+|---|---|
+| `trigger/chat-async.ts` | Offloads Claude completions to background queue — prevents HTTP timeouts |
+| `trigger/daily-report.ts` | Scheduled AI-generated business intelligence report (orders, stock, trends) |
+| `trigger/low-stock-alert.ts` | Reacts to Prometheus stock events → autonomous Claude reorder pipeline |
+| `trigger/order-confirmation.ts` | Event-driven order processing, inventory update, confirmation dispatch |
 
 ### Phase 2: Autonomous Stock Management Agent
 
@@ -134,15 +145,35 @@ Top-k product chunks → injected into Claude context
 Grounded, accurate product recommendation
 ```
 
-### Future: AgentOps & LLMOps (Phase 6)
+---
 
-| Feature | Description |
+## 🏛️ Infrastructure as Code
+
+Terraform modules written from scratch — production-ready, modular, and reviewable.
+
+### AWS Terraform Modules (`infra/aws/modules/`)
+
+| Module | Resources |
 |---|---|
-| Prompt versioning | System prompts managed in Git like code |
-| A/B prompt testing | Automated quality evaluation |
-| Token cost monitoring | Claude usage as Prometheus metric |
-| Contextual memory | User preferences persist across sessions |
-| Agent observability | Every tool-use decision logged in Loki |
+| `vpc/` | VPC, public/private subnets, route tables, NACLs |
+| `alb/` | Application Load Balancer, target groups, ACM TLS |
+| `ecs/` | ECS Fargate cluster, task definitions, service, autoscaling |
+| `rds/` | PostgreSQL 15 RDS, parameter groups, KMS encryption |
+| `secrets/` | AWS Secrets Manager, IAM policies, auto-rotation |
+| `cloudwatch/` | Log groups, metric alarms, SNS alerts, dashboards |
+| `ecr/` | Container registry, lifecycle policies, image scanning |
+
+### Multi-Cloud Strategy
+
+| Layer | AWS | Azure |
+|---|---|---|
+| Container Runtime | ECS Fargate / EKS | Container Apps / AKS |
+| Database | RDS PostgreSQL | Azure Database for PostgreSQL |
+| CDN | CloudFront | Azure Front Door |
+| Secrets | Secrets Manager | Key Vault |
+| Monitoring | CloudWatch | Azure Monitor |
+| Container Registry | ECR | ACR |
+| IaC | Terraform | Terraform / Bicep |
 
 ---
 
@@ -166,7 +197,7 @@ Security is enforced at every layer. OWASP Top 10 aligned.
 | Authorization | RBAC — Admin / User / Agent roles |
 | Input Validation | Zod schema validation on all endpoints |
 | SQL Injection | Parameterized queries throughout |
-| Security Headers | Helmet.js — X-Frame-Options, HSTS, CSP, etc. |
+| Security Headers | Helmet.js — X-Frame-Options, HSTS, CSP |
 | Rate Limiting | express-rate-limit per user and per IP |
 | CORS | Strict origin whitelist — no wildcard in production |
 
@@ -176,6 +207,7 @@ Security is enforced at every layer. OWASP Top 10 aligned.
 | Local HTTPS | mkcert self-signed certificates |
 | Production TLS | Let's Encrypt via ACM / Azure |
 | Secrets | Environment variables only — never hardcoded |
+| IAM | Least-privilege policies on all AWS resources |
 | Dependency Audit | npm audit + Snyk in CI pipeline |
 | Container Isolation | Separate networks per service (Podman) |
 
@@ -187,78 +219,37 @@ Security is enforced at every layer. OWASP Top 10 aligned.
 
 ```
 Metrics    → Prometheus + Grafana    (API latency, error rate, stock levels, Claude token usage)
-Logs       → Loki + Promtail         (structured JSON, Kubernetes-native, low resource usage)
+Logs       → Loki + Promtail         (structured JSON, Kubernetes-native, agent decision audit)
 Analytics  → ELK Stack               (full-text search, business intelligence, Kibana dashboards)
-Enterprise → Splunk                  (learning track — SPL queries, security event correlation)
+Enterprise → Splunk                  (SPL queries, security event correlation)
 Tracing    → Jaeger                  (distributed tracing — Phase 5, microservices)
 ```
 
 ### Key Dashboards (Grafana)
-
 - **API Health** — response time, error rate, throughput per endpoint
 - **Stock Intelligence** — real-time levels, reorder threshold alerts
 - **AI Operations** — Claude token usage, agent decision log, response latency
 - **Infrastructure** — container CPU/memory, PostgreSQL connections, Keycloak auth events
 - **Business Analytics** — (Kibana) order volume, product views, conversion funnel
 
-### Alerting Rules
-
-```yaml
-# Example: Stock threshold alert triggers Claude agent
-- alert: LowStockLevel
-  expr: seiko_stock_level < 5
-  for: 1m
-  labels:
-    severity: critical
-  annotations:
-    summary: "Stock critical — AI agent triggered"
-```
-
----
-
-## ☸️ Kubernetes & Cloud
-
-### Container Orchestration Roadmap
-
-```
-Local        →  Minikube (Podman driver) — running today
-AWS          →  EKS (Phase 5) — Helm charts, HPA, AWS LBC
-Azure        →  AKS (Phase 5) — Azure Monitor, Managed Identity
-Enterprise   →  OpenShift Sandbox — free, available now
-GitOps       →  ArgoCD / Flux — Phase 6
-```
-
-### Multi-Cloud Strategy
-
-| Layer | AWS | Azure |
-|---|---|---|
-| Container Runtime | ECS Fargate / EKS | Container Apps / AKS |
-| Database | RDS PostgreSQL | Azure Database for PostgreSQL |
-| CDN | CloudFront | Azure Front Door |
-| Secrets | Secrets Manager | Key Vault |
-| Monitoring | CloudWatch | Azure Monitor |
-| Container Registry | ECR | ACR |
-| IaC | CDK / Terraform | Bicep / Terraform |
-
 ---
 
 ## 🗺️ Roadmap
 
-```
-Phase 1  Feb–Mar 2026   ████████░░  Security hardening, Claude RAG chatbot, pgvector
-Phase 2  Apr 2026       ██████░░░░  Observability stack, AI stock agent, CI/CD
-Phase 3  May–Jun 2026   ████░░░░░░  AWS: ECS, RDS, CloudFront, production deployment
-Phase 4  Jul–Aug 2026   ██░░░░░░░░  Azure: multi-cloud, AKS, Azure Monitor
-Phase 5  Sep–Oct 2026   ░░░░░░░░░░  Kubernetes: EKS/AKS, OpenShift, Helm, GitOps
-Phase 6  Nov 2026+      ░░░░░░░░░░  AI-native: AgentOps, LLMOps, contextual memory
-```
+| Phase | Timeline | Focus | Status |
+|---|---|---|---|
+| Phase 1 | Feb–Mar 2026 | Security hardening · Claude RAG · pgvector · Trigger.dev · TypeScript | ✅ Active |
+| Phase 2 | Apr 2026 | Observability stack · AI stock agent · CI/CD pipeline | 🔜 Next |
+| Phase 3 | May–Jun 2026 | AWS production: ECS, RDS, CloudFront, Terraform modules | 📋 Planned |
+| Phase 4 | Jul–Aug 2026 | Azure multi-cloud: AKS, Azure Monitor, Key Vault | 📋 Planned |
+| Phase 5 | Sep–Oct 2026 | Kubernetes: EKS/AKS, Helm, GitOps (ArgoCD), Jaeger | 📋 Planned |
+| Phase 6 | Nov 2026+ | AgentOps, LLMOps, contextual memory, prompt versioning | 📋 Planned |
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-
 - Node.js 20+
 - Podman + podman-compose (or Docker + docker-compose)
 - Git
@@ -283,8 +274,6 @@ DATABASE_URL=postgresql://postgres:changeme@seiko_db:5432/jwtauth
 DB_USER=postgres
 DB_PASSWORD=changeme
 DB_HOST=seiko_db
-DB_PORT=5432
-DB_DATABASE=jwtauth
 
 # Auth
 KEYCLOAK_BASE_URL=http://localhost:8080
@@ -317,16 +306,6 @@ podman-compose logs -f       # follow logs
 curl http://localhost:5000/health
 # → {"ok":true}
 
-# Protected endpoint — no token
-curl -X POST http://localhost:5000/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{"message":"hello"}'
-# → 401 Unauthorized ✓
-```
-
-### 5. Get Access Token (Local Testing)
-
-```bash
 # Get token from Keycloak
 curl -X POST "http://localhost:8080/realms/seiko-realm/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
@@ -340,64 +319,12 @@ curl -X POST http://localhost:5000/api/chat \
 # → 200 OK ✓
 ```
 
-### Alternative: Local Development (no containers)
-
-```bash
-# Backend
-cd server && npm install && npm run dev
-
-# Frontend (separate terminal)
-cd client && npm install && npm start
-```
-
 ### Database Migrations
 
 ```bash
 cd server
 npx node-pg-migrate up
-
-# Access DB directly
-podman exec -it seiko_db psql -U postgres -d jwtauth
 ```
-
-### Keycloak Setup
-
-1. Open `http://localhost:8080`
-2. Import `keycloak-realm.json` (if provided) or create realm manually
-3. Create test user → assign role (`admin` / `user`)
-4. Ensure **Direct Access Grants** enabled on client (for local token testing)
-
----
-
-## 🧪 Testing & Quality
-
-```bash
-# Run tests
-cd server && npm test
-cd client && npm test
-
-# Lint & format
-npm run lint
-npm run format
-```
-
-### CI Pipeline (GitHub Actions)
-
-```
-Push → Lint → Test → Security Scan (Snyk) → Build Image → Push to GHCR
-```
-
----
-
-## 🔧 Troubleshooting
-
-| Problem | Cause | Fix |
-|---|---|---|
-| DB connection refused | Container not running or wrong hostname | `podman ps` · check `DB_HOST=seiko_db` |
-| JWKS not available | Keycloak not ready | Wait 30s after start · check `KEYCLOAK_BASE_URL` |
-| 401 on all requests | Token expired or wrong audience | Re-fetch token · verify `KEYCLOAK_AUDIENCE` |
-| CORS error | Mismatch on allowed origin | Check `FRONTEND_URL` in `.env` |
-| Port conflict | Another service on same port | Change port in `.env` |
 
 ---
 
@@ -405,23 +332,57 @@ Push → Lint → Test → Security Scan (Snyk) → Build Image → Push to GHCR
 
 ```
 pern-todo/
-├── client/                  # React frontend
-│   ├── src/
-│   │   ├── components/      # UI components + ChatWidget
-│   │   ├── hooks/           # Custom React hooks
-│   │   └── context/         # Auth, Cart context
+├── client/                  # React 18 + TypeScript frontend
+│   └── src/
+│       ├── components/      # UI components + ChatWidget
+│       ├── hooks/           # Custom React hooks
+│       └── context/         # Auth, Cart context
 ├── server/                  # Express backend
-│   ├── routes/              # API route handlers
-│   ├── middleware/           # Auth, validation, rate limit
+│   ├── routes/              # API route handlers (TypeScript)
+│   ├── middleware/          # Auth, validation, rate limit
 │   ├── db/                  # PostgreSQL pool + queries
-│   └── agent/               # Claude Tool-Use agent logic
+│   ├── agent/               # Claude Tool-Use agent logic
+│   └── trigger/             # Async jobs (chat, report, stock, orders)
+├── infra/
+│   └── aws/                 # Terraform AWS modules
+│       └── modules/
+│           ├── vpc/         # Networking
+│           ├── alb/         # Load Balancer
+│           ├── ecs/         # Container Runtime
+│           ├── rds/         # Database
+│           ├── secrets/     # Secrets Manager
+│           ├── cloudwatch/  # Monitoring
+│           └── ecr/         # Container Registry
 ├── monitoring/              # Prometheus config + Grafana dashboards
 ├── k8s/                     # Kubernetes manifests (Phase 5)
-├── terraform/               # IaC — AWS + Azure (Phase 3–4)
 ├── .github/workflows/       # GitHub Actions CI/CD
-├── podman-compose.yml        # Local container orchestration
+├── podman-compose.yml       # Local container orchestration
 └── .env.example             # Environment template
 ```
+
+---
+
+## 🛠️ Core Technologies
+
+**Frontend** — React 18 · TypeScript · Tailwind CSS · DOMPurify · react-hot-toast · dnd-kit
+
+**Backend** — Node.js 20 · Express · TypeScript · Zod · Helmet.js · Morgan · express-rate-limit · Trigger.dev · node-pg-migrate
+
+**Database** — PostgreSQL 15 · pgvector · pg.Pool
+
+**Auth** — Keycloak · OpenID Connect · JWKS · RBAC
+
+**AI** — Claude API (Anthropic) · Tool Use · RAG · pgvector embeddings · Async Trigger jobs
+
+**Observability** — Prometheus · Grafana · Loki · Promtail · Elasticsearch · Logstash · Kibana · Splunk · Jaeger
+
+**DevOps** — Podman · Nginx · GitHub Actions · Snyk · Trivy
+
+**Cloud** — AWS (ECS · EKS · RDS · ALB · CloudFront · ACM · Secrets Manager · CloudWatch · ECR) · Azure (Container Apps · AKS · PostgreSQL · Front Door · Key Vault · ACR)
+
+**IaC** — Terraform (modular) · AWS CDK · Bicep
+
+**Kubernetes** — Minikube · Helm · ArgoCD · OpenShift
 
 ---
 
@@ -431,37 +392,13 @@ pern-todo/
 
 1. **Production thinking from day one** — security hardening, observability, error handling, and containerization are not afterthoughts. They are built into the architecture from the start.
 
-2. **AI integration with real operational impact** — Claude is not a UI gimmick. It is a server-side agent with Tool Use, database access, and autonomous decision-making. This is LLMOps in practice.
+2. **AI integration with real operational impact** — Claude is a server-side agent with Tool Use, database access, async Trigger.dev jobs, and autonomous decision-making. This is LLMOps in practice.
 
-3. **Multi-cloud without vendor lock-in** — AWS and Azure deployments use the same containerized services. Switching providers does not require rewriting the application.
+3. **Infrastructure-as-Code with modular Terraform** — VPC, ALB, ECS, RDS, Secrets, CloudWatch — all written as reusable modules. Infrastructure is versioned, reviewable, and reproducible.
 
-4. **Full observability stack** — Prometheus, Grafana, Loki, ELK, and Splunk are all configured. The system is measurable, alertable, and debuggable in production.
+4. **Multi-cloud without vendor lock-in** — AWS and Azure deployments use the same containerized services. Switching providers does not require rewriting the application.
 
 5. **Cloud-native trajectory** — The project is actively moving toward Kubernetes (EKS/AKS), GitOps (ArgoCD), and OpenShift. Every architectural decision is made with orchestration in mind.
-
----
-
-## 🛠️ Core Technologies
-
-**Frontend** — React 18 · Tailwind CSS · DOMPurify · react-hot-toast · dnd-kit
-
-**Backend** — Node.js 20 · Express · Zod · Helmet.js · Morgan · express-rate-limit · node-pg-migrate
-
-**Database** — PostgreSQL 15 · pgvector · pg.Pool
-
-**Auth** — Keycloak · OpenID Connect · JWKS · RBAC
-
-**AI** — Claude API (Anthropic) · Tool Use · RAG · pgvector embeddings
-
-**Observability** — Prometheus · Grafana · Loki · Promtail · Elasticsearch · Logstash · Kibana · Splunk · Jaeger
-
-**DevOps** — Podman · Nginx · GitHub Actions · Snyk · Trivy
-
-**Cloud** — AWS (ECS · EKS · RDS · CloudFront · ACM · Secrets Manager) · Azure (Container Apps · AKS · PostgreSQL · Front Door · Key Vault)
-
-**IaC** — Terraform · AWS CDK · Bicep
-
-**Kubernetes** — Minikube · Helm · ArgoCD · OpenShift
 
 ---
 
