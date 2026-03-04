@@ -6,7 +6,8 @@ import toast from "react-hot-toast";
 import { CartItem } from "../types";
 import { apiUrl } from "../config";
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY as string);
+const stripePublishableKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
 
 interface CheckoutFormProps {
   orderId: number;
@@ -161,9 +162,15 @@ const Checkout = ({ cart, onOrderSuccess }: CheckoutProps) => {
           <div className="alert alert-info small mb-3">
             🔒 Your payment is secured by Stripe. We never store your card details.
           </div>
-          <Elements stripe={stripePromise} options={{ clientSecret }}>
-            <CheckoutForm orderId={orderId} onSuccess={handleSuccess} />
-          </Elements>
+          {!stripePromise ? (
+            <div className="alert alert-danger mb-0">
+              Stripe is not configured. Missing REACT_APP_STRIPE_PUBLISHABLE_KEY.
+            </div>
+          ) : (
+            <Elements stripe={stripePromise} options={{ clientSecret }}>
+              <CheckoutForm orderId={orderId} onSuccess={handleSuccess} />
+            </Elements>
+          )}
         </div>
       )}
 
