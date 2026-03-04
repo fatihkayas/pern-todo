@@ -1,0 +1,81 @@
+{
+  "executionRoleArn": "arn:aws:iam::576418249619:role/seiko-ecs-task-execution-role",
+  "containerDefinitions": [
+    {
+      "name": "backend",
+      "image": "576418249619.dkr.ecr.eu-central-1.amazonaws.com/seiko-backend:latest",
+      "cpu": 0,
+      "portMappings": [
+        {
+          "containerPort": 5000,
+          "hostPort": 5000,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "DB_SSL",
+          "value": "true"
+        },
+        {
+          "name": "DB_PORT",
+          "value": "5432"
+        },
+        {
+          "name": "DB_HOST",
+          "value": "seiko-postgres.cvqcmygu8efa.eu-central-1.rds.amazonaws.com"
+        },
+        {
+          "name": "DB_USER",
+          "value": "psqladmin"
+        },
+        {
+          "name": "DB_DATABASE",
+          "value": "jwtauth"
+        }
+      ],
+      "mountPoints": [],
+      "volumesFrom": [],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/seiko-backend",
+          "awslogs-region": "eu-central-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "systemControls": [],
+      "secrets": [
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:eu-central-1:576418249619:secret:seiko/db-password-7GanqA"
+        },
+        {
+          "name": "JWT_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:eu-central-1:576418249619:secret:seiko/jwt-secret-SEViCz"
+        },
+        {
+          "name": "STRIPE_SECRET_KEY",
+          "valueFrom": "arn:aws:secretsmanager:eu-central-1:576418249619:secret:seiko/stripe-secret-key-F2ycvL"
+        },
+        {
+          "name": "STRIPE_WEBHOOK_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:eu-central-1:576418249619:secret:seiko/stripe-webhook-secret-EpEBjV"
+        }
+      ]
+    }
+  ],
+  "cpu": "512",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "memory": "1024",
+  "family": "seiko-backend",
+  "networkMode": "awsvpc",
+  "taskRoleArn": "arn:aws:iam::576418249619:role/seiko-ecs-task-role"
+}
