@@ -19,7 +19,7 @@ export const createOrderSchema = z.object({
   items: z
     .array(
       z.object({
-        watch_id: z.coerce.number().int().positive(),
+        watch_id: z.string().uuid(),
         quantity: z.coerce.number().int().positive(),
         unit_price: z.coerce.number().positive(),
       })

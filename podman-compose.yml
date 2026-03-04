@@ -63,6 +63,7 @@ services:
       DB_DATABASE: jwtauth
       OLLAMA_URL: http://seiko_ollama:11434
       OLLAMA_MODEL: llama3.2
+      KAFKA_BROKER: seiko_redpanda:9092
 
   frontend:
     image: localhost/seiko-frontend:latest
@@ -133,6 +134,57 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
     depends_on:
       - prometheus
+
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v23.3.21
+    container_name: seiko_redpanda
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp
+      - "1"
+      - --memory
+      - 512M
+      - --reserve-memory
+      - 0M
+      - --node-id
+      - "0"
+      - --kafka-addr
+      - internal://0.0.0.0:9092,external://0.0.0.0:29092
+      - --advertise-kafka-addr
+      - internal://seiko_redpanda:9092,external://localhost:29092
+      - --check=false
+    ports:
+      - "29092:29092"
+
+  redpanda-init:
+    image: docker.redpanda.com/redpandadata/redpanda:v23.3.21
+    container_name: seiko_redpanda_init
+    depends_on:
+      - redpanda
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        sleep 5 &&
+        rpk --brokers seiko_redpanda:9092 topic create orders.created --partitions 1 --replicas 1 || true
+    restart: "no"
+
+  integration-service:
+    image: localhost/seiko-integration:latest
+    container_name: seiko_integration
+    depends_on:
+      - redpanda
+      - db
+    ports:
+      - "8083:8080"
+    environment:
+      KAFKA_BROKER: seiko_redpanda:9092
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: your_password
+      DB_DATABASE: jwtauth
 
 volumes:
   postgres_data:

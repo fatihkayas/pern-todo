@@ -6,6 +6,7 @@ import { createOrderSchema } from "../schemas";
 import { Order, OrderItem } from "../types";
 import { ordersCreatedTotal, ordersRevenueDollars } from "../middleware/metrics";
 import { tasks } from "@trigger.dev/sdk/v3";
+import { publishOrderEvent } from "../kafka";
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "seiko_secret_key_change_in_prod";
@@ -56,7 +57,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "seiko_secret_key_change_in_prod";
 // POST /api/orders
 router.post("/", validate(createOrderSchema), async (req: Request, res: Response) => {
   const { items, shipping_address } = req.body as {
-    items: { watch_id: number; quantity: number; unit_price: number }[];
+    items: { watch_id: string; quantity: number; unit_price: number }[];
     shipping_address?: string;
   };
 
@@ -106,6 +107,19 @@ router.post("/", validate(createOrderSchema), async (req: Request, res: Response
         shippingAddress: shipping_address,
       })
       .catch((e) => console.error("order-confirmation trigger failed:", e));
+
+    // Publish Kafka event (fire-and-forget — failure must not block order response)
+    publishOrderEvent({
+      orderId: order_id,
+      customerId: customerId ?? null,
+      totalAmount: String(total_amount),
+      items: items.map((i) => ({
+        watchId: String(i.watch_id),
+        quantity: i.quantity,
+        unitPrice: String(i.unit_price),
+      })),
+      timestamp: new Date().toISOString(),
+    }).catch((e) => console.warn("Kafka publish failed (non-blocking):", e));
 
     res.status(201).json({ order_id, total_amount, status: "pending" });
   } catch (err) {

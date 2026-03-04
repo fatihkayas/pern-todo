@@ -1,3 +1,7 @@
+jest.mock("../kafka", () => ({
+  publishOrderEvent: jest.fn().mockResolvedValue(undefined),
+}));
+
 jest.mock("../db", () => ({
   __esModule: true,
   default: {

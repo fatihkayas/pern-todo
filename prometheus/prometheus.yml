@@ -22,3 +22,9 @@ scrape_configs:
     static_configs:
       - targets:
           - seiko_alertmanager:9093
+
+  - job_name: integration-service
+    static_configs:
+      - targets:
+          - seiko_integration:8080
+    metrics_path: /metrics

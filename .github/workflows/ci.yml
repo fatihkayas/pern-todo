@@ -78,6 +78,25 @@ jobs:
         env:
           CI: false
 
+  # ── Go: build & vet integration-service ──────────────────
+  go-build:
+    name: Go — Build & Vet
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: integration-service/go.sum
+
+      - name: Build integration-service
+        run: cd integration-service && go build ./...
+
+      - name: Vet
+        run: cd integration-service && go vet ./...
+
   # ── Docker: build & push to GHCR (main only) ─────────────
   docker:
     name: Build & Push Images
@@ -233,7 +252,7 @@ jobs:
   summary:
     name: Pipeline Summary
     runs-on: ubuntu-latest
-    needs: [backend, frontend, docker, deploy-aws]
+    needs: [backend, frontend, go-build, docker, deploy-aws]
     if: always()
 
     steps:
@@ -244,5 +263,6 @@ jobs:
           echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Backend | ${{ needs.backend.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend | ${{ needs.frontend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Go Build | ${{ needs.go-build.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Docker | ${{ needs.docker.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Deploy AWS | ${{ needs.deploy-aws.result }} |" >> $GITHUB_STEP_SUMMARY
