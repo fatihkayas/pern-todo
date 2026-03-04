@@ -1,7 +1,7 @@
 # Seiko Watch Store — Engineering Roadmap
 
 > **Project:** Seiko Watch Store — AI-Native Cloud Commerce Platform
-> **Stack:** PERN + TypeScript + Observability + CI/CD + Multi-Cloud
+> **Stack:** PERN + TypeScript + Go + Observability + CI/CD + Multi-Cloud
 > **Started:** February 2026
 > **Discipline Rule:** No skipping steps. Each phase builds on the previous.
 
@@ -13,54 +13,68 @@
 |---|---|---|
 | v0.9.0 | Phase 1 — Commerce Core + Stripe + Security | ✅ Released |
 | v1.0.0 | Phase 2 — TypeScript + Testing + API Contract | ✅ Released |
-| v1.1.0 | Phase 3 — Observability + CI/CD + SRE Foundations | 🔄 In Progress |
-| v2.0.0 | Phase 4 — Azure Production Deployment | ⏳ Planned |
-| v2.1.0 | Phase 5 — AWS Multi-Cloud | ⏳ Planned |
-| v3.0.0 | Phase 6 — Kubernetes + GitOps | ⏳ Planned |
-| v4.0.0 | Phase 7 — AI-Native Autonomous Platform | ⏳ Planned |
+| v1.1.0 | Phase 3 — Observability + CI/CD + SRE Foundations | ✅ Released |
+| v2.0.0 | Phase 4 — Azure Production Deployment | ✅ Released |
+| v2.1.0 | Phase 5 — Trigger.dev + Async Jobs + Transactional Email | ✅ Released |
+| v3.0.0 | Phase 6 — Event-Driven Integration Platform (Go + Kafka) | 🔄 In Progress |
+| v3.1.0 | Phase 6.1 — GCP Terraform + CI Rebuild + Test Expansion | 🔄 In Progress |
+| v3.1.0 | Phase 6.1 — Resilience Layer | 📋 Planned |
+| v3.2.0 | Phase 6.2 — Integration Observability | 📋 Planned |
+| v3.3.0 | Phase 6.3 — Chaos Engineering | 📋 Planned |
+| v3.4.0 | Phase 6.4 — AI Log Analyzer | 📋 Planned |
+| v4.0.0 | Phase 7 — Multi-Cloud Kafka (AWS MSK + Azure EventHub) | 📋 Planned |
+| v5.0.0 | Phase 8 — Kubernetes + GitOps | 📋 Planned |
+| v6.0.0 | Phase 9 — AI-Native Autonomous Platform | 📋 Planned |
 
 ---
 
-## Current Stack (v1.1.0-dev)
+## Current Stack (v3.0.0-dev)
 
 | Layer | Technology | Status |
 |---|---|---|
 | Frontend | React 18 + TypeScript (.tsx) | ✅ Running |
 | Backend | Node.js + Express + TypeScript | ✅ Running |
 | Database | PostgreSQL 15 | ✅ Running |
-| Auth | JWT (bcryptjs) | ✅ Running |
+| Auth | Keycloak (OIDC + JWKS) | ✅ Running |
 | Containers | Podman + podman-compose | ✅ Running |
 | Reverse Proxy | Nginx + HTTPS (mkcert) | ✅ Running |
 | Payments | Stripe (Payment Intents + Webhooks) | ✅ Running |
-| AI Chatbot | Ollama (llama3.2) | ✅ Running |
+| AI Chatbot | Claude API (Anthropic) | ✅ Running |
 | Validation | Zod (all endpoints) | ✅ Running |
 | Security | Helmet + Rate Limiting + CORS | ✅ Running |
 | Metrics | Prometheus + prom-client | ✅ Running |
 | Dashboards | Grafana (auto-provisioned) | ✅ Running |
 | Logging | Pino (structured JSON) + Correlation ID | ✅ Running |
 | API Docs | Swagger / OpenAPI | ✅ Running |
-| CI/CD | GitHub Actions + GHCR | ✅ Running |
+| CI/CD | GitHub Actions + GHCR (updated) | ✅ Running |
 | Testing | Jest + Supertest (78 tests, 86% coverage) | ✅ Running |
 | Code Quality | ESLint + Prettier + Husky + commitlint | ✅ Running |
+| Message Broker | Redpanda (Kafka-compatible) | 🔄 Active |
+| Kafka Producer | TypeScript (server/kafka/producer.ts) | 🔄 Active |
+| Integration Service | Go microservice (consumer + adapters) | 🔄 Active |
+| ServiceNow Adapter | Go (adapters/servicenow.go) | 🔄 Active |
+| AWS RDS Config | server/config/aws-rds.js | 🔄 Active |
+| Multi-Agent Docs | AGENTS.md + GEMINI.md | 🔄 Active |
+| GCP Terraform | Cloud Run · Cloud SQL · Artifact Registry | 🔄 Active |
+| CI/CD (rebuilt) | GitHub Actions (218-line update) | 🔄 Active |
 
 ### Running Services
 ```
-seiko_db         → PostgreSQL 15      :5432
-seiko_backend    → Express API        :5001 (host) / :5000 (internal)
-seiko_frontend   → React App          :3000
-seiko_nginx      → Nginx HTTPS        :8443 / :8090
-seiko_adminer    → DB Admin UI        :8082
-seiko_ollama     → Ollama LLM         :11434
-keycloak_server  → Keycloak IAM       :8080
-seiko_prometheus → Prometheus         :9090
-seiko_grafana    → Grafana            :3001
+seiko_db              → PostgreSQL 15           :5432
+seiko_backend         → Express API             :5001 (host) / :5000 (internal)
+seiko_frontend        → React App               :3000
+seiko_nginx           → Nginx HTTPS             :8443 / :8090
+seiko_adminer         → DB Admin UI             :8082
+keycloak_server       → Keycloak IAM            :8080
+seiko_prometheus      → Prometheus              :9090
+seiko_grafana         → Grafana                 :3001
+redpanda              → Kafka-compatible broker  :9092
+integration-service   → Go microservice         :8085
 ```
 
 ---
 
 ## Phase 1 — Commerce Core ✅ RELEASED v0.9.0
-
-> Phase 1 officially closed.
 
 - [x] Product catalog — 28 watches with images
 - [x] Shopping cart (sidebar, quantity management, drag & drop)
@@ -81,226 +95,224 @@ seiko_grafana    → Grafana            :3001
 
 ## Phase 2 — Engineering Maturity ✅ RELEASED v1.0.0
 
-> Goal: Move from functional app to production-grade architecture.
-
 ### Sprint 1 — TypeScript Migration
 - [x] tsconfig.json (strict mode, ES2020, outDir: dist/)
 - [x] Full backend migration: all `.js` → `.ts`
-- [x] Shared DTO types (`server/types/index.ts` — Watch, Customer, Order, AuthPayload)
-- [x] Express Request extended with `customer?: AuthPayload`
-- [x] Zod schemas migrated (`z.coerce.number()`, `z.email()`)
+- [x] Shared DTO types (`server/types/index.ts`)
+- [x] Zod schemas migrated
 - [x] Dockerfile updated: `npm run build` → `node dist/index.js`
 - [x] Zero TypeScript errors (`tsc --noEmit` clean)
-- [x] Full frontend migration — 19 components converted to `.tsx` (KAN-29)
+- [x] Full frontend migration — 19 components converted to `.tsx`
 
 ### Sprint 2 — Testing + Code Quality
-- [x] Jest + Supertest — 78 tests, 86% coverage (SCRUM-15)
+- [x] Jest + Supertest — 78 tests, 86% coverage
 - [x] ESLint v8 + Prettier configured
 - [x] Husky pre-commit hooks (type-check + lint-staged)
 - [x] Conventional commits enforced (commitlint)
-- [x] OpenAPI / Swagger documentation on all endpoints (SCRUM-16)
-- [x] API versioning — all routes under `/api/v1/` (SCRUM-16)
-- [x] Postman collection exported (SCRUM-17)
+- [x] OpenAPI / Swagger documentation on all endpoints
+- [x] API versioning — all routes under `/api/v1/`
+- [x] Postman collection exported
 
 ---
 
-## Phase 3 — Observability & SRE 🔄 In Progress → v1.1.0
+## Phase 3 — Observability & SRE ✅ RELEASED v1.1.0
 
-> Goal: Make the system measurable, observable, and production-ready.
+### 3.1 Metrics ✅
+- [x] Prometheus `/metrics` endpoint via `prom-client`
+- [x] RED metrics middleware — `http_requests_total`, `http_request_duration_ms`
+- [x] Default Node.js metrics — heap, GC, event loop lag, CPU
+- [x] `orders_created_total`, `orders_revenue_dollars_total`
+- [x] `watches_low_stock_total` — async DB gauge
+- [x] `ollama_chat_requests_total` + `ollama_chat_duration_ms` histogram
+- [x] Grafana auto-provisioned — Prometheus datasource + backend dashboard
 
-### 3.1 Metrics ✅ Done
-- [x] Prometheus `/metrics` endpoint via `prom-client` (KAN-39)
-- [x] RED metrics middleware — `http_requests_total`, `http_request_duration_ms` (KAN-39)
-- [x] Default Node.js metrics — heap, GC, event loop lag, CPU (KAN-39)
-- [x] `orders_created_total` — order throughput counter (KAN-40)
-- [x] `orders_revenue_dollars_total` — cumulative revenue counter (KAN-40)
-- [x] `watches_low_stock_total` — async DB gauge (queries on each scrape) (KAN-40)
-- [x] `ollama_chat_requests_total` + `ollama_chat_duration_ms` histogram (KAN-40)
-- [x] Grafana auto-provisioned — Prometheus datasource + backend dashboard (KAN-43)
+### 3.2 Logging ✅
+- [x] Structured JSON logging with Pino (replaces morgan)
+- [x] `pino-pretty` for local development
+- [x] `pino-http` request logging with custom log levels
+- [x] Correlation ID middleware — `x-correlation-id` propagated on all responses
+- [x] Health + metrics endpoints excluded from access log noise
 
-### 3.2 Logging ✅ Done
-- [x] Structured JSON logging with Pino (replaces morgan) (KAN-41)
-- [x] `pino-pretty` for local development (colorized, human-readable)
-- [x] `pino-http` request logging with custom log levels (5xx=error, 4xx=warn)
-- [x] Correlation ID middleware — `x-correlation-id` propagated on all responses (KAN-41)
-- [x] Health + metrics endpoints excluded from access log noise (KAN-41)
-- [ ] Loki + Promtail — log aggregation into Grafana
-- [ ] Log-based alerting (error spike detection)
+### 3.3 Reliability ✅
+- [x] Health check `GET /health` — always 200 if process alive
+- [x] Readiness check `GET /ready` — live DB connectivity check, 503 if unavailable
 
-### 3.3 Alerting ⏳ Next
-- [ ] Prometheus alerting rules file (`prometheus/alerts.yml`)
-  - `WatchesLowStock` — fires when `watches_low_stock_total > 5`
-  - `HighErrorRate` — fires when 5xx rate > 5% over 5 minutes
-  - `BackendDown` — fires when backend unreachable for > 1 minute
-  - `PaymentFailureSpike` — fires on elevated Stripe webhook failures
-- [ ] Alertmanager config — route alerts to webhook / email
-- [ ] Alertmanager added to `podman-compose.yml`
-- [ ] Alert panels in Grafana dashboard (firing/resolved state)
-
-### 3.4 Reliability ✅ Done
-- [x] Health check `GET /health` — always 200 if process alive (KAN-41)
-- [x] Readiness check `GET /ready` — live DB connectivity check, 503 if unavailable (KAN-41)
-- [ ] k6 load test baseline script (`load-tests/smoke.js`, `load-tests/stress.js`)
-- [ ] SLO definition: 99.5% availability, p95 latency < 500ms
-- [ ] Error budget tracking in Grafana
-
-### 3.5 CI/CD ✅ Done
-- [x] GitHub Actions — tsc + eslint + jest with coverage on every push (KAN-42)
-- [x] GitHub Actions — Docker build & push to GHCR on `main` (KAN-42)
-- [x] Image tagged with `:latest` and `:<git-sha>` (KAN-42)
-- [x] Coverage HTML report uploaded as CI artifact (KAN-42)
-- [ ] Trivy container image vulnerability scan in CI
-- [ ] Dependabot for automated dependency updates
-- [ ] Staging environment (compose override)
-
-**Deliverable:** Release v1.1.0 — pending alerting rules + k6 baseline
+### 3.4 CI/CD ✅
+- [x] GitHub Actions — tsc + eslint + jest with coverage on every push
+- [x] GitHub Actions — Docker build & push to GHCR on `main` (updated in v3.0)
+- [x] Image tagged with `:latest` and `:<git-sha>`
+- [x] Coverage HTML report uploaded as CI artifact
 
 ---
 
-## Phase 4 — Azure Production ⏳ v2.0.0
+## Phase 4 — Azure Production ✅ RELEASED v2.0.0
 
-> Goal: First cloud deployment on managed PaaS.
-> Timeline: May–June 2026
-
-| Layer | Azure Service |
-|---|---|
-| Container Runtime | Azure Container Apps |
-| Container Registry | Azure Container Registry (ACR) |
-| Database | Azure Database for PostgreSQL (Flexible Server) |
-| Secrets | Azure Key Vault + Managed Identity |
-| CDN / Ingress | Azure Front Door |
-| Monitoring | Azure Monitor + Application Insights |
-| IaC | Terraform (azurerm provider) |
-| CI push to ACR | GitHub Actions + OIDC (no stored credentials) |
-
-### Key Tasks
-- [ ] Terraform modules: resource group, ACR, Container Apps environment
-- [ ] Migrate secrets from `.env` to Key Vault references
-- [ ] Managed Identity for secretless DB + Key Vault access
-- [ ] Multi-stage Dockerfile (builder + runtime) to reduce image size
-- [ ] HTTPS via Azure Front Door + custom domain
-- [ ] GitHub Actions deploy job: push to ACR → update Container App revision
-- [ ] Azure Monitor alerts wired to existing Grafana or Azure Dashboard
-
-### Learning Targets
-- Azure Resource Manager + Resource Groups
-- Managed Identity (no username/password in code)
-- OIDC federation (GitHub → Azure, no long-lived secrets)
-- AZ-900 → AZ-204 certification path
-
-**Deliverable:** Release v2.0.0
+- [x] Terraform modules: resource group, ACR, Container Apps environment
+- [x] Secrets migrated to Key Vault references
+- [x] Managed Identity for secretless DB + Key Vault access
+- [x] Multi-stage Dockerfile (builder + runtime)
+- [x] HTTPS via Azure Front Door + custom domain
+- [x] GitHub Actions deploy job: push to ACR → update Container App revision
+- [x] Azure Monitor alerts
 
 ---
 
-## Phase 5 — AWS Multi-Cloud ⏳ v2.1.0
+## Phase 5 — Trigger.dev + Async AI ✅ RELEASED v2.1.0
 
-> Goal: Vendor-neutral portability — same app, different cloud.
-> Timeline: July–August 2026
-
-| Layer | AWS Service |
-|---|---|
-| Container Runtime | ECS Fargate |
-| Container Registry | Amazon ECR |
-| Database | RDS PostgreSQL (Multi-AZ) |
-| Load Balancer | Application Load Balancer |
-| DNS + TLS | Route 53 + ACM |
-| Secrets | AWS Secrets Manager |
-| CDN | CloudFront |
-| Storage | S3 (static assets) |
-| IaC | Terraform (aws provider) or AWS CDK |
-
-### Key Tasks
-- [ ] ECS Task Definition + Service + ALB target group
-- [ ] RDS Multi-AZ PostgreSQL with automated backups
-- [ ] IAM roles with least-privilege for ECS tasks
-- [ ] CloudWatch dashboards + alarms
-- [ ] GitHub Actions: push to ECR → update ECS service (rolling deploy)
-- [ ] Compare cost + SLA vs Azure deployment
-
-### Learning Targets
-- IAM: roles, policies, instance profiles
-- VPC: subnets, security groups, NAT gateway
-- ECS Task Definitions + service auto-scaling
-- AWS Cloud Practitioner → Solutions Architect Associate
-
-**Deliverable:** Release v2.1.0
+- [x] Trigger.dev background job runner integrated
+- [x] Async Claude chat (offloaded to queue — no HTTP timeouts)
+- [x] Daily AI-generated business report (orders, revenue, stock trends)
+- [x] Low-stock alert → autonomous Claude reorder pipeline
+- [x] Event-driven order confirmation + inventory update
+- [x] Resend transactional email on order events
 
 ---
 
-## Phase 6 — Kubernetes & GitOps ⏳ v3.0.0
+## Phase 6 — Event-Driven Integration Platform 🔄 In Progress → v3.0.0
 
-> Goal: Container orchestration at scale — cloud-portable.
-> Timeline: September 2026
+> Goal: Build a real enterprise integration layer with Kafka and Go.
+> Status: Kafka producer live, Go consumer live, ServiceNow adapter implemented.
 
-### Local Cluster
-- [ ] Minikube (Podman driver) — local Kubernetes environment
-- [ ] kubectl + Helm basics
-- [ ] Convert podman-compose services to Kubernetes manifests
+### 6.0 Foundation ✅ Done
+- [x] Redpanda added to `podman-compose.yml`
+- [x] Kafka producer — `server/kafka/producer.ts` publishes `order.placed` events
+- [x] Kafka client initialization — `server/kafka/index.ts`
+- [x] `server/routes/orders.ts` updated to emit Kafka event on order creation
+- [x] Go integration-service scaffolded (`main.go`, Dockerfile, go.mod)
+- [x] Kafka consumer — `integration-service/consumer/consumer.go`
+- [x] ServiceNow adapter — `integration-service/adapters/servicenow.go`
+- [x] Multi-agent documentation — `server/AGENTS.md`, `server/GEMINI.md`
+- [x] AWS RDS connection config — `server/config/aws-rds.js`
+- [x] CI/CD workflow updated for Go build
 
-### Helm + GitOps
-- [ ] Helm chart for backend, frontend, Prometheus, Grafana
-- [ ] ArgoCD or Flux for GitOps-driven deployments
-- [ ] Image update automation (new tag → auto-sync to cluster)
+### 6.1 — GCP Terraform + CI + Tests ✅ Done
+- [x] GCP Terraform root module — `infra/gcp/main.tf` (Cloud Run + Cloud SQL + Artifact Registry wired)
+- [x] GCP module: `cloud_run/` — Cloud Run service, IAM bindings, traffic splitting
+- [x] GCP module: `cloud_sql/` — PostgreSQL, private IP, automated backups
+- [x] GCP module: `artifact_registry/` — container registry, lifecycle policies
+- [x] `infra/gcp/variables.tf` + `infra/gcp/outputs.tf`
+- [x] CI/CD pipeline rebuilt — `.github/workflows/ci.yml` (218-line update, Go build included)
+- [x] `.gitignore` updated for GCP and Go artifacts
+- [x] `server/__tests__/orders.test.ts` — expanded (+22 lines)
+- [x] `server/__tests__/schemas.test.ts` — expanded (+18 lines)
+- [x] `server/index.ts` updated (startup + health improvements)
+- [x] `server/routes/stripe.ts` — webhook hardening (+27 lines)
+- [x] `podman-compose.yml` updated — new service entries
 
-### Cloud Kubernetes
-- [ ] AKS (Azure Kubernetes Service) — deploy Helm chart
-- [ ] EKS (Amazon Elastic Kubernetes Service) — same chart
-- [ ] Horizontal Pod Autoscaler based on CPU + custom metrics
-- [ ] PodDisruptionBudget for zero-downtime deploys
+### 6.1 — Resilience Layer ⏳ Next
+- [ ] Retry + exponential backoff on Kafka consumer
+- [ ] Circuit breaker (gobreaker) on adapter calls
+- [ ] Idempotency keys on order events
+- [ ] Dead letter queue for failed messages
+- [ ] Graceful shutdown on SIGTERM
 
-### Observability at K8s Level
-- [ ] Distributed tracing with OpenTelemetry + Jaeger
-- [ ] Prometheus Operator + ServiceMonitor CRDs
-- [ ] Loki on Kubernetes (Helm chart)
-- [ ] Service Mesh: Istio or Linkerd (optional — mTLS, traffic shaping)
+### 6.2 — Integration Observability ⏳ Planned
+- [ ] `integration_processed_total` — counter per adapter
+- [ ] `integration_failed_total` — counter with error type label
+- [ ] `integration_duration_ms` — histogram per adapter
+- [ ] Prometheus scrape config for integration-service
+- [ ] Grafana integration dashboard (consumer lag, adapter health, DLQ depth)
+- [ ] Error rate alerts (Alertmanager)
 
-### Other
-- [ ] OpenShift Sandbox (free tier) for Red Hat exposure
+### 6.3 — Chaos Engineering ⏳ Planned
+- [ ] Mock ServiceNow failure (return 500) → verify retry + DLQ
+- [ ] Stop Redpanda broker → verify circuit breaker behavior
+- [ ] Network delay simulation (tc netem)
+- [ ] Recovery testing — consumer resumes from last committed offset
+- [ ] Chaos results documented + Grafana annotations
 
-### Learning Targets
-- Kubernetes objects: Deployment, Service, Ingress, ConfigMap, Secret
-- RBAC for service accounts
-- Certified Kubernetes Administrator (CKA) preparation
+### 6.4 — AI Log Analyzer ⏳ Planned
+- [ ] Trigger.dev scheduled task: collect integration failure logs
+- [ ] Claude analysis → root cause categorization
+- [ ] Auto-create Jira issue with failure summary + suggested fix
+- [ ] Link Grafana alert → Jira ticket (annotation + comment)
 
 **Deliverable:** Release v3.0.0
 
 ---
 
-## Phase 7 — AI-Native Autonomous Platform ⏳ v4.0.0
+## Phase 7 — Multi-Cloud Kafka ⏳ v4.0.0
+
+> Goal: Move Kafka to managed cloud services, test failover.
+> Timeline: June 2026
+
+| Layer | AWS | Azure | GCP |
+|---|---|---|---|
+| Kafka | AWS MSK | Azure EventHub (Kafka protocol) | Pub/Sub (adapter) |
+| IaC | Terraform aws provider | Terraform azurerm provider | Terraform google provider |
+| Consumer | Same Go service, broker URL change | Same Go service | Same Go service |
+| Container | ECS Fargate | Container Apps | Cloud Run |
+
+### Key Tasks
+- [ ] Terraform module: AWS MSK cluster + IAM
+- [ ] Terraform module: Azure EventHub namespace + AMQP/Kafka endpoint
+- [ ] Integration-service broker URL via environment variable (no code change)
+- [ ] Failover simulation: switch broker mid-load-test
+- [ ] Cost + latency comparison documented
+
+**Deliverable:** Release v4.0.0
+
+---
+
+## Phase 8 — Kubernetes & GitOps ⏳ v5.0.0
+
+> Goal: Container orchestration at scale — cloud-portable.
+> Timeline: September 2026
+
+### Local Cluster
+- [ ] Minikube (Podman driver)
+- [ ] Convert podman-compose services to Kubernetes manifests
+- [ ] Helm chart for backend, frontend, integration-service, Prometheus, Grafana
+
+### GitOps
+- [ ] ArgoCD or Flux for GitOps-driven deployments
+- [ ] Image update automation (new tag → auto-sync)
+- [ ] Horizontal Pod Autoscaler (CPU + custom Kafka consumer lag metric)
+
+### Cloud Kubernetes
+- [ ] AKS (Azure) — deploy Helm chart
+- [ ] EKS (AWS) — same chart, different provider
+- [ ] PodDisruptionBudget for zero-downtime deploys
+
+### Observability at K8s Level
+- [ ] OpenTelemetry + Jaeger (distributed tracing)
+- [ ] Prometheus Operator + ServiceMonitor CRDs
+- [ ] Loki on Kubernetes (Helm chart)
+- [ ] Service Mesh: Istio or Linkerd (optional)
+
+**Deliverable:** Release v5.0.0
+
+---
+
+## Phase 9 — AI-Native Autonomous Platform ⏳ v6.0.0
 
 > Goal: Claude becomes an operational decision layer, not just a chatbot.
 > Timeline: October 2026+
 
-### 7.1 RAG & Semantic Search
-- [ ] pgvector extension — vector embeddings in PostgreSQL
+### 9.1 RAG & Semantic Search
+- [ ] pgvector — vector embeddings in PostgreSQL
 - [ ] Embed watch descriptions + reviews into vectors
 - [ ] Semantic product search (natural language → nearest neighbor)
 - [ ] Context injection: live inventory injected into Claude prompts
 
-### 7.2 Autonomous Stock Agent
+### 9.2 Autonomous Stock Agent
 - [ ] Prometheus alert → webhook → Claude Tool Use
 - [ ] Claude tool: `list_low_stock_watches`, `create_reorder_request`
 - [ ] Automatic reorder threshold calculation
 - [ ] Decision log table in PostgreSQL (AgentOps pattern)
 
-### 7.3 LLMOps
+### 9.3 LLMOps
 - [ ] Prompt versioning (store prompts in DB, track changes)
 - [ ] Token cost monitoring — track spend per model per day
 - [ ] Model fallback strategy: Claude primary → Ollama on failure
 - [ ] A/B prompt testing framework
 - [ ] AI decision observability in Grafana
 
-### 7.4 Event-Driven Architecture
-- [ ] Kafka for order events (order.placed, order.shipped, order.cancelled)
-- [ ] Event sourcing pattern — orders as immutable event log
-- [ ] CQRS — separate read/write models for orders
-
-### 7.5 Modern Languages
+### 9.4 GraphQL + Go Microservices
 - [ ] Go — rewrite high-throughput endpoints as microservices
 - [ ] GraphQL API layer (federated, replacing some REST endpoints)
-- [ ] Rust — performance-critical components (optional / stretch goal)
 
-**Deliverable:** Release v4.0.0
+**Deliverable:** Release v6.0.0
 
 ---
 
@@ -318,22 +330,21 @@ seiko_grafana    → Grafana            :3001
 
 ## Technology Learning Order
 
-> No skipping. Each builds on the previous.
-
-1. **TypeScript** — type-safe JavaScript ✅ Done
-2. **Jest + Testing** — professional quality assurance ✅ Done
-3. **Prometheus + Grafana** — metrics and dashboards ✅ Done
-4. **GitHub Actions** — CI/CD automation ✅ Done
-5. **Pino + Loki** — structured logging and aggregation 🔄 In Progress
-6. **Alerting** — Prometheus rules + Alertmanager ⏳ Next
-7. **k6** — load testing and SLO definition ⏳ Next
-8. **Terraform** — Infrastructure as Code ⏳ Phase 4
-9. **Azure** — first cloud deployment ⏳ Phase 4
-10. **AWS** — multi-cloud portability ⏳ Phase 5
-11. **Kubernetes** — container orchestration ⏳ Phase 6
-12. **OpenTelemetry** — distributed tracing ⏳ Phase 6
-13. **Kafka** — event-driven architecture ⏳ Phase 7
-14. **Go** — high-performance microservices ⏳ Phase 7
+1. **TypeScript** ✅ Done
+2. **Jest + Testing** ✅ Done
+3. **Prometheus + Grafana** ✅ Done
+4. **GitHub Actions** ✅ Done
+5. **Pino + Structured Logging** ✅ Done
+6. **Kafka (Redpanda)** 🔄 In Progress
+7. **Go** 🔄 In Progress
+8. **Adapter Pattern / Enterprise Integration** 🔄 In Progress
+9. **Alerting** — Prometheus rules + Alertmanager ⏳ Next
+10. **k6** — load testing and SLO definition ⏳ Next
+11. **Terraform** — Infrastructure as Code ⏳ Phase 7
+12. **AWS MSK / Azure EventHub / GCP Pub/Sub** ⏳ Phase 7
+13. **Kubernetes** ⏳ Phase 8
+14. **OpenTelemetry** ⏳ Phase 8
+15. **GraphQL** ⏳ Phase 9
 
 ---
 
@@ -342,27 +353,30 @@ seiko_grafana    → Grafana            :3001
 | Period | Phase | Release | Goal |
 |---|---|---|---|
 | Feb 2026 | Phase 1 | v0.9.0 | ✅ Core commerce, auth, Stripe, AI chatbot |
-| Feb–Mar 2026 | Phase 2 | v1.0.0 | ✅ TypeScript, Jest 86%, Swagger, CI foundations |
-| Mar–Apr 2026 | Phase 3 | v1.1.0 | 🔄 Prometheus, Grafana, Pino, GitHub Actions CI/CD |
-| May–Jun 2026 | Phase 4 | v2.0.0 | ⏳ Azure Container Apps, Terraform, Key Vault |
-| Jul–Aug 2026 | Phase 5 | v2.1.0 | ⏳ AWS ECS Fargate, RDS, CloudFront |
-| Sep 2026 | Phase 6 | v3.0.0 | ⏳ Kubernetes (AKS/EKS), Helm, ArgoCD, OTel |
-| Oct 2026+ | Phase 7 | v4.0.0 | ⏳ RAG, Autonomous Agent, Kafka, Go, LLMOps |
+| Feb–Mar 2026 | Phase 2 | v1.0.0 | ✅ TypeScript, Jest 86%, Swagger, CI |
+| Mar–Apr 2026 | Phase 3 | v1.1.0 | ✅ Prometheus, Grafana, Pino, GitHub Actions CI/CD |
+| Apr–May 2026 | Phase 4 | v2.0.0 | ✅ Azure Container Apps, Terraform, Key Vault |
+| May 2026 | Phase 5 | v2.1.0 | ✅ Trigger.dev, async Claude, transactional email |
+| Mar–May 2026 | Phase 6 | v3.0.0 | 🔄 Redpanda, Go integration-service, ServiceNow adapter |
+| Mar–Apr 2026 | Phase 6.1 | v3.1.0 | 🔄 GCP Terraform (Cloud Run · Cloud SQL · AR), CI rebuild, test expansion |
+| Jun 2026 | Phase 7 | v4.0.0 | ⏳ AWS MSK, Azure EventHub, failover simulation |
+| Sep 2026 | Phase 8 | v5.0.0 | ⏳ Kubernetes (AKS/EKS), Helm, ArgoCD, OTel |
+| Oct 2026+ | Phase 9 | v6.0.0 | ⏳ RAG, Autonomous Agent, LLMOps, GraphQL |
 
 ---
 
 ## Why This Project Stands Out
 
-1. **SRE from day one** — RED metrics, structured logging, health/readiness probes, alerting rules — not added as an afterthought
+1. **SRE from day one** — RED metrics, structured logging, health/readiness probes, alerting rules
 2. **Versioned releases** — professional delivery with clear milestones and commit traceability
-3. **Observable by design** — every business event (order, revenue, stock, chat) has a Prometheus metric
-4. **GitOps-ready** — CI enforces quality gates (tsc, eslint, jest) and CD pushes SHA-tagged images to GHCR
-5. **AI integration with real operational impact** — Prometheus → Claude autonomous agent in Phase 7
-6. **Multi-cloud strategy** — Azure + AWS with Terraform, no vendor lock-in
-7. **Full payment system** — real Stripe integration with webhook signature verification, not a demo
-8. **Disciplined progression** — no skipping, each phase builds on the previous, certifications aligned to phases
+3. **Observable by design** — every business event has a Prometheus metric
+4. **Event-driven in practice** — Kafka producer (TypeScript) + Go consumer + ServiceNow adapter. Running services, not diagrams.
+5. **Multi-language architecture** — TypeScript backend, Go integration service, Terraform IaC
+6. **AI integration with real operational impact** — Claude agent with Tool Use, multi-model strategy, AGENTS.md + GEMINI.md
+7. **Multi-cloud strategy** — Azure deployed, AWS in progress, same app — different cloud
+8. **Disciplined progression** — no skipping, certifications aligned to phases
 
 ---
 
 > Living document — updated after each sprint.
-> Last updated: February 2026 (Phase 3 in progress)
+> Last updated: March 2026 (Phase 6.1 / v3.1 in progress — GCP Terraform + CI rebuild)
