@@ -86,7 +86,9 @@ resource "google_service_account_iam_member" "wif_binding" {
 resource "google_secret_manager_secret" "db_password" {
   secret_id  = "${var.app_name}-db-password"
   depends_on = [google_project_service.apis]
-  replication { auto {} }
+  replication {
+    auto {}
+  }
 }
 resource "google_secret_manager_secret_version" "db_password" {
   secret      = google_secret_manager_secret.db_password.id
@@ -96,7 +98,9 @@ resource "google_secret_manager_secret_version" "db_password" {
 resource "google_secret_manager_secret" "stripe_secret_key" {
   secret_id  = "${var.app_name}-stripe-secret-key"
   depends_on = [google_project_service.apis]
-  replication { auto {} }
+  replication {
+    auto {}
+  }
 }
 resource "google_secret_manager_secret_version" "stripe_secret_key" {
   secret      = google_secret_manager_secret.stripe_secret_key.id
@@ -106,7 +110,9 @@ resource "google_secret_manager_secret_version" "stripe_secret_key" {
 resource "google_secret_manager_secret" "stripe_webhook_secret" {
   secret_id  = "${var.app_name}-stripe-webhook-secret"
   depends_on = [google_project_service.apis]
-  replication { auto {} }
+  replication {
+    auto {}
+  }
 }
 resource "google_secret_manager_secret_version" "stripe_webhook_secret" {
   secret      = google_secret_manager_secret.stripe_webhook_secret.id
@@ -116,7 +122,9 @@ resource "google_secret_manager_secret_version" "stripe_webhook_secret" {
 resource "google_secret_manager_secret" "jwt_secret" {
   secret_id  = "${var.app_name}-jwt-secret"
   depends_on = [google_project_service.apis]
-  replication { auto {} }
+  replication {
+    auto {}
+  }
 }
 resource "google_secret_manager_secret_version" "jwt_secret" {
   secret      = google_secret_manager_secret.jwt_secret.id

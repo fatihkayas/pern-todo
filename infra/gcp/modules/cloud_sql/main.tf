@@ -16,8 +16,9 @@ resource "google_sql_database_instance" "postgres" {
     }
 
     ip_configuration {
-      # No public IP — backend connects via Cloud SQL Auth Proxy socket
-      ipv4_enabled = false
+      # Public IP required for Cloud SQL Auth Proxy socket in Cloud Run (no VPC needed)
+      # Connection is still secure — goes through Cloud SQL Auth Proxy with IAM auth
+      ipv4_enabled = true
     }
 
     insights_config {

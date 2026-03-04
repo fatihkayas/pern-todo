@@ -15,10 +15,11 @@ resource "google_cloud_run_v2_service" "backend" {
     }
 
     containers {
-      image = "${var.registry}/${var.app_name}-backend:latest"
+      # Placeholder image for initial deploy — CI will update this via gcloud run deploy
+      image = "gcr.io/cloudrun/hello"
 
       ports {
-        container_port = 5000
+        container_port = 8080
       }
 
       volume_mounts {
@@ -26,14 +27,31 @@ resource "google_cloud_run_v2_service" "backend" {
         mount_path = "/cloudsql"
       }
 
-      # Runtime environment
-      env { name = "NODE_ENV";    value = "production" }
-      env { name = "DB_USER";     value = "psqladmin" }
-      env { name = "DB_DATABASE"; value = "jwtauth" }
-      env { name = "DB_PORT";     value = "5432" }
+      env {
+        name  = "NODE_ENV"
+        value = "production"
+      }
+      env {
+        name  = "DB_USER"
+        value = "psqladmin"
+      }
+      env {
+        name  = "DB_DATABASE"
+        value = "jwtauth"
+      }
+      env {
+        name  = "DB_PORT"
+        value = "5432"
+      }
       # Unix socket path — pg library handles this transparently (no code change needed)
-      env { name = "DB_HOST"; value = "/cloudsql/${var.cloud_sql_connection_name}" }
-      env { name = "DB_SSL";  value = "false" }
+      env {
+        name  = "DB_HOST"
+        value = "/cloudsql/${var.cloud_sql_connection_name}"
+      }
+      env {
+        name  = "DB_SSL"
+        value = "false"
+      }
 
       # Secrets from Secret Manager
       env {
@@ -88,8 +106,13 @@ resource "google_cloud_run_v2_service" "backend" {
   }
 
   traffic {
-    type    = "TRAFFIC_TARGET_TYPE_LATEST"
+    type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
     percent = 100
+  }
+
+  # Ignore image changes — CI/CD updates the image via gcloud run deploy
+  lifecycle {
+    ignore_changes = [template[0].containers[0].image, template[0].containers[0].ports]
   }
 }
 
@@ -109,20 +132,30 @@ resource "google_cloud_run_v2_service" "frontend" {
     service_account = var.service_account_email
 
     containers {
-      image = "${var.registry}/${var.app_name}-frontend:latest"
+      # Placeholder image for initial deploy — CI will update this via gcloud run deploy
+      image = "gcr.io/cloudrun/hello"
 
       ports {
-        container_port = 3000
+        container_port = 8080
       }
 
-      env { name = "BROWSER";                       value = "none" }
-      env { name = "DANGEROUSLY_DISABLE_HOST_CHECK"; value = "true" }
-      env { name = "CHOKIDAR_USEPOLLING";            value = "false" }
+      env {
+        name  = "BROWSER"
+        value = "none"
+      }
+      env {
+        name  = "DANGEROUSLY_DISABLE_HOST_CHECK"
+        value = "true"
+      }
+      env {
+        name  = "CHOKIDAR_USEPOLLING"
+        value = "false"
+      }
 
       resources {
         limits = {
-          cpu    = "0.5"
-          memory = "256Mi"
+          cpu    = "1"
+          memory = "512Mi"
         }
       }
     }
@@ -134,8 +167,13 @@ resource "google_cloud_run_v2_service" "frontend" {
   }
 
   traffic {
-    type    = "TRAFFIC_TARGET_TYPE_LATEST"
+    type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
     percent = 100
+  }
+
+  # Ignore image changes — CI/CD updates the image via gcloud run deploy
+  lifecycle {
+    ignore_changes = [template[0].containers[0].image, template[0].containers[0].ports]
   }
 }
 
