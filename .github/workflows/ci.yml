@@ -302,10 +302,12 @@ jobs:
           gcloud run deploy seiko-backend \
             --image ${AR}/seiko-backend:${SHA} \
             --region ${{ secrets.GCP_REGION }} \
+            --port 5000 \
             --quiet
           gcloud run deploy seiko-frontend \
             --image ${AR}/seiko-frontend:${SHA} \
             --region ${{ secrets.GCP_REGION }} \
+            --port 3000 \
             --quiet
 
   # ── Summary ───────────────────────────────────────────────
