@@ -1,3 +1,7 @@
 import app from "./app";
 
-app.listen(5000, () => console.log("Backend 5000 portunda hazır."));
+const port = Number(process.env.PORT) || 8080;
+
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Backend listening on port ${port}`);
+});

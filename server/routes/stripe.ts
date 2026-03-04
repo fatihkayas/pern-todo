@@ -5,7 +5,14 @@ import validate from "../middleware/validate";
 import { createPaymentIntentSchema, confirmOrderSchema } from "../schemas";
 
 const router = express.Router();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+
+const getStripe = () => {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  if (!stripeSecretKey) {
+    return null;
+  }
+  return new Stripe(stripeSecretKey);
+};
 
 /**
  * @swagger
@@ -43,6 +50,12 @@ router.post(
   "/create-payment-intent",
   validate(createPaymentIntentSchema),
   async (req: Request, res: Response) => {
+    const stripe = getStripe();
+    if (!stripe) {
+      res.status(503).json({ error: "Stripe is not configured" });
+      return;
+    }
+
     const { amount, order_id, currency } = req.body as {
       amount: number;
       order_id: number;
@@ -88,6 +101,12 @@ router.post(
  */
 // POST /api/stripe/webhook
 router.post("/webhook", async (req: Request, res: Response) => {
+  const stripe = getStripe();
+  if (!stripe) {
+    res.status(503).send("Stripe is not configured");
+    return;
+  }
+
   const sig = req.headers["stripe-signature"];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -154,6 +173,12 @@ router.post("/webhook", async (req: Request, res: Response) => {
  */
 // POST /api/stripe/confirm-order
 router.post("/confirm-order", validate(confirmOrderSchema), async (req: Request, res: Response) => {
+  const stripe = getStripe();
+  if (!stripe) {
+    res.status(503).json({ error: "Stripe is not configured" });
+    return;
+  }
+
   const { payment_intent_id, order_id } = req.body as {
     payment_intent_id: string;
     order_id: number;
