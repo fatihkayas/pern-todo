@@ -1,0 +1,8 @@
+project_id            = "YOUR_GCP_PROJECT_ID"
+app_name              = "seiko"
+region                = "europe-west1"
+github_repo           = "YOUR_GITHUB_OWNER/pern-todo"
+db_password           = "CHANGE_ME_strong_password"
+stripe_secret_key     = "sk_test_..."
+stripe_webhook_secret = "whsec_..."
+jwt_secret            = "change_me_64_bytes_long_random_secret"

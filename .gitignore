@@ -36,5 +36,12 @@ infra/aws/crash.log
 infra/aws/override.tf
 infra/aws/override.tf.json
 
+infra/gcp/.terraform/
+infra/gcp/.terraform.lock.hcl
+infra/gcp/*.tfstate
+infra/gcp/*.tfstate.backup
+infra/gcp/*.tfvars
+infra/gcp/crash.log
+
 # Trigger.dev build cache
 server/.trigger/
