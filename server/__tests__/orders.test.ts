@@ -47,7 +47,9 @@ describe("POST /api/v1/orders", () => {
       .post("/api/v1/orders")
       .set("Authorization", `Bearer ${makeAuthToken()}`)
       .send({
-        items: [{ watch_id: 1, quantity: 2, unit_price: 299.99 }],
+        items: [
+          { watch_id: "f15ec893-7113-4f91-801a-2a8109d96290", quantity: 2, unit_price: 299.99 },
+        ],
       });
 
     expect(res.status).toBe(201);
@@ -66,7 +68,11 @@ describe("POST /api/v1/orders", () => {
 
     const res = await request(app)
       .post("/api/v1/orders")
-      .send({ items: [{ watch_id: 2, quantity: 1, unit_price: 599.99 }] });
+      .send({
+        items: [
+          { watch_id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", quantity: 1, unit_price: 599.99 },
+        ],
+      });
 
     expect(res.status).toBe(201);
     expect(res.body).toHaveProperty("order_id", 99);
@@ -86,11 +92,11 @@ describe("POST /api/v1/orders", () => {
     expect(res.body).toHaveProperty("error", "Validation failed");
   });
 
-  it("returns 400 for non-numeric watch_id that cannot be coerced", async () => {
+  it("returns 400 for invalid watch_id (not a UUID)", async () => {
     const res = await request(app)
       .post("/api/v1/orders")
       .send({
-        items: [{ watch_id: "abc", quantity: 1, unit_price: 299.99 }],
+        items: [{ watch_id: "not-a-uuid", quantity: 1, unit_price: 299.99 }],
       });
 
     expect(res.status).toBe(400);
@@ -100,7 +106,9 @@ describe("POST /api/v1/orders", () => {
     const res = await request(app)
       .post("/api/v1/orders")
       .send({
-        items: [{ watch_id: 1, quantity: 0, unit_price: 299.99 }],
+        items: [
+          { watch_id: "f15ec893-7113-4f91-801a-2a8109d96290", quantity: 0, unit_price: 299.99 },
+        ],
       });
 
     expect(res.status).toBe(400);
@@ -118,7 +126,9 @@ describe("POST /api/v1/orders", () => {
     const res = await request(app)
       .post("/api/v1/orders")
       .send({
-        items: [{ watch_id: "3", quantity: "1", unit_price: "340.00" }],
+        items: [
+          { watch_id: "f15ec893-7113-4f91-801a-2a8109d96290", quantity: "1", unit_price: "340.00" },
+        ],
       });
 
     expect(res.status).toBe(201);

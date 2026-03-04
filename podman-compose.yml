@@ -158,6 +158,16 @@ services:
     ports:
       - "29092:29092"
 
+  redpanda-console:
+    image: docker.redpanda.com/redpandadata/console:latest
+    container_name: seiko_redpanda_console
+    depends_on:
+      - redpanda
+    ports:
+      - "8084:8080"
+    environment:
+      KAFKA_BROKERS: seiko_redpanda:9092
+
   redpanda-init:
     image: docker.redpanda.com/redpandadata/redpanda:v23.3.21
     container_name: seiko_redpanda_init

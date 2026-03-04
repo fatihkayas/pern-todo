@@ -83,21 +83,25 @@ describe("loginSchema", () => {
 });
 
 describe("createOrderSchema", () => {
-  it("accepts valid order with number types", () => {
+  it("accepts valid order with UUID watch_id", () => {
     const result = createOrderSchema.safeParse({
-      items: [{ watch_id: 1, quantity: 2, unit_price: 299.99 }],
+      items: [
+        { watch_id: "f15ec893-7113-4f91-801a-2a8109d96290", quantity: 2, unit_price: 299.99 },
+      ],
     });
     expect(result.success).toBe(true);
   });
 
   it("coerces string numbers from PostgreSQL DECIMAL columns", () => {
     const result = createOrderSchema.safeParse({
-      items: [{ watch_id: "1", quantity: "2", unit_price: "299.99" }],
+      items: [
+        { watch_id: "f15ec893-7113-4f91-801a-2a8109d96290", quantity: "2", unit_price: "299.99" },
+      ],
     });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.items[0].unit_price).toBe(299.99);
-      expect(result.data.items[0].watch_id).toBe(1);
+      expect(result.data.items[0].watch_id).toBe("f15ec893-7113-4f91-801a-2a8109d96290");
       expect(result.data.items[0].quantity).toBe(2);
     }
   });
@@ -109,14 +113,16 @@ describe("createOrderSchema", () => {
 
   it("rejects negative quantity", () => {
     const result = createOrderSchema.safeParse({
-      items: [{ watch_id: 1, quantity: -1, unit_price: 299.99 }],
+      items: [
+        { watch_id: "f15ec893-7113-4f91-801a-2a8109d96290", quantity: -1, unit_price: 299.99 },
+      ],
     });
     expect(result.success).toBe(false);
   });
 
   it("rejects non-numeric string for price", () => {
     const result = createOrderSchema.safeParse({
-      items: [{ watch_id: 1, quantity: 1, unit_price: "abc" }],
+      items: [{ watch_id: "f15ec893-7113-4f91-801a-2a8109d96290", quantity: 1, unit_price: "abc" }],
     });
     expect(result.success).toBe(false);
   });
