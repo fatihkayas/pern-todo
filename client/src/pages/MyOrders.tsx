@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Order, OrderStatus } from "../types";
+import { apiUrl } from "../config";
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
   pending: "warning",
@@ -27,7 +28,7 @@ const MyOrders = () => {
 
   useEffect(() => {
     if (!token) { navigate("/login"); return; }
-    fetch("/api/v1/orders/my", {
+    fetch(apiUrl("/api/v1/orders/my"), {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())

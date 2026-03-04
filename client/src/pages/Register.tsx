@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Customer } from "../types";
+import { apiUrl } from "../config";
 
 interface RegisterProps {
   onLogin: (customer: Customer) => void;
@@ -35,7 +36,7 @@ const Register = ({ onLogin }: RegisterProps) => {
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/v1/auth/register", {
+      const res = await fetch(apiUrl("/api/v1/auth/register"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

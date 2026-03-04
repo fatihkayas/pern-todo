@@ -17,6 +17,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import { ThemeProvider } from "./context/ThemeContext";
 import { Watch, CartItem, Customer } from "./types";
+import { apiUrl } from "./config";
 
 function App() {
   const [watches, setWatches] = useState<Watch[]>([]);
@@ -28,7 +29,7 @@ function App() {
   });
 
   useEffect(() => {
-    fetch("/api/v1/watches")
+    fetch(apiUrl("/api/v1/watches"))
       .then((res) => {
         if (!res.ok) throw new Error("Connection refused");
         return res.json();

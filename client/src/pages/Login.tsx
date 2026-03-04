@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Customer } from "../types";
+import { apiUrl } from "../config";
 
 interface LoginProps {
   onLogin: (customer: Customer) => void;
@@ -21,7 +22,7 @@ const Login = ({ onLogin }: LoginProps) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("/api/v1/auth/login", {
+      const res = await fetch(apiUrl("/api/v1/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

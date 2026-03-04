@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Watch, Order, OrderStatus, AdminStats } from "../types";
+import { apiUrl } from "../config";
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
   pending: "warning",
@@ -31,9 +32,9 @@ const AdminPanel = () => {
     setLoading(true);
     try {
       const [statsRes, ordersRes, watchesRes] = await Promise.all([
-        fetch("/api/v1/admin/stats", { headers: authHeaders }),
-        fetch("/api/v1/admin/orders", { headers: authHeaders }),
-        fetch("/api/v1/admin/watches", { headers: authHeaders }),
+        fetch(apiUrl("/api/v1/admin/stats"), { headers: authHeaders }),
+        fetch(apiUrl("/api/v1/admin/orders"), { headers: authHeaders }),
+        fetch(apiUrl("/api/v1/admin/watches"), { headers: authHeaders }),
       ]);
       if (statsRes.status === 403) { toast.error("Admin yetkisi yok"); navigate("/"); return; }
       setStats(await statsRes.json());
@@ -48,7 +49,7 @@ const AdminPanel = () => {
 
   const updateOrderStatus = async (orderId: number, status: OrderStatus) => {
     try {
-      const res = await fetch(`/api/v1/admin/orders/${orderId}/status`, {
+      const res = await fetch(apiUrl(`/api/v1/admin/orders/${orderId}/status`), {
         method: "PUT", headers: authHeaders,
         body: JSON.stringify({ status }),
       });
@@ -62,7 +63,7 @@ const AdminPanel = () => {
 
   const updateStock = async (watchId: number, stockQuantity: number) => {
     try {
-      const res = await fetch(`/api/v1/admin/watches/${watchId}/stock`, {
+      const res = await fetch(apiUrl(`/api/v1/admin/watches/${watchId}/stock`), {
         method: "PUT", headers: authHeaders,
         body: JSON.stringify({ stock_quantity: stockQuantity }),
       });

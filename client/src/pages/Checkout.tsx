@@ -4,6 +4,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import toast from "react-hot-toast";
 import { CartItem } from "../types";
+import { apiUrl } from "../config";
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY as string);
 
@@ -32,7 +33,7 @@ function CheckoutForm({ orderId, onSuccess }: CheckoutFormProps) {
         return;
       }
       if (paymentIntent?.status === "succeeded") {
-        const res = await fetch("/api/v1/stripe/confirm-order", {
+        const res = await fetch(apiUrl("/api/v1/stripe/confirm-order"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -95,7 +96,7 @@ const Checkout = ({ cart, onOrderSuccess }: CheckoutProps) => {
   const createOrder = async () => {
     setLoading(true);
     try {
-      const orderRes = await fetch("/api/v1/orders", {
+      const orderRes = await fetch(apiUrl("/api/v1/orders"), {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify({
@@ -110,7 +111,7 @@ const Checkout = ({ cart, onOrderSuccess }: CheckoutProps) => {
       if (!orderRes.ok) throw new Error(orderData.error);
       setOrderId(orderData.order_id);
 
-      const payRes = await fetch("/api/v1/stripe/create-payment-intent", {
+      const payRes = await fetch(apiUrl("/api/v1/stripe/create-payment-intent"), {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify({ amount: total, order_id: orderData.order_id }),

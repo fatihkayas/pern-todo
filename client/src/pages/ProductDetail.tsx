@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Watch } from "../types";
+import { apiUrl } from "../config";
 
 function fixImageUrl(url: string | undefined): string {
   if (!url) return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400";
@@ -22,7 +23,7 @@ const ProductDetail = ({ addToCart }: ProductDetailProps) => {
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
-    fetch(`/api/v1/watches`)
+    fetch(apiUrl("/api/v1/watches"))
       .then((res) => res.json())
       .then((data: Watch[]) => {
         const found = data.find((w) => String(w.watch_id) === id);

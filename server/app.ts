@@ -35,6 +35,17 @@ new client.Gauge({
 });
 
 const app = express();
+const configuredOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const allowedOrigins = new Set([
+  "https://localhost:8443",
+  "http://localhost:3000",
+  "https://seiko-frontend-e3b5xeopra-ew.a.run.app",
+  ...configuredOrigins,
+]);
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -53,7 +64,13 @@ const authLimiter = rateLimit({
 app.use(helmet());
 app.use(
   cors({
-    origin: ["https://localhost:8443", "http://localhost:3000"],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.has(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );
