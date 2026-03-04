@@ -1,18 +1,20 @@
+﻿FROM node:18-alpine AS builder
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --legacy-peer-deps
+
+COPY . .
+RUN npm run build
+
 FROM node:18-alpine
 WORKDIR /app
 
-# Sadece client package dosyalarını kopyala
-COPY package*.json ./
+RUN npm install -g serve
+COPY --from=builder /app/build ./build
 
-# Bağımlılıkları yükle
-RUN npm install --legacy-peer-deps
+ENV NODE_ENV=production
+ENV PORT=8080
 
-# Client kodunu kopyala
-COPY . .
-
-# Tarayıcı otomatik açılmasını devre dışı bırak
-ENV BROWSER=none
-ENV CHOKIDAR_USEPOLLING=true
-
-EXPOSE 3000
-CMD ["npm", "start"]
+EXPOSE 8080
+CMD ["sh", "-c", "serve -s build -l ${PORT}"]
