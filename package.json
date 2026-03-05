@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "prepare": "husky",
-    "predev": "podman-compose up -d db ollama",
+    "predev": "podman-compose up -d db ollama adminer prometheus alertmanager grafana redpanda redpanda-console redpanda-init",
     "dev": "concurrently --kill-others --names \"server,trigger,client\" --prefix-colors \"cyan,magenta,green\" \"cd server && npm run dev\" \"cd server && npx trigger.dev@latest dev\" \"cd client && npm start\""
   },
   "dependencies": {
