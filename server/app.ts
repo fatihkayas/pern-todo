@@ -53,6 +53,8 @@ const limiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
+  // Chat status polling can fire ~120 req/message — skip it from the global limiter
+  skip: (req) => req.method === "GET" && req.path.startsWith("/chat/"),
 });
 
 const authLimiter = rateLimit({
@@ -78,6 +80,7 @@ app.use(
 
 app.use("/api/v1", limiter);
 app.use("/api/v1/auth", authLimiter);
+// Chat polling (GET /api/v1/chat/:runId) is exempt — can fire 120 req/message
 
 // Stripe webhook requires raw body — must be registered BEFORE express.json()
 app.use("/api/v1/stripe/webhook", express.raw({ type: "application/json" }));

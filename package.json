@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "prepare": "husky",
-    "dev": "concurrently --kill-others --names \"server,client\" --prefix-colors \"cyan,green\" \"cd server && npm run dev\" \"cd client && npm start\""
+    "predev": "podman-compose up -d db ollama",
+    "dev": "concurrently --kill-others --names \"server,trigger,client\" --prefix-colors \"cyan,magenta,green\" \"cd server && npm run dev\" \"cd server && npx trigger.dev@latest dev\" \"cd client && npm start\""
   },
   "dependencies": {
     "react-router-dom": "^7.13.0"
