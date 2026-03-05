@@ -45,3 +45,11 @@ infra/gcp/crash.log
 
 # Trigger.dev build cache
 server/.trigger/
+
+# TypeScript compiled output
+server/dist/
+client/build/
+
+# Windows reserved device name artifacts
+CON
+NUL
