@@ -47,7 +47,7 @@ const AdminPanel = () => {
     }
   };
 
-  const updateOrderStatus = async (orderId: number, status: OrderStatus) => {
+  const updateOrderStatus = async (orderId: string, status: OrderStatus) => {
     try {
       const res = await fetch(apiUrl(`/api/v1/admin/orders/${orderId}/status`), {
         method: "PUT", headers: authHeaders,

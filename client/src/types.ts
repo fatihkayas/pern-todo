@@ -27,6 +27,7 @@ export type OrderStatus =
   | "cancelled";
 
 export interface OrderItem {
+  watch_id?: string;
   watch_name: string;
   quantity: number;
   unit_price: number;
@@ -34,7 +35,7 @@ export interface OrderItem {
 }
 
 export interface Order {
-  order_id: number;
+  order_id: string;
   customer_id: number | null;
   total_amount: string;
   status: OrderStatus;
