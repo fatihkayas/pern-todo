@@ -142,6 +142,39 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Build & push prometheus
+        uses: docker/build-push-action@v5
+        with:
+          context: ./prometheus
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/seiko-prometheus:latest
+            ghcr.io/${{ github.repository_owner }}/seiko-prometheus:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & push alertmanager
+        uses: docker/build-push-action@v5
+        with:
+          context: ./alertmanager
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/seiko-alertmanager:latest
+            ghcr.io/${{ github.repository_owner }}/seiko-alertmanager:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & push grafana
+        uses: docker/build-push-action@v5
+        with:
+          context: ./grafana
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/seiko-grafana:latest
+            ghcr.io/${{ github.repository_owner }}/seiko-grafana:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   # ── AWS: push to ECR + force new ECS deployment (main only) ─────
   # deploy-aws:
   #   name: Deploy to AWS
@@ -226,7 +259,7 @@ jobs:
           ACR=${{ secrets.ACR_LOGIN_SERVER }}
           OWNER=${{ github.repository_owner }}
 
-          for SVC in seiko-backend seiko-frontend; do
+          for SVC in seiko-backend seiko-frontend seiko-prometheus seiko-alertmanager seiko-grafana; do
             docker pull ghcr.io/${OWNER}/${SVC}:${SHA}
             docker tag  ghcr.io/${OWNER}/${SVC}:${SHA} ${ACR}/${SVC}:${SHA}
             docker tag  ghcr.io/${OWNER}/${SVC}:${SHA} ${ACR}/${SVC}:latest
@@ -247,6 +280,27 @@ jobs:
             --name seiko-frontend \
             --resource-group seiko-rg \
             --image ${{ secrets.ACR_LOGIN_SERVER }}/seiko-frontend:${{ github.sha }}
+
+      - name: Update prometheus Container App
+        run: |
+          az containerapp update \
+            --name seiko-prometheus \
+            --resource-group seiko-rg \
+            --image ${{ secrets.ACR_LOGIN_SERVER }}/seiko-prometheus:${{ github.sha }}
+
+      - name: Update alertmanager Container App
+        run: |
+          az containerapp update \
+            --name seiko-alertmanager \
+            --resource-group seiko-rg \
+            --image ${{ secrets.ACR_LOGIN_SERVER }}/seiko-alertmanager:${{ github.sha }}
+
+      - name: Update grafana Container App
+        run: |
+          az containerapp update \
+            --name seiko-grafana \
+            --resource-group seiko-rg \
+            --image ${{ secrets.ACR_LOGIN_SERVER }}/seiko-grafana:${{ github.sha }}
 
   # ── GCP: push to Artifact Registry + deploy to Cloud Run (main only) ──────────
   # deploy-gcp:

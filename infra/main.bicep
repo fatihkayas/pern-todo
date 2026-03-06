@@ -30,7 +30,6 @@ var suffix     = uniqueString(resourceGroup().id)
 var acrName    = '${appName}acr${suffix}'
 
 // ── User-Assigned Managed Identity (shared by both Container Apps) ──────────
-// Created first so the ACR module can assign AcrPull before the apps start.
 resource uami 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: '${appName}-identity'
   location: location
@@ -133,9 +132,84 @@ module frontend 'modules/containerApp.bicep' = {
   }
 }
 
+// ── Redpanda (Kafka) — internal only ─────────────────────────────────────────
+module redpanda 'modules/containerApp.bicep' = {
+  name: 'deploy-redpanda'
+  params: {
+    location: location
+    appName: '${appName}-redpanda'
+    environmentId: containerAppsEnv.outputs.environmentId
+    containerImage: 'docker.redpanda.com/redpandadata/redpanda:latest'
+    targetPort: 9644
+    externalIngress: false
+    minReplicas: 1
+    maxReplicas: 1
+    envVars: [
+      { name: 'REDPANDA_MODE', value: 'dev-container' }
+    ]
+  }
+}
+
+// ── Prometheus — external (view metrics) ─────────────────────────────────────
+module prometheus 'modules/containerApp.bicep' = {
+  name: 'deploy-prometheus'
+  params: {
+    location: location
+    appName: '${appName}-prometheus'
+    environmentId: containerAppsEnv.outputs.environmentId
+    containerImage: '${acr.outputs.loginServer}/seiko-prometheus:${imageTag}'
+    acrLoginServer: acr.outputs.loginServer
+    uamiId: uami.id
+    targetPort: 9090
+    externalIngress: true
+    minReplicas: 1
+    maxReplicas: 1
+  }
+}
+
+// ── Alertmanager — internal only ─────────────────────────────────────────────
+module alertmanager 'modules/containerApp.bicep' = {
+  name: 'deploy-alertmanager'
+  params: {
+    location: location
+    appName: '${appName}-alertmanager'
+    environmentId: containerAppsEnv.outputs.environmentId
+    containerImage: '${acr.outputs.loginServer}/seiko-alertmanager:${imageTag}'
+    acrLoginServer: acr.outputs.loginServer
+    uamiId: uami.id
+    targetPort: 9093
+    externalIngress: false
+    minReplicas: 1
+    maxReplicas: 1
+  }
+}
+
+// ── Grafana — external (view dashboards) ─────────────────────────────────────
+module grafana 'modules/containerApp.bicep' = {
+  name: 'deploy-grafana'
+  params: {
+    location: location
+    appName: '${appName}-grafana'
+    environmentId: containerAppsEnv.outputs.environmentId
+    containerImage: '${acr.outputs.loginServer}/seiko-grafana:${imageTag}'
+    acrLoginServer: acr.outputs.loginServer
+    uamiId: uami.id
+    targetPort: 3000
+    externalIngress: true
+    minReplicas: 1
+    maxReplicas: 1
+    envVars: [
+      { name: 'GF_SECURITY_ADMIN_PASSWORD', value: 'admin' }
+      { name: 'GF_USERS_ALLOW_SIGN_UP',     value: 'false' }
+    ]
+  }
+}
+
 // ── Outputs ──────────────────────────────────────────────────────────────────
-output acrLoginServer  string = acr.outputs.loginServer
-output acrName         string = acrName
-output backendUrl      string = 'https://${backend.outputs.fqdn}'
-output frontendUrl     string = 'https://${frontend.outputs.fqdn}'
-output postgresServer  string = postgres.outputs.fqdn
+output acrLoginServer    string = acr.outputs.loginServer
+output acrName           string = acrName
+output backendUrl        string = 'https://${backend.outputs.fqdn}'
+output frontendUrl       string = 'https://${frontend.outputs.fqdn}'
+output postgresServer    string = postgres.outputs.fqdn
+output prometheusUrl     string = 'https://${prometheus.outputs.fqdn}'
+output grafanaUrl        string = 'https://${grafana.outputs.fqdn}'

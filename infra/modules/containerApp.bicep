@@ -2,46 +2,49 @@ param location string
 param appName string
 param environmentId string
 param containerImage string
-param acrLoginServer string
 
-@description('Resource ID of the User-Assigned Managed Identity for ACR pull')
-param uamiId string
+@description('ACR login server — empty string for public images')
+param acrLoginServer string = ''
+
+@description('Resource ID of the User-Assigned Managed Identity for ACR pull — empty string for public images')
+param uamiId string = ''
 
 param targetPort int
+param externalIngress bool = true
 param minReplicas int = 1
 param maxReplicas int = 3
 param secrets array = []
 param envVars array = []
 
+var useAcr = !empty(acrLoginServer) && !empty(uamiId)
+
 resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
   name: appName
   location: location
 
-  // Attach the shared UAMI — used for pulling images from ACR
-  identity: {
+  identity: useAcr ? {
     type: 'UserAssigned'
     userAssignedIdentities: {
       '${uamiId}': {}
     }
-  }
+  } : { type: 'None' }
 
   properties: {
     managedEnvironmentId: environmentId
 
     configuration: {
       ingress: {
-        external: true
+        external: externalIngress
         targetPort: targetPort
         transport: 'auto'
         allowInsecure: false
       }
-      // Use UAMI (not admin creds) to authenticate to ACR
-      registries: [
+      registries: useAcr ? [
         {
           server: acrLoginServer
           identity: uamiId
         }
-      ]
+      ] : []
       secrets: secrets
     }
 
