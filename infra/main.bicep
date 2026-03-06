@@ -88,7 +88,7 @@ module backend 'modules/containerApp.bicep' = {
     containerImage: '${acr.outputs.loginServer}/seiko-backend:${imageTag}'
     acrLoginServer: acr.outputs.loginServer
     uamiId: uami.id
-    targetPort: 5000
+    targetPort: 8080
     minReplicas: 1
     maxReplicas: 3
     secrets: [

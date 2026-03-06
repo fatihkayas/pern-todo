@@ -44,7 +44,6 @@ const configuredOrigins = (process.env.CORS_ORIGIN || "")
 const allowedOrigins = new Set([
   "https://localhost:8443",
   "http://localhost:3000",
-  "https://seiko-frontend-e3b5xeopra-ew.a.run.app",
   ...configuredOrigins,
 ]);
 
