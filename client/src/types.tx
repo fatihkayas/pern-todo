@@ -1,0 +1,8 @@
+export type WatchBrand = "Seiko" | "Tissot" | "Rolex" | "Casio" | "Patek Philippe";
+
+export interface Category {
+  id: string;
+  name: string;
+  icon: string; // Emoji veya SVG path
+  brand?: WatchBrand;
+}

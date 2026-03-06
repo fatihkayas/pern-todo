@@ -1,4 +1,10 @@
-const DEFAULT_API_BASE_URL = "https://seiko-backend-e3b5xeopra-ew.a.run.app";
+const isLocalhost =
+  typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
+const DEFAULT_API_BASE_URL = isLocalhost
+  ? "http://localhost:8080"
+  : "https://seiko-backend-e3b5xeopra-ew.a.run.app";
 
 const rawApiBaseUrl = process.env.REACT_APP_API_URL || DEFAULT_API_BASE_URL;
 

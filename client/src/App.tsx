@@ -16,6 +16,7 @@ import AdminPanel from "./pages/AdminPanel";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import { ThemeProvider } from "./context/ThemeContext";
+import { LanguageProvider } from "./context/LanguageContext";
 import { Watch, CartItem, Customer } from "./types";
 import { apiUrl } from "./config";
 
@@ -86,36 +87,38 @@ function App() {
 
   return (
     <ThemeProvider>
-      <Toaster position="top-right" />
-      <Router>
-        <Navbar
-          userDisplayName={customer ? customer.full_name : null}
-          cartCount={cartCount}
-          logout={handleLogout}
-          onCartClick={() => setCartOpen(true)}
-        />
-        <CartSidebar
-          cart={cart}
-          isOpen={cartOpen}
-          onClose={() => setCartOpen(false)}
-          removeFromCart={removeFromCart}
-          updateQuantity={updateQuantity}
-          onOrderSuccess={() => setCart([])}
-        />
-        <Routes>
-          <Route path="/" element={<Store watches={watches} addToCart={addToCart} />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/returns" element={<Returns />} />
-          <Route path="/watch/:id" element={<ProductDetail addToCart={addToCart} />} />
-          <Route path="/login" element={customer ? <Navigate to="/" /> : <Login onLogin={handleLogin} />} />
-          <Route path="/checkout" element={<Checkout cart={cart} onOrderSuccess={() => setCart([])} />} />
-          <Route path="/orders" element={<MyOrders />} />
-          <Route path="/admin" element={<AdminPanel />} />
-          <Route path="/register" element={customer ? <Navigate to="/" /> : <Register onLogin={handleLogin} />} />
-        </Routes>
-        <ChatWidget />
-      </Router>
+      <LanguageProvider>
+        <Toaster position="top-right" />
+        <Router>
+          <Navbar
+            userDisplayName={customer ? customer.full_name : null}
+            cartCount={cartCount}
+            logout={handleLogout}
+            onCartClick={() => setCartOpen(true)}
+          />
+          <CartSidebar
+            cart={cart}
+            isOpen={cartOpen}
+            onClose={() => setCartOpen(false)}
+            removeFromCart={removeFromCart}
+            updateQuantity={updateQuantity}
+            onOrderSuccess={() => setCart([])}
+          />
+          <Routes>
+            <Route path="/" element={<Store watches={watches} addToCart={addToCart} />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/returns" element={<Returns />} />
+            <Route path="/watch/:id" element={<ProductDetail addToCart={addToCart} />} />
+            <Route path="/login" element={customer ? <Navigate to="/" /> : <Login onLogin={handleLogin} />} />
+            <Route path="/checkout" element={<Checkout cart={cart} onOrderSuccess={() => setCart([])} />} />
+            <Route path="/orders" element={<MyOrders />} />
+            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/register" element={customer ? <Navigate to="/" /> : <Register onLogin={handleLogin} />} />
+          </Routes>
+          <ChatWidget />
+        </Router>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }
