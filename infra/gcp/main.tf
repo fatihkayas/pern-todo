@@ -53,7 +53,7 @@ resource "google_project_iam_member" "runner_roles" {
 
 # ── Workload Identity Federation (GitHub Actions OIDC — no long-lived keys) ────
 resource "google_iam_workload_identity_pool" "github" {
-  workload_identity_pool_id = "${var.app_name}-github-pool"
+  workload_identity_pool_id = "${var.app_name}-gh-pool-v2"
   display_name              = "GitHub Actions Pool"
   depends_on                = [google_project_service.apis]
 }
