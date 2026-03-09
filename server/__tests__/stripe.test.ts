@@ -42,6 +42,28 @@ const stripeInstance = new MockStripe("") as unknown as {
 describe("POST /api/v1/stripe/create-payment-intent", () => {
   beforeEach(() => jest.clearAllMocks());
 
+  it("returns 503 when STRIPE_SECRET_KEY is not set", async () => {
+    const original = process.env.STRIPE_SECRET_KEY;
+    delete process.env.STRIPE_SECRET_KEY;
+
+    const res = await request(app)
+      .post("/api/v1/stripe/create-payment-intent")
+      .send({ amount: 299.99, order_id: 1 });
+
+    process.env.STRIPE_SECRET_KEY = original;
+    expect(res.status).toBe(503);
+  });
+
+  it("returns 500 when Stripe API throws", async () => {
+    stripeInstance.paymentIntents.create.mockRejectedValueOnce(new Error("Stripe network error"));
+
+    const res = await request(app)
+      .post("/api/v1/stripe/create-payment-intent")
+      .send({ amount: 299.99, order_id: 1 });
+
+    expect(res.status).toBe(500);
+  });
+
   it("creates a payment intent and returns clientSecret", async () => {
     stripeInstance.paymentIntents.create.mockResolvedValueOnce({
       client_secret: "pi_test_secret_abc",
@@ -84,6 +106,20 @@ describe("POST /api/v1/stripe/create-payment-intent", () => {
 
 describe("POST /api/v1/stripe/webhook", () => {
   beforeEach(() => jest.clearAllMocks());
+
+  it("returns 503 when STRIPE_SECRET_KEY is not set", async () => {
+    const original = process.env.STRIPE_SECRET_KEY;
+    delete process.env.STRIPE_SECRET_KEY;
+
+    const res = await request(app)
+      .post("/api/v1/stripe/webhook")
+      .set("content-type", "application/json")
+      .set("stripe-signature", "valid_sig")
+      .send(Buffer.from("{}"));
+
+    process.env.STRIPE_SECRET_KEY = original;
+    expect(res.status).toBe(503);
+  });
 
   it("processes payment_intent.succeeded and updates order status", async () => {
     stripeInstance.webhooks.constructEvent.mockReturnValueOnce({
@@ -154,6 +190,30 @@ describe("POST /api/v1/stripe/webhook", () => {
 
 describe("POST /api/v1/stripe/confirm-order", () => {
   beforeEach(() => jest.clearAllMocks());
+
+  it("returns 503 when STRIPE_SECRET_KEY is not set", async () => {
+    const original = process.env.STRIPE_SECRET_KEY;
+    delete process.env.STRIPE_SECRET_KEY;
+
+    const res = await request(app).post("/api/v1/stripe/confirm-order").send({
+      payment_intent_id: "pi_test_123",
+      order_id: 1,
+    });
+
+    process.env.STRIPE_SECRET_KEY = original;
+    expect(res.status).toBe(503);
+  });
+
+  it("returns 500 when Stripe API throws", async () => {
+    stripeInstance.paymentIntents.retrieve.mockRejectedValueOnce(new Error("Stripe error"));
+
+    const res = await request(app).post("/api/v1/stripe/confirm-order").send({
+      payment_intent_id: "pi_test_123",
+      order_id: 1,
+    });
+
+    expect(res.status).toBe(500);
+  });
 
   it("confirms an order after successful payment", async () => {
     stripeInstance.paymentIntents.retrieve.mockResolvedValueOnce({

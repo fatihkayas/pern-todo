@@ -79,6 +79,18 @@ describe("POST /api/v1/auth/register", () => {
     expect(res.status).toBe(409);
     expect(res.body).toHaveProperty("error");
   });
+
+  it("returns 500 on DB error", async () => {
+    mockQuery.mockRejectedValueOnce(new Error("DB failure"));
+
+    const res = await request(app).post("/api/v1/auth/register").send({
+      email: "test@test.com",
+      full_name: "Test User",
+      password: "password123",
+    });
+
+    expect(res.status).toBe(500);
+  });
 });
 
 describe("POST /api/v1/auth/login", () => {
@@ -105,6 +117,19 @@ describe("POST /api/v1/auth/login", () => {
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("token");
     expect(res.body.customer).toMatchObject({ email: "test@test.com" });
+  });
+
+  it("returns 401 when customer has no password set", async () => {
+    mockQuery.mockResolvedValueOnce({
+      rows: [{ customer_id: 1, email: "oauth@test.com", password_hash: null }],
+    });
+
+    const res = await request(app).post("/api/v1/auth/login").send({
+      email: "oauth@test.com",
+      password: "anypassword",
+    });
+
+    expect(res.status).toBe(401);
   });
 
   it("returns 401 for wrong password", async () => {
@@ -152,6 +177,17 @@ describe("POST /api/v1/auth/login", () => {
     });
 
     expect(res.status).toBe(400);
+  });
+
+  it("returns 500 on DB error", async () => {
+    mockQuery.mockRejectedValueOnce(new Error("DB failure"));
+
+    const res = await request(app).post("/api/v1/auth/login").send({
+      email: "test@test.com",
+      password: "password123",
+    });
+
+    expect(res.status).toBe(500);
   });
 });
 

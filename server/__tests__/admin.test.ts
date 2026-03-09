@@ -74,6 +74,18 @@ describe("GET /api/v1/admin/orders", () => {
     expect(Array.isArray(res.body)).toBe(true);
     expect(res.body[0]).toHaveProperty("order_id", 1);
   });
+
+  it("returns 500 on DB error", async () => {
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ is_admin: true }] })
+      .mockRejectedValueOnce(new Error("DB failure"));
+
+    const res = await request(app)
+      .get("/api/v1/admin/orders")
+      .set("Authorization", `Bearer ${makeAdminToken()}`);
+
+    expect(res.status).toBe(500);
+  });
 });
 
 // ─── PUT /api/v1/admin/orders/:id/status ─────────────────────────────────────────
@@ -135,6 +147,19 @@ describe("PUT /api/v1/admin/orders/:id/status", () => {
       expect(res.status).toBe(200);
     }
   });
+
+  it("returns 500 on DB error", async () => {
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ is_admin: true }] })
+      .mockRejectedValueOnce(new Error("DB failure"));
+
+    const res = await request(app)
+      .put("/api/v1/admin/orders/1/status")
+      .set("Authorization", `Bearer ${makeAdminToken()}`)
+      .send({ status: "shipped" });
+
+    expect(res.status).toBe(500);
+  });
 });
 
 // ─── GET /api/v1/admin/watches ────────────────────────────────────────────────────
@@ -156,6 +181,18 @@ describe("GET /api/v1/admin/watches", () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(2);
+  });
+
+  it("returns 500 on DB error", async () => {
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ is_admin: true }] })
+      .mockRejectedValueOnce(new Error("DB failure"));
+
+    const res = await request(app)
+      .get("/api/v1/admin/watches")
+      .set("Authorization", `Bearer ${makeAdminToken()}`);
+
+    expect(res.status).toBe(500);
   });
 });
 
@@ -215,6 +252,19 @@ describe("PUT /api/v1/admin/watches/:id/stock", () => {
 
     expect(res.status).toBe(404);
   });
+
+  it("returns 500 on DB error", async () => {
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ is_admin: true }] })
+      .mockRejectedValueOnce(new Error("DB failure"));
+
+    const res = await request(app)
+      .put("/api/v1/admin/watches/1/stock")
+      .set("Authorization", `Bearer ${makeAdminToken()}`)
+      .send({ stock_quantity: 10 });
+
+    expect(res.status).toBe(500);
+  });
 });
 
 // ─── GET /api/v1/admin/stats ──────────────────────────────────────────────────────
@@ -239,5 +289,17 @@ describe("GET /api/v1/admin/stats", () => {
     expect(res.body).toHaveProperty("customers");
     expect(res.body).toHaveProperty("revenue");
     expect(res.body).toHaveProperty("watches");
+  });
+
+  it("returns 500 on DB error", async () => {
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ is_admin: true }] })
+      .mockRejectedValueOnce(new Error("DB failure"));
+
+    const res = await request(app)
+      .get("/api/v1/admin/stats")
+      .set("Authorization", `Bearer ${makeAdminToken()}`);
+
+    expect(res.status).toBe(500);
   });
 });

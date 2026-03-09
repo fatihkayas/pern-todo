@@ -133,4 +133,100 @@ describe("POST /api/v1/orders", () => {
 
     expect(res.status).toBe(201);
   });
+
+  it("returns 500 and rolls back on DB error", async () => {
+    const client = makeMockClient();
+    client.query
+      .mockResolvedValueOnce(undefined) // BEGIN
+      .mockRejectedValueOnce(new Error("DB failure")); // INSERT orders throws
+
+    const res = await request(app)
+      .post("/api/v1/orders")
+      .send({
+        items: [
+          { watch_id: "f15ec893-7113-4f91-801a-2a8109d96290", quantity: 1, unit_price: 299.99 },
+        ],
+      });
+
+    expect(res.status).toBe(500);
+    expect(client.query).toHaveBeenCalledWith("ROLLBACK");
+  });
+});
+
+describe("GET /api/v1/orders/my", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("returns 401 when no Authorization header", async () => {
+    const res = await request(app).get("/api/v1/orders/my");
+    expect(res.status).toBe(401);
+  });
+
+  it("returns 401 for an invalid token", async () => {
+    const res = await request(app)
+      .get("/api/v1/orders/my")
+      .set("Authorization", "Bearer not.a.valid.token");
+    expect(res.status).toBe(401);
+  });
+
+  it("returns orders for authenticated customer", async () => {
+    const mockPool = pool.query as jest.Mock;
+    mockPool.mockResolvedValueOnce({
+      rows: [
+        {
+          order_id: 10,
+          status: "pending",
+          total_amount: "299.99",
+          items: [{ watch_name: "Seiko 5", quantity: 1, unit_price: "299.99", subtotal: "299.99" }],
+        },
+      ],
+    });
+
+    const res = await request(app)
+      .get("/api/v1/orders/my")
+      .set("Authorization", `Bearer ${makeAuthToken()}`);
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body[0]).toHaveProperty("order_id", 10);
+  });
+});
+
+describe("GET /api/v1/orders/:id", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("returns order with items when found", async () => {
+    const mockPool = pool.query as jest.Mock;
+    mockPool
+      .mockResolvedValueOnce({ rows: [{ order_id: 5, status: "pending", total_amount: "199.99" }] })
+      .mockResolvedValueOnce({
+        rows: [
+          { order_item_id: 1, watch_name: "Seiko Presage", quantity: 1, unit_price: "199.99" },
+        ],
+      });
+
+    const res = await request(app).get("/api/v1/orders/5");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("order_id", 5);
+    expect(Array.isArray(res.body.items)).toBe(true);
+  });
+
+  it("returns 404 when order does not exist", async () => {
+    const mockPool = pool.query as jest.Mock;
+    mockPool.mockResolvedValueOnce({ rows: [] });
+
+    const res = await request(app).get("/api/v1/orders/9999");
+
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty("error");
+  });
+
+  it("returns 500 on DB error", async () => {
+    const mockPool = pool.query as jest.Mock;
+    mockPool.mockRejectedValueOnce(new Error("connection lost"));
+
+    const res = await request(app).get("/api/v1/orders/1");
+
+    expect(res.status).toBe(500);
+  });
 });
