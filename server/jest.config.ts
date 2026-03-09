@@ -8,10 +8,12 @@ const config: Config = {
   collectCoverageFrom: [
     "routes/**/*.ts",
     "middleware/**/*.ts",
+    "kafka/**/*.ts",
     "schemas.ts",
     "app.ts",
     "!routes/chat.ts", // SSE streaming — tested via integration tests
     "!routes/checkout.ts", // Legacy route — uses optional tables
+    "!kafka/index.ts", // re-export barrel only
     "!**/*.d.ts",
   ],
   coverageThreshold: {
