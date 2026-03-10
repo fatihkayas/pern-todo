@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -17,15 +20,47 @@ func main() {
 	db := connectDB()
 	runMigration(db)
 
-	go consumer.Start(db)
+	// ctx controls the consumer goroutine lifetime.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	http.Handle("/metrics", promhttp.Handler())
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	go consumer.Start(ctx, db)
+
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintf(w, `{"status":"ok"}`)
 	})
-	log.Println("integration-service listening on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+	}
+
+	// Start HTTP server in background.
+	go func() {
+		log.Println("integration-service listening on :8080")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("HTTP server error: %v", err)
+		}
+	}()
+
+	// ── Graceful shutdown on SIGTERM / SIGINT ──────────────────────────────
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+	sig := <-quit
+	log.Printf("received signal %s — shutting down", sig)
+
+	cancel() // signal consumer to stop polling
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer shutdownCancel()
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Printf("HTTP server shutdown error: %v", err)
+	}
+
+	log.Println("integration-service stopped")
 }
 
 func connectDB() *sql.DB {

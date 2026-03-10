@@ -235,12 +235,13 @@ integration-service   → Go microservice         :8085
 - [ ] Run DB migrations against Cloud SQL
 - [ ] Verify app running on Cloud Run URL
 
-### 6.4 — Resilience Layer ⏳ Next
-- [ ] Retry + exponential backoff on Kafka consumer
-- [ ] Circuit breaker (gobreaker) on adapter calls
-- [ ] Idempotency keys on order events
-- [ ] Dead letter queue for failed messages
-- [ ] Graceful shutdown on SIGTERM
+### 6.4 — Resilience Layer ✅ Done
+- [x] Retry + exponential backoff on Kafka consumer (1s → 2s → 4s, 3 attempts)
+- [x] Circuit breaker (gobreaker) on ServiceNow adapter — open after 5 consecutive failures
+- [x] Idempotency check — skip duplicate order events via `integration_logs` table
+- [x] Dead letter queue — failed messages routed to `orders.created.dlq` topic
+- [x] Graceful shutdown on SIGTERM/SIGINT — consumer stops, HTTP server drains (15s timeout)
+- [x] New Prometheus metrics: `integration_events_retried_total`, `integration_events_dlq_total`, `integration_events_skipped_total`, `integration_circuit_breaker_state`
 
 ### 6.5 — Integration Observability ⏳ Planned
 - [ ] `integration_processed_total` — counter per adapter
