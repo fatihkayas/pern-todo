@@ -69,3 +69,7 @@ server/.trigger/
 # Windows artifacts
 CON
 NUL
+
+# Playwright E2E
+playwright-report/
+test-results/

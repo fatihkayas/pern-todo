@@ -17,11 +17,13 @@
 | v2.0.0 | Phase 4 — Azure Production Deployment | ✅ Released |
 | v2.1.0 | Phase 5 — Trigger.dev + Async Jobs + Transactional Email | ✅ Released |
 | v3.0.0 | Phase 6 — Event-Driven Integration Platform (Go + Kafka) | 🔄 In Progress |
-| v3.1.0 | Phase 6.1 — GCP Terraform + CI Rebuild + Test Expansion | 🔄 In Progress |
-| v3.1.0 | Phase 6.1 — Resilience Layer | 📋 Planned |
-| v3.2.0 | Phase 6.2 — Integration Observability | 📋 Planned |
-| v3.3.0 | Phase 6.3 — Chaos Engineering | 📋 Planned |
-| v3.4.0 | Phase 6.4 — AI Log Analyzer | 📋 Planned |
+| v3.1.0 | Phase 6.1 — GCP Terraform + CI Rebuild + Test Expansion | ✅ Released |
+| v3.2.0 | Phase 6.2 — AWS ECS + RDS Production Deployment (Terraform) | 🔄 In Progress |
+| v3.3.0 | Phase 6.3 — GCP Cloud Run + Cloud SQL Deployment | 📋 Planned |
+| v3.4.0 | Phase 6.4 — Resilience Layer | 📋 Planned |
+| v3.5.0 | Phase 6.5 — Integration Observability | 📋 Planned |
+| v3.6.0 | Phase 6.6 — Chaos Engineering | 📋 Planned |
+| v3.7.0 | Phase 6.7 — AI Log Analyzer | 📋 Planned |
 | v4.0.0 | Phase 7 — Multi-Cloud Kafka (AWS MSK + Azure EventHub) | 📋 Planned |
 | v5.0.0 | Phase 8 — Kubernetes + GitOps | 📋 Planned |
 | v6.0.0 | Phase 9 — AI-Native Autonomous Platform | 📋 Planned |
@@ -47,7 +49,7 @@
 | Logging | Pino (structured JSON) + Correlation ID | ✅ Running |
 | API Docs | Swagger / OpenAPI | ✅ Running |
 | CI/CD | GitHub Actions + GHCR (updated) | ✅ Running |
-| Testing | Jest + Supertest (78 tests, 86% coverage) | ✅ Running |
+| Testing | Backend: 100 tests, 97% coverage · Frontend: 44 RTL tests · E2E: 23 Playwright tests | ✅ Running |
 | Code Quality | ESLint + Prettier + Husky + commitlint | ✅ Running |
 | Message Broker | Redpanda (Kafka-compatible) | 🔄 Active |
 | Kafka Producer | TypeScript (server/kafka/producer.ts) | 🔄 Active |
@@ -55,7 +57,8 @@
 | ServiceNow Adapter | Go (adapters/servicenow.go) | 🔄 Active |
 | AWS RDS Config | server/config/aws-rds.js | 🔄 Active |
 | Multi-Agent Docs | AGENTS.md + GEMINI.md | 🔄 Active |
-| GCP Terraform | Cloud Run · Cloud SQL · Artifact Registry | 🔄 Active |
+| GCP Terraform | Cloud Run · Cloud SQL · Artifact Registry (written, not deployed) | 📋 Ready |
+| AWS Terraform | VPC · ECR · RDS deployed · ECS/ALB/Secrets pending | 🔄 Active |
 | CI/CD (rebuilt) | GitHub Actions (218-line update) | 🔄 Active |
 
 ### Running Services
@@ -198,15 +201,48 @@ integration-service   → Go microservice         :8085
 - [x] `server/index.ts` updated (startup + health improvements)
 - [x] `server/routes/stripe.ts` — webhook hardening (+27 lines)
 - [x] `podman-compose.yml` updated — new service entries
+- [x] Backend API tests fully expanded — 100 tests, 97% route coverage (KAN-65)
+- [x] Frontend component/service tests — 44 RTL tests across 5 test files (KAN-66)
+- [x] E2E browser tests — 23 Playwright tests, webServer auto-start (KAN-67)
+- [x] CI `e2e` job added to GitHub Actions — Playwright chromium install + report artifact
 
-### 6.1 — Resilience Layer ⏳ Next
+### 6.2 — AWS ECS + RDS Production Deployment 🔄 In Progress
+
+- [x] Terraform root module — `infra/aws/main.tf` (VPC + ECR + RDS + ALB + ECS + CloudWatch + Secrets)
+- [x] AWS module: `vpc/` — VPC, public + private subnets, Internet Gateway
+- [x] AWS module: `ecr/` — backend + frontend container repositories
+- [x] AWS module: `rds/` — PostgreSQL RDS instance, subnet group, parameter group
+- [x] AWS module: `alb/` — Application Load Balancer, target groups, listeners
+- [x] AWS module: `ecs/` — ECS Fargate cluster, task definitions, services
+- [x] AWS module: `cloudwatch/` — log groups, dashboards, alarms
+- [x] AWS module: `secrets/` — Secrets Manager for DB password, Stripe keys, JWT
+- [x] Deployed: VPC, subnets, ECR repos, RDS PostgreSQL, security groups (11 resources in state)
+- [ ] Deploy remaining: ALB, ECS Fargate services, Secrets Manager, CloudWatch
+- [ ] Push container images to ECR
+- [ ] Run DB migrations against RDS
+- [ ] Verify app running on ALB DNS
+
+### 6.3 — GCP Cloud Run + Cloud SQL Deployment 📋 Planned
+
+- [x] Terraform root module — `infra/gcp/main.tf` (Cloud Run + Cloud SQL + Artifact Registry)
+- [x] GCP module: `artifact_registry/` — container registry + lifecycle policies
+- [x] GCP module: `cloud_sql/` — PostgreSQL, private IP, automated backups
+- [x] GCP module: `cloud_run/` — Cloud Run service, IAM bindings, traffic splitting
+- [x] Workload Identity Federation — GitHub Actions OIDC (no long-lived keys)
+- [x] Secret Manager — DB password, Stripe keys, JWT secret
+- [ ] `terraform apply` — deploy all GCP resources
+- [ ] Push container images to Artifact Registry
+- [ ] Run DB migrations against Cloud SQL
+- [ ] Verify app running on Cloud Run URL
+
+### 6.4 — Resilience Layer ⏳ Next
 - [ ] Retry + exponential backoff on Kafka consumer
 - [ ] Circuit breaker (gobreaker) on adapter calls
 - [ ] Idempotency keys on order events
 - [ ] Dead letter queue for failed messages
 - [ ] Graceful shutdown on SIGTERM
 
-### 6.2 — Integration Observability ⏳ Planned
+### 6.5 — Integration Observability ⏳ Planned
 - [ ] `integration_processed_total` — counter per adapter
 - [ ] `integration_failed_total` — counter with error type label
 - [ ] `integration_duration_ms` — histogram per adapter
@@ -214,14 +250,14 @@ integration-service   → Go microservice         :8085
 - [ ] Grafana integration dashboard (consumer lag, adapter health, DLQ depth)
 - [ ] Error rate alerts (Alertmanager)
 
-### 6.3 — Chaos Engineering ⏳ Planned
+### 6.4 — Chaos Engineering ⏳ Planned
 - [ ] Mock ServiceNow failure (return 500) → verify retry + DLQ
 - [ ] Stop Redpanda broker → verify circuit breaker behavior
 - [ ] Network delay simulation (tc netem)
 - [ ] Recovery testing — consumer resumes from last committed offset
 - [ ] Chaos results documented + Grafana annotations
 
-### 6.4 — AI Log Analyzer ⏳ Planned
+### 6.5 — AI Log Analyzer ⏳ Planned
 - [ ] Trigger.dev scheduled task: collect integration failure logs
 - [ ] Claude analysis → root cause categorization
 - [ ] Auto-create Jira issue with failure summary + suggested fix
@@ -358,7 +394,7 @@ integration-service   → Go microservice         :8085
 | Apr–May 2026 | Phase 4 | v2.0.0 | ✅ Azure Container Apps, Terraform, Key Vault |
 | May 2026 | Phase 5 | v2.1.0 | ✅ Trigger.dev, async Claude, transactional email |
 | Mar–May 2026 | Phase 6 | v3.0.0 | 🔄 Redpanda, Go integration-service, ServiceNow adapter |
-| Mar–Apr 2026 | Phase 6.1 | v3.1.0 | 🔄 GCP Terraform (Cloud Run · Cloud SQL · AR), CI rebuild, test expansion |
+| Mar–Apr 2026 | Phase 6.1 | v3.1.0 | ✅ GCP Terraform (Cloud Run · Cloud SQL · AR), CI rebuild, 100 backend + 44 RTL + 23 E2E tests |
 | Jun 2026 | Phase 7 | v4.0.0 | ⏳ AWS MSK, Azure EventHub, failover simulation |
 | Sep 2026 | Phase 8 | v5.0.0 | ⏳ Kubernetes (AKS/EKS), Helm, ArgoCD, OTel |
 | Oct 2026+ | Phase 9 | v6.0.0 | ⏳ RAG, Autonomous Agent, LLMOps, GraphQL |
@@ -379,4 +415,4 @@ integration-service   → Go microservice         :8085
 ---
 
 > Living document — updated after each sprint.
-> Last updated: March 2026 (Phase 6.1 / v3.1 in progress — GCP Terraform + CI rebuild)
+> Last updated: March 2026 (Phase 6.1 ✅ Released — GCP Terraform + CI rebuild + 167 tests total · Next: Phase 6.2 Resilience Layer)

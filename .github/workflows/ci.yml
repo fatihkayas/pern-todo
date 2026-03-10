@@ -364,11 +364,50 @@ jobs:
   #           --port 3000 \
   #           --quiet
 
+  # ── E2E: Playwright browser tests ────────────────────────
+  e2e:
+    name: E2E Tests — Playwright
+    runs-on: ubuntu-latest
+    needs: [frontend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install root dependencies (includes @playwright/test)
+        run: npm ci
+
+      - name: Install client dependencies
+        working-directory: client
+        run: npm install --legacy-peer-deps
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Run E2E tests
+        run: npx playwright test
+        env:
+          CI: true
+          BROWSER: none
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
   # ── Summary ───────────────────────────────────────────────
   summary:
     name: Pipeline Summary
     runs-on: ubuntu-latest
-    needs: [backend, frontend, go-build, docker, deploy]
+    needs: [backend, frontend, go-build, docker, deploy, e2e]
     if: always()
 
     steps:
@@ -382,3 +421,4 @@ jobs:
           echo "| Go Build | ${{ needs.go-build.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Docker | ${{ needs.docker.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Deploy Azure | ${{ needs.deploy.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| E2E Tests | ${{ needs.e2e.result }} |" >> $GITHUB_STEP_SUMMARY
