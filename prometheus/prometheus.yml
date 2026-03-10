@@ -18,6 +18,12 @@ scrape_configs:
           - seiko-backend:8080
     metrics_path: /metrics
 
+  - job_name: integration-service
+    static_configs:
+      - targets:
+          - integration-service:8080
+    metrics_path: /metrics
+
   - job_name: alertmanager
     static_configs:
       - targets:

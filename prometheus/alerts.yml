@@ -63,6 +63,53 @@ groups:
           summary: "Critical stock depletion"
           description: "{{ $value }} watches are critically low on stock. Immediate reorder required."
 
+  - name: seiko.integration
+    rules:
+      # Integration-service has been unreachable for > 1 minute
+      - alert: IntegrationServiceDown
+        expr: up{job="integration-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Integration service is down"
+          description: "The integration-service scrape target has been unreachable for more than 1 minute."
+
+      # Failure rate > 10% over a 5-minute window
+      - alert: IntegrationHighFailureRate
+        expr: >
+          (
+            sum(rate(integration_events_failed_total[5m]))
+            /
+            sum(rate(integration_events_consumed_total[5m]))
+          ) * 100 > 10
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High integration failure rate"
+          description: "Integration failure rate is {{ printf \"%.1f\" $value }}% — above 10% for 2+ minutes."
+
+      # Any DLQ messages in the last 5 minutes
+      - alert: IntegrationDLQMessages
+        expr: sum(increase(integration_events_dlq_total[5m])) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Messages routed to DLQ"
+          description: "{{ printf \"%.0f\" $value }} events were sent to the dead letter queue in the last 5 minutes."
+
+      # Circuit breaker is open (state == 1)
+      - alert: IntegrationCircuitBreakerOpen
+        expr: integration_circuit_breaker_state{name="servicenow"} == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ServiceNow circuit breaker is OPEN"
+          description: "The servicenow circuit breaker has been open for 1+ minutes. ServiceNow adapter calls are blocked."
+
   - name: seiko.resources
     rules:
       # Node.js heap > 400 MB

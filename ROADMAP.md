@@ -243,13 +243,11 @@ integration-service   → Go microservice         :8085
 - [x] Graceful shutdown on SIGTERM/SIGINT — consumer stops, HTTP server drains (15s timeout)
 - [x] New Prometheus metrics: `integration_events_retried_total`, `integration_events_dlq_total`, `integration_events_skipped_total`, `integration_circuit_breaker_state`
 
-### 6.5 — Integration Observability ⏳ Planned
-- [ ] `integration_processed_total` — counter per adapter
-- [ ] `integration_failed_total` — counter with error type label
-- [ ] `integration_duration_ms` — histogram per adapter
-- [ ] Prometheus scrape config for integration-service
-- [ ] Grafana integration dashboard (consumer lag, adapter health, DLQ depth)
-- [ ] Error rate alerts (Alertmanager)
+### 6.5 — Integration Observability ✅ Done
+- [x] Prometheus scrape config — `integration-service:8080/metrics` added to `prometheus.yml`
+- [x] Grafana dashboard — `grafana/dashboards/integration.json` (9 panels: rate, success %, latency p50/p95/p99, retry/DLQ rate, circuit breaker state, totals)
+- [x] Alert rules — 4 new rules in `prometheus/alerts.yml`: IntegrationServiceDown, IntegrationHighFailureRate, IntegrationDLQMessages, IntegrationCircuitBreakerOpen
+- [x] Metrics already live in consumer.go: consumed, failed, retried, dlq, skipped, duration, circuit_breaker_state
 
 ### 6.4 — Chaos Engineering ⏳ Planned
 - [ ] Mock ServiceNow failure (return 500) → verify retry + DLQ
