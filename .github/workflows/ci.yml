@@ -38,8 +38,8 @@ jobs:
         run: npm run test:coverage
         env:
           NODE_ENV: test
-          STRIPE_SECRET_KEY: sk_test_fakekeyfortestingonly00000000
-          STRIPE_WEBHOOK_SECRET: whsec_fakesecretfortestingonly000000
+          STRIPE_SECRET_KEY: not-a-real-stripe-key
+          STRIPE_WEBHOOK_SECRET: not-a-real-webhook-secret
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4

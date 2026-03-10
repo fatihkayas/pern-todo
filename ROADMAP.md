@@ -23,7 +23,7 @@
 | v3.4.0 | Phase 6.4 — Resilience Layer | 📋 Planned |
 | v3.5.0 | Phase 6.5 — Integration Observability | 📋 Planned |
 | v3.6.0 | Phase 6.6 — Chaos Engineering | 📋 Planned |
-| v3.7.0 | Phase 6.7 — AI Log Analyzer | 📋 Planned |
+| v3.7.0 | Phase 6.7 — AI Log Analyzer | ✅ Released |
 | v4.0.0 | Phase 7 — Multi-Cloud Kafka (AWS MSK + Azure EventHub) | 📋 Planned |
 | v5.0.0 | Phase 8 — Kubernetes + GitOps | 📋 Planned |
 | v6.0.0 | Phase 9 — AI-Native Autonomous Platform | 📋 Planned |
@@ -257,13 +257,17 @@ integration-service   → Go microservice         :8085
 - [x] `TestProcessRecord_*` — 5 tests: happy path, transient retry, DLQ on exhaustion, invalid JSON, open CB blocks adapter
 - [x] `backoffFn` injectable — tests run in <2ms (zero real sleep)
 
-### 6.7 — AI Log Analyzer ⏳ Planned
-- [ ] Trigger.dev scheduled task: collect integration failure logs
-- [ ] Claude analysis → root cause categorization
-- [ ] Auto-create Jira issue with failure summary + suggested fix
-- [ ] Link Grafana alert → Jira ticket (annotation + comment)
+### 6.7 — AI Log Analyzer ✅ Done
 
-**Deliverable:** Release v3.0.0
+- [x] `server/trigger/integration-log-analyzer.ts` — Trigger.dev scheduled task (every hour)
+- [x] Queries `integration_logs` for failures in the last 60 minutes
+- [x] Claude claude-opus-4-6 root-cause analysis → categorized JSON (network_timeout, http_5xx, circuit_breaker_open, chaos_injection, etc.)
+- [x] Auto-creates Jira issue via REST API v3 (priority mapped to severity: low/medium/high/critical)
+- [x] Skips Jira issue creation for low-severity findings
+- [x] Appends audit row to `integration_logs` with analysis metadata (severity, jiraKey, summary)
+- [x] Graceful no-op when Jira not configured (JIRA_BASE_URL/JIRA_EMAIL/JIRA_API_TOKEN unset)
+
+**Deliverable:** Release v3.0.0 ✅
 
 ---
 
