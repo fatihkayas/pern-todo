@@ -20,6 +20,22 @@ const (
 	dlqTopic   = "orders.created.dlq"
 )
 
+// Adapter is the interface for outbound integration targets.
+// Using an interface makes the consumer independently testable.
+type Adapter interface {
+	Forward(payload map[string]interface{}) error
+}
+
+// serviceNowAdapter wraps the real ServiceNow package function.
+type serviceNowAdapter struct{}
+
+func (s *serviceNowAdapter) Forward(payload map[string]interface{}) error {
+	return adapters.ForwardToServiceNow(payload)
+}
+
+// backoffFn is time.Sleep by default; overridden in tests to avoid real delays.
+var backoffFn = time.Sleep
+
 var (
 	consumed = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "integration_events_consumed_total",
@@ -122,13 +138,14 @@ func Start(ctx context.Context, db *sql.DB) {
 		fetches.EachError(func(_ string, _ int32, err error) {
 			log.Printf("consumer fetch error: %v", err)
 		})
+		adapter := &serviceNowAdapter{}
 		fetches.EachRecord(func(r *kgo.Record) {
-			processRecord(ctx, db, dlqClient, r)
+			processRecord(ctx, db, dlqClient, r, adapter)
 		})
 	}
 }
 
-func processRecord(ctx context.Context, db *sql.DB, dlqClient *kgo.Client, r *kgo.Record) {
+func processRecord(ctx context.Context, db *sql.DB, dlqClient *kgo.Client, r *kgo.Record, adapter Adapter) {
 	start := time.Now()
 	topic := r.Topic
 	consumed.WithLabelValues(topic).Inc()
@@ -155,7 +172,7 @@ func processRecord(ctx context.Context, db *sql.DB, dlqClient *kgo.Client, r *kg
 	// ── Retry with exponential backoff + circuit breaker ──────────────────
 	err := withRetry(topic, func() error {
 		_, cbErr := sn.Execute(func() (interface{}, error) {
-			return nil, adapters.ForwardToServiceNow(payload)
+			return nil, adapter.Forward(payload)
 		})
 		return cbErr
 	}, maxRetries)
@@ -193,15 +210,18 @@ func withRetry(topic string, fn func() error, maxAttempts int) error {
 			backoff := time.Duration(1<<uint(attempt-1)) * time.Second // 1s → 2s → 4s
 			log.Printf("retry %d/%d after %v: %v", attempt, maxAttempts, backoff, err)
 			retried.WithLabelValues(topic).Inc()
-			time.Sleep(backoff)
+			backoffFn(backoff)
 		}
 	}
 	return err
 }
 
 // isAlreadyProcessed returns true when a successful log entry exists for orderID.
-// On DB error it returns false (fail open — process rather than silently drop).
+// Returns false when db is nil (test mode) or on DB error (fail open).
 func isAlreadyProcessed(db *sql.DB, orderID int) bool {
+	if db == nil {
+		return false
+	}
 	var count int
 	if err := db.QueryRow(
 		`SELECT COUNT(*) FROM integration_logs WHERE order_id = $1 AND status = 'success'`,
@@ -241,6 +261,9 @@ func extractOrderID(payload map[string]interface{}) *int {
 }
 
 func insertLog(db *sql.DB, orderID *int, service, status string, payload []byte, errMsg string) {
+	if db == nil {
+		return
+	}
 	_, err := db.Exec(
 		`INSERT INTO integration_logs (order_id, service, status, payload, error_message) VALUES ($1, $2, $3, $4, $5)`,
 		orderID, service, status, string(payload), nullableStr(errMsg),

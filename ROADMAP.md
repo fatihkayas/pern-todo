@@ -249,14 +249,15 @@ integration-service   → Go microservice         :8085
 - [x] Alert rules — 4 new rules in `prometheus/alerts.yml`: IntegrationServiceDown, IntegrationHighFailureRate, IntegrationDLQMessages, IntegrationCircuitBreakerOpen
 - [x] Metrics already live in consumer.go: consumed, failed, retried, dlq, skipped, duration, circuit_breaker_state
 
-### 6.4 — Chaos Engineering ⏳ Planned
-- [ ] Mock ServiceNow failure (return 500) → verify retry + DLQ
-- [ ] Stop Redpanda broker → verify circuit breaker behavior
-- [ ] Network delay simulation (tc netem)
-- [ ] Recovery testing — consumer resumes from last committed offset
-- [ ] Chaos results documented + Grafana annotations
+### 6.6 — Chaos Engineering ✅ Done
+- [x] `SERVICENOW_CHAOS_FAILURE_RATE` env var — injects random failures at N% rate for live testing
+- [x] `consumer_test.go` — 10 chaos tests covering retry, circuit breaker, DLQ, invalid JSON
+- [x] `TestWithRetry_*` — 4 tests: success, succeed-after-retry, exhaust-retries, CB-open-no-retry
+- [x] `TestCircuitBreaker_OpensAfterFiveFailures` — verifies CB trips correctly
+- [x] `TestProcessRecord_*` — 5 tests: happy path, transient retry, DLQ on exhaustion, invalid JSON, open CB blocks adapter
+- [x] `backoffFn` injectable — tests run in <2ms (zero real sleep)
 
-### 6.5 — AI Log Analyzer ⏳ Planned
+### 6.7 — AI Log Analyzer ⏳ Planned
 - [ ] Trigger.dev scheduled task: collect integration failure logs
 - [ ] Claude analysis → root cause categorization
 - [ ] Auto-create Jira issue with failure summary + suggested fix
