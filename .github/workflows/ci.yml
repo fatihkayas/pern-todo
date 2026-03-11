@@ -97,6 +97,9 @@ jobs:
       - name: Vet
         run: cd integration-service && go vet ./...
 
+      - name: Test
+        run: cd integration-service && go test ./... -v -count=1
+
   # ── Docker: build & push to GHCR (main only) ─────────────
   docker:
     name: Build & Push Images

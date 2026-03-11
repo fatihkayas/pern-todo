@@ -20,9 +20,9 @@
 | v3.1.0 | Phase 6.1 — GCP Terraform + CI Rebuild + Test Expansion | ✅ Released |
 | v3.2.0 | Phase 6.2 — AWS ECS + RDS Production Deployment (Terraform) | 🔄 In Progress |
 | v3.3.0 | Phase 6.3 — GCP Cloud Run + Cloud SQL Deployment | 📋 Planned |
-| v3.4.0 | Phase 6.4 — Resilience Layer | 📋 Planned |
-| v3.5.0 | Phase 6.5 — Integration Observability | 📋 Planned |
-| v3.6.0 | Phase 6.6 — Chaos Engineering | 📋 Planned |
+| v3.4.0 | Phase 6.4 — Resilience Layer | ✅ Released |
+| v3.5.0 | Phase 6.5 — Integration Observability | ✅ Released |
+| v3.6.0 | Phase 6.6 — Chaos Engineering | ✅ Released |
 | v3.7.0 | Phase 6.7 — AI Log Analyzer | ✅ Released |
 | v4.0.0 | Phase 7 — Multi-Cloud Kafka (AWS MSK + Azure EventHub) | 📋 Planned |
 | v5.0.0 | Phase 8 — Kubernetes + GitOps | 📋 Planned |
@@ -419,4 +419,4 @@ integration-service   → Go microservice         :8085
 ---
 
 > Living document — updated after each sprint.
-> Last updated: March 2026 (Phase 6.1 ✅ Released — GCP Terraform + CI rebuild + 167 tests total · Next: Phase 6.2 Resilience Layer)
+> Last updated: March 2026 (Phase 6.7 ✅ Released — AI Log Analyzer (Claude + Jira) · Phases 6.4–6.7 complete · Next: Phase 6.2 AWS ECS deployment or Phase 6.3 GCP Cloud Run)
