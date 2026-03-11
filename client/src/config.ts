@@ -3,8 +3,8 @@ const isLocalhost =
   (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 
 const DEFAULT_API_BASE_URL = isLocalhost
-  ? "http://localhost:8080"
-  : "https://seiko-backend.wonderfulground-778cc800.westeurope.azurecontainerapps.io";
+  ? "http://localhost:5001"
+  : "https://seiko-backend.ashyground-a8f00237.westeurope.azurecontainerapps.io";
 
 const rawApiBaseUrl = process.env.REACT_APP_API_URL || DEFAULT_API_BASE_URL;
 
