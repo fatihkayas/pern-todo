@@ -30,7 +30,7 @@
 
 ---
 
-## Current Stack (v3.8.0)
+## Current Stack (v3.7.0)
 
 | Layer | Technology | Status |
 | --- | --- | --- |
