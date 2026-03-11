@@ -352,72 +352,81 @@ Tracing    → Jaeger                  (distributed tracing — Phase 5, microse
 ```bash
 git clone https://github.com/fatihkayas/pern-todo.git
 cd pern-todo
-git checkout -b feature/local-setup
 ```
 
-### 2. Configure Environment
+### 2. Install Dependencies
 
 ```bash
-cp .env.example .env
+npm install                                        # root (playwright, husky, commitlint)
+cd server && npm install                           # backend
+cd ../client && npm install --legacy-peer-deps     # frontend
+cd ..
 ```
+
+### 3. Configure Environment
+
+```bash
+cp server/.env.example server/.env
+```
+
+Edit `server/.env` — minimum required:
 
 ```env
-# Database
-DATABASE_URL=postgresql://postgres:changeme@seiko_db:5432/jwtauth
 DB_USER=postgres
-DB_PASSWORD=changeme
-DB_HOST=seiko_db
-
-# Auth
-KEYCLOAK_BASE_URL=http://localhost:8080
-KEYCLOAK_REALM=seiko-realm
-KEYCLOAK_AUDIENCE=seiko-backend-client
-
-# Server
-PORT=5000
-FRONTEND_URL=http://localhost:3000
-
-# Kafka
-KAFKA_BROKER=redpanda:9092
-KAFKA_TOPIC=order.placed
-
-# AI — server-side only, never expose to client
-ANTHROPIC_API_KEY=your_key_here
+DB_PASSWORD=your_password
+DB_HOST=localhost
+DB_PORT=5433
+DB_DATABASE=jwtauth
+JWT_SECRET=your_jwt_secret_here
+ANTHROPIC_API_KEY=your_key_here      # for AI chatbot
+KAFKA_BROKER=localhost:29092
 ```
 
-> ⚠️ Never commit `.env`. Only `.env.example` is tracked in Git.
+### 4. Start
 
-### 3. Start All Services
+**Option A — Everything in containers (simplest):**
 
 ```bash
-podman machine start
-podman-compose up -d
-podman ps                    # verify all containers running
-podman-compose logs -f       # follow logs
+podman machine start        # once after reboot (Windows/macOS)
+podman-compose up -d        # starts all 13 services
 ```
 
-### 4. Verify
+**Option B — Hybrid dev mode (hot reload for backend + frontend):**
 
 ```bash
-# Health check
-curl http://localhost:5000/health
-# → {"ok":true}
+podman machine start        # once after reboot
+npm run dev                 # starts infra containers + backend + frontend in parallel
+```
 
-# Integration service health
-curl http://localhost:8085/health
-# → {"ok":true}
+`npm run dev` automatically:
+- Starts infrastructure containers (DB, Redpanda, Prometheus, Grafana, Alertmanager, Adminer, Ollama)
+- Runs Express backend with `ts-node-dev` (hot reload) at <http://localhost:5001>
+- Runs React frontend with CRA dev server (hot reload) at <http://localhost:3000>
+- Starts Trigger.dev worker for background jobs
 
-# Get token from Keycloak
-curl -X POST "http://localhost:8080/realms/seiko-realm/protocol/openid-connect/token" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=password&client_id=seiko-backend-client&username=USER&password=PASS"
+**Optional — Go integration service (separate terminal):**
 
-# Use token
-curl -X POST http://localhost:5000/api/chat \
-  -H "Authorization: Bearer <ACCESS_TOKEN>" \
-  -H "Content-Type: application/json" \
-  -d '{"message":"hello"}'
-# → 200 OK ✓
+```bash
+cd integration-service && go run main.go
+```
+
+### 5. Verify
+
+| Service | URL | Expected |
+| --- | --- | --- |
+| Frontend | <http://localhost:3000> | React app loads |
+| Backend health | <http://localhost:5001/health> | `{"status":"ok"}` |
+| Backend ready | <http://localhost:5001/ready> | `{"status":"ready"}` |
+| Integration service | <http://localhost:8083/health> | `{"status":"ok"}` |
+| Prometheus | <http://localhost:9090> | Targets page — 3/3 up |
+| Grafana | <http://localhost:3001> | admin / admin |
+| Redpanda Console | <http://localhost:8084> | Kafka topics |
+| Adminer (DB) | <http://localhost:8082> | DB admin UI |
+
+```bash
+# Quick health check
+curl http://localhost:5001/health    # → {"status":"ok"}
+curl http://localhost:8083/health    # → {"status":"ok"}
 ```
 
 ### Database Migrations
