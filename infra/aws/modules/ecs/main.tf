@@ -110,6 +110,7 @@ resource "aws_ecs_task_definition" "backend" {
 
     environment = [
       { name = "NODE_ENV",    value = "production" },
+      { name = "PORT",        value = "5000" },
       { name = "DB_PORT",     value = "5432" },
       { name = "DB_USER",     value = "psqladmin" },
       { name = "DB_DATABASE", value = "jwtauth" },
@@ -158,6 +159,7 @@ resource "aws_ecs_task_definition" "frontend" {
     }]
 
     environment = [
+      { name = "PORT",                           value = "3000" },
       { name = "BROWSER",                        value = "none" },
       { name = "DANGEROUSLY_DISABLE_HOST_CHECK", value = "true" },
     ]

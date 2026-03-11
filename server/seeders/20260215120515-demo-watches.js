@@ -11,7 +11,7 @@ module.exports = {
         description: 'The Seiko SRPD79K1 is the ultimate tactical timepiece.',
         price: 340.00,
         stock_quantity: 80,
-        image_url: 'https://drive.google.com/uc?export=view&id=1Fw5yVculmlFxp4DZAVDb1WuJJ1cSDCse',
+        image_url: 'https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?w=400',
         created_at: new Date(),
         updated_at: new Date()
       },

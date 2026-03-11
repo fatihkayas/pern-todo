@@ -12,7 +12,7 @@
 [![Claude AI](https://img.shields.io/badge/Claude-AI%20Agent-CC785C?style=flat-square&logo=anthropic&logoColor=white)](https://anthropic.com)
 [![Kafka](https://img.shields.io/badge/Kafka-Event--Driven-231F20?style=flat-square&logo=apachekafka&logoColor=white)](https://kafka.apache.org)
 [![Terraform](https://img.shields.io/badge/Terraform-IaC-7B42BC?style=flat-square&logo=terraform&logoColor=white)](https://terraform.io)
-[![AWS](https://img.shields.io/badge/AWS-In%20Progress-FF9900?style=flat-square&logo=amazonaws&logoColor=white)](https://aws.amazon.com)
+[![AWS](https://img.shields.io/badge/AWS-Live-FF9900?style=flat-square&logo=amazonaws&logoColor=white)](http://seiko-alb-1474380243.eu-central-1.elb.amazonaws.com)
 [![Azure](https://img.shields.io/badge/Azure-Planned-0078D4?style=flat-square&logo=microsoftazure&logoColor=white)](https://azure.microsoft.com)
 [![GCP](https://img.shields.io/badge/GCP-Terraform%20Ready-4285F4?style=flat-square&logo=googlecloud&logoColor=white)](https://cloud.google.com)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-Ready-326CE5?style=flat-square&logo=kubernetes&logoColor=white)](https://kubernetes.io)
@@ -331,7 +331,7 @@ Tracing    → Jaeger                  (distributed tracing — Phase 5, microse
 | **v2.1.0** | Trigger.dev background jobs · Async Claude chat · Resend transactional email | ✅ Released |
 | **v3.0.0** | Event-Driven Platform — Redpanda (Kafka) · Go integration microservice · ServiceNow adapter | ✅ Released |
 | **v3.1.0** | GCP Terraform (Cloud Run · Cloud SQL · AR) · CI rebuild · 100 backend + 44 RTL + 23 E2E tests | ✅ Released |
-| **v3.2.0** | AWS ECS + RDS Terraform (VPC/ECR/RDS deployed, ECS in progress) | 🔄 In Progress |
+| **v3.2.0** | AWS ECS Fargate + RDS live on ALB (eu-central-1) · Dockerfile build ARGs · same-origin routing | ✅ Released |
 | **v3.3.0** | GCP Cloud Run deployment (`terraform apply`) | 📋 Planned |
 | **v3.4.0** | Resilience — retry/backoff · circuit breaker · idempotency · DLQ · graceful shutdown | ✅ Released |
 | **v3.5.0** | Integration observability — Grafana dashboard · 4 Prometheus alert rules | ✅ Released |

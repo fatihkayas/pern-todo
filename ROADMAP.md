@@ -18,7 +18,7 @@
 | v2.1.0 | Phase 5 — Trigger.dev + Async Jobs + Transactional Email | ✅ Released |
 | v3.0.0 | Phase 6 — Event-Driven Integration Platform (Go + Kafka) | 🔄 In Progress |
 | v3.1.0 | Phase 6.1 — GCP Terraform + CI Rebuild + Test Expansion | ✅ Released |
-| v3.2.0 | Phase 6.2 — AWS ECS + RDS Production Deployment (Terraform) | 🔄 In Progress |
+| v3.2.0 | Phase 6.2 — AWS ECS + RDS Production Deployment (Terraform) | ✅ Released |
 | v3.3.0 | Phase 6.3 — GCP Cloud Run + Cloud SQL Deployment | 📋 Planned |
 | v3.4.0 | Phase 6.4 — Resilience Layer | ✅ Released |
 | v3.5.0 | Phase 6.5 — Integration Observability | ✅ Released |
@@ -208,21 +208,25 @@ seiko_integration     → Go microservice          :8083 (host) / :8080 (interna
 - [x] E2E browser tests — 23 Playwright tests, webServer auto-start (KAN-67)
 - [x] CI `e2e` job added to GitHub Actions — Playwright chromium install + report artifact
 
-### 6.2 — AWS ECS + RDS Production Deployment 🔄 In Progress
+### 6.2 — AWS ECS + RDS Production Deployment ✅ Done
 
 - [x] Terraform root module — `infra/aws/main.tf` (VPC + ECR + RDS + ALB + ECS + CloudWatch + Secrets)
 - [x] AWS module: `vpc/` — VPC, public + private subnets, Internet Gateway
 - [x] AWS module: `ecr/` — backend + frontend container repositories
-- [x] AWS module: `rds/` — PostgreSQL RDS instance, subnet group, parameter group
-- [x] AWS module: `alb/` — Application Load Balancer, target groups, listeners
-- [x] AWS module: `ecs/` — ECS Fargate cluster, task definitions, services
-- [x] AWS module: `cloudwatch/` — log groups, dashboards, alarms
+- [x] AWS module: `rds/` — PostgreSQL 15 RDS instance, subnet group, parameter group, encryption
+- [x] AWS module: `alb/` — Application Load Balancer, path-based routing (`/api/*` → backend, `/*` → frontend)
+- [x] AWS module: `ecs/` — ECS Fargate cluster, task definitions (backend 512 CPU/1GB, frontend 256/512), services
+- [x] AWS module: `cloudwatch/` — log groups, dashboard (CPU/mem/ALB/RDS), 4 alarms
 - [x] AWS module: `secrets/` — Secrets Manager for DB password, Stripe keys, JWT
-- [x] Deployed: VPC, subnets, ECR repos, RDS PostgreSQL, security groups (11 resources in state)
-- [ ] Deploy remaining: ALB, ECS Fargate services, Secrets Manager, CloudWatch
-- [ ] Push container images to ECR
-- [ ] Run DB migrations against RDS
-- [ ] Verify app running on ALB DNS
+- [x] GitHub Actions OIDC role — ECR push + ECS update without stored credentials
+- [x] Container images built with Podman and pushed to ECR (`eu-central-1`)
+- [x] `client/Dockerfile` — build ARGs for `REACT_APP_STRIPE_PUBLISHABLE_KEY` + `REACT_APP_API_URL`, PORT=3000
+- [x] `client/src/config.ts` — `window.location.origin` fallback for same-ALB routing
+- [x] DB migrations + seed ran against RDS PostgreSQL (`aws-rds` Sequelize env)
+- [x] All seeder image URLs migrated from Google Drive to Unsplash CDN
+- [x] App live at `http://seiko-alb-1474380243.eu-central-1.elb.amazonaws.com`
+
+**Deliverable:** Release v3.2.0 ✅
 
 ### 6.3 — GCP Cloud Run + Cloud SQL Deployment 📋 Planned
 
@@ -403,7 +407,7 @@ seiko_integration     → Go microservice          :8083 (host) / :8080 (interna
 | May 2026 | Phase 5 | v2.1.0 | ✅ Trigger.dev, async Claude, transactional email |
 | Mar–May 2026 | Phase 6 | v3.0.0 | 🔄 Redpanda, Go integration-service, ServiceNow adapter |
 | Mar–Apr 2026 | Phase 6.1 | v3.1.0 | ✅ GCP Terraform (Cloud Run · Cloud SQL · AR), CI rebuild, 100 backend + 44 RTL + 23 E2E tests |
-| Apr 2026 | Phase 6.2 | v3.2.0 | 🔄 AWS ECS + RDS Terraform (VPC/ECR/RDS deployed, ECS pending) |
+| Apr 2026 | Phase 6.2 | v3.2.0 | ✅ AWS ECS Fargate + RDS live on ALB (eu-central-1), Unsplash image URLs, config.ts same-origin routing |
 | Apr 2026 | Phase 6.3 | v3.3.0 | 📋 GCP Cloud Run + Cloud SQL deploy (`terraform apply`) |
 | Apr 2026 | Phase 6.4 | v3.4.0 | ✅ Resilience: retry, circuit breaker, idempotency, DLQ, graceful shutdown |
 | Apr 2026 | Phase 6.5 | v3.5.0 | ✅ Integration observability: Grafana dashboard, Prometheus scrape, 4 alert rules |
@@ -429,4 +433,4 @@ seiko_integration     → Go microservice          :8083 (host) / :8080 (interna
 ---
 
 > Living document — updated after each sprint.
-> Last updated: March 2026 · v3.7.0 Released · Phases 6.0–6.7 complete (v3.0.0–v3.7.0) · 7 GitHub Releases published · Next: Phase 6.2 (AWS ECS deployment) or Phase 6.3 (GCP Cloud Run terraform apply)
+> Last updated: March 2026 · v3.8.0 Released · Phases 6.0–6.7 + 6.2 complete (v3.0.0–v3.8.0) · 8 GitHub Releases published · Next: Phase 6.3 (GCP Cloud Run terraform apply)
