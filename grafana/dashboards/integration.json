@@ -4,14 +4,17 @@
   "schemaVersion": 38,
   "refresh": "30s",
   "time": { "from": "now-1h", "to": "now" },
+  "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
   "panels": [
     {
       "id": 1,
       "title": "Events Consumed / s",
       "type": "timeseries",
       "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "sum(rate(integration_events_consumed_total[1m])) by (topic)",
           "legendFormat": "{{topic}}"
         }
@@ -25,8 +28,10 @@
       "title": "Events Failed / s",
       "type": "timeseries",
       "gridPos": { "x": 8, "y": 0, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "sum(rate(integration_events_failed_total[1m])) by (topic)",
           "legendFormat": "{{topic}}"
         }
@@ -40,8 +45,10 @@
       "title": "Success Rate (%)",
       "type": "timeseries",
       "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "100 - (100 * sum(rate(integration_events_failed_total[5m])) / sum(rate(integration_events_consumed_total[5m])))",
           "legendFormat": "success %"
         }
@@ -64,16 +71,20 @@
       "title": "Processing Duration (p50 / p95 / p99)",
       "type": "timeseries",
       "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "histogram_quantile(0.50, sum(rate(integration_event_processing_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "p50"
         },
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "histogram_quantile(0.95, sum(rate(integration_event_processing_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "p95"
         },
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "histogram_quantile(0.99, sum(rate(integration_event_processing_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "p99"
         }
@@ -87,12 +98,15 @@
       "title": "Retry Rate / s",
       "type": "timeseries",
       "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "sum(rate(integration_events_retried_total[1m])) by (topic)",
           "legendFormat": "retries — {{topic}}"
         },
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "sum(rate(integration_events_dlq_total[1m])) by (topic)",
           "legendFormat": "DLQ — {{topic}}"
         }
@@ -106,8 +120,10 @@
       "title": "Circuit Breaker State",
       "type": "stat",
       "gridPos": { "x": 0, "y": 16, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "integration_circuit_breaker_state{name=\"servicenow\"}",
           "legendFormat": "servicenow"
         }
@@ -133,8 +149,10 @@
       "title": "Total Consumed",
       "type": "stat",
       "gridPos": { "x": 6, "y": 16, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "sum(integration_events_consumed_total)",
           "legendFormat": "total"
         }
@@ -149,8 +167,10 @@
       "title": "Total Failed",
       "type": "stat",
       "gridPos": { "x": 12, "y": 16, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "sum(integration_events_failed_total)",
           "legendFormat": "total"
         }
@@ -165,8 +185,10 @@
       "title": "Total DLQ",
       "type": "stat",
       "gridPos": { "x": 18, "y": 16, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "sum(integration_events_dlq_total)",
           "legendFormat": "total"
         }

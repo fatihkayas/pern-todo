@@ -4,14 +4,17 @@
   "schemaVersion": 38,
   "refresh": "30s",
   "time": { "from": "now-1h", "to": "now" },
+  "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
   "panels": [
     {
       "id": 1,
       "title": "Request Rate (req/s)",
       "type": "timeseries",
       "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "sum(rate(http_requests_total[1m])) by (route)",
           "legendFormat": "{{route}}"
         }
@@ -22,8 +25,10 @@
       "title": "Error Rate (%)",
       "type": "timeseries",
       "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "100 * sum(rate(http_requests_total{status_code=~\"5..\"}[1m])) / sum(rate(http_requests_total[1m]))",
           "legendFormat": "error %"
         }
@@ -34,8 +39,10 @@
       "title": "P95 Latency (ms)",
       "type": "timeseries",
       "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_ms_bucket[5m])) by (le, route))",
           "legendFormat": "p95 {{route}}"
         }
@@ -46,8 +53,10 @@
       "title": "Orders Created",
       "type": "stat",
       "gridPos": { "x": 12, "y": 8, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "orders_created_total",
           "legendFormat": "orders"
         }
@@ -58,8 +67,10 @@
       "title": "Revenue ($)",
       "type": "stat",
       "gridPos": { "x": 18, "y": 8, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "orders_revenue_dollars_total",
           "legendFormat": "revenue"
         }
@@ -70,8 +81,10 @@
       "title": "Low Stock Watches",
       "type": "stat",
       "gridPos": { "x": 12, "y": 12, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "watches_low_stock_total",
           "legendFormat": "low stock"
         }
@@ -91,8 +104,10 @@
       "title": "Chat Requests",
       "type": "stat",
       "gridPos": { "x": 18, "y": 12, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "ollama_chat_requests_total",
           "legendFormat": "chat requests"
         }
@@ -103,8 +118,10 @@
       "title": "Node.js Heap Used (MB)",
       "type": "timeseries",
       "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "nodejs_heap_size_used_bytes / 1024 / 1024",
           "legendFormat": "heap MB"
         }
@@ -115,8 +132,10 @@
       "title": "Event Loop Lag (ms)",
       "type": "timeseries",
       "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "nodejs_eventloop_lag_seconds * 1000",
           "legendFormat": "lag ms"
         }
