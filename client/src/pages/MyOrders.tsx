@@ -176,7 +176,7 @@ const MyOrders = () => {
             const active = selectedOrder?.order_id === order.order_id;
             return (
               <div key={order.order_id} style={dynStyles.orderCard(active)} onClick={() => setSelectedOrder(order)}>
-                <div style={styles.orderCardId}>Sipariş #{order.order_id.slice(0, 8).toUpperCase()}</div>
+                <div style={styles.orderCardId}>Sipariş #{String(order.order_id).padStart(8, "0")}</div>
                 <div style={dynStyles.orderCardDate(active)}>
                   {new Date(order.order_date).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}
                 </div>
@@ -201,7 +201,7 @@ const MyOrders = () => {
             {/* Header */}
             <div style={styles.detailHeader}>
               <div>
-                <div style={styles.detailOrderNum}>Sipariş #{o.order_id.slice(0, 8).toUpperCase()}</div>
+                <div style={styles.detailOrderNum}>Sipariş #{String(o.order_id).padStart(8, "0")}</div>
                 <div style={styles.detailDate}>
                   {new Date(o.order_date).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}
                   &nbsp;·&nbsp;
