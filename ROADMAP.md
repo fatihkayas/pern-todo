@@ -16,7 +16,7 @@
 | v1.1.0 | Phase 3 — Observability + CI/CD + SRE Foundations | ✅ Released |
 | v2.0.0 | Phase 4 — Azure Production Deployment | ✅ Released |
 | v2.1.0 | Phase 5 — Trigger.dev + Async Jobs + Transactional Email | ✅ Released |
-| v3.0.0 | Phase 6 — Event-Driven Integration Platform (Go + Kafka) | 🔄 In Progress |
+| v3.0.0 | Phase 6 — Event-Driven Integration Platform (Go + Kafka) | ✅ Released |
 | v3.1.0 | Phase 6.1 — GCP Terraform + CI Rebuild + Test Expansion | ✅ Released |
 | v3.2.0 | Phase 6.2 — AWS ECS + RDS Production Deployment (Terraform) | ✅ Released |
 | v3.3.0 | Phase 6.3 — GCP Cloud Run + Cloud SQL Deployment | 📋 Planned |
@@ -30,7 +30,7 @@
 
 ---
 
-## Current Stack (v3.7.0)
+## Current Stack (v3.8.0)
 
 | Layer | Technology | Status |
 | --- | --- | --- |
@@ -48,18 +48,17 @@
 | Dashboards | Grafana (auto-provisioned) | ✅ Running |
 | Logging | Pino (structured JSON) + Correlation ID | ✅ Running |
 | API Docs | Swagger / OpenAPI | ✅ Running |
-| CI/CD | GitHub Actions + GHCR (updated) | ✅ Running |
+| CI/CD | GitHub Actions + GHCR + AWS ECR | ✅ Running |
 | Testing | Backend: 100 tests, 97% coverage · Frontend: 44 RTL tests · E2E: 23 Playwright tests | ✅ Running |
 | Code Quality | ESLint + Prettier + Husky + commitlint | ✅ Running |
-| Message Broker | Redpanda (Kafka-compatible) | 🔄 Active |
-| Kafka Producer | TypeScript (server/kafka/producer.ts) | 🔄 Active |
-| Integration Service | Go microservice (consumer + adapters) | 🔄 Active |
-| ServiceNow Adapter | Go (adapters/servicenow.go) | 🔄 Active |
-| AWS RDS Config | server/config/aws-rds.js | 🔄 Active |
-| Multi-Agent Docs | AGENTS.md + GEMINI.md | 🔄 Active |
+| Message Broker | Redpanda (Kafka-compatible) | ✅ Running |
+| Kafka Producer | TypeScript (server/kafka/producer.ts) | ✅ Running |
+| Integration Service | Go microservice (consumer + adapters) | ✅ Running |
+| ServiceNow Adapter | Go (adapters/servicenow.go) | ✅ Running |
+| AWS Terraform | ECS Fargate + RDS + ALB live · eu-central-1 | ✅ Deployed |
+| Azure Terraform | Container Apps + PostgreSQL live · westeurope | ✅ Deployed |
 | GCP Terraform | Cloud Run · Cloud SQL · Artifact Registry (written, not deployed) | 📋 Ready |
-| AWS Terraform | VPC · ECR · RDS deployed · ECS/ALB/Secrets pending | 🔄 Active |
-| CI/CD (rebuilt) | GitHub Actions (218-line update) | 🔄 Active |
+| CI/CD (rebuilt) | GitHub Actions (218-line pipeline) | ✅ Running |
 
 ### Running Services
 ```
@@ -405,7 +404,7 @@ seiko_integration     → Go microservice          :8083 (host) / :8080 (interna
 | Mar–Apr 2026 | Phase 3 | v1.1.0 | ✅ Prometheus, Grafana, Pino, GitHub Actions CI/CD |
 | Apr–May 2026 | Phase 4 | v2.0.0 | ✅ Azure Container Apps, Terraform, Key Vault |
 | May 2026 | Phase 5 | v2.1.0 | ✅ Trigger.dev, async Claude, transactional email |
-| Mar–May 2026 | Phase 6 | v3.0.0 | 🔄 Redpanda, Go integration-service, ServiceNow adapter |
+| Mar–May 2026 | Phase 6 | v3.0.0 | ✅ Redpanda, Go integration-service, ServiceNow adapter |
 | Mar–Apr 2026 | Phase 6.1 | v3.1.0 | ✅ GCP Terraform (Cloud Run · Cloud SQL · AR), CI rebuild, 100 backend + 44 RTL + 23 E2E tests |
 | Apr 2026 | Phase 6.2 | v3.2.0 | ✅ AWS ECS Fargate + RDS live on ALB (eu-central-1), Unsplash image URLs, config.ts same-origin routing |
 | Apr 2026 | Phase 6.3 | v3.3.0 | 📋 GCP Cloud Run + Cloud SQL deploy (`terraform apply`) |
@@ -433,4 +432,4 @@ seiko_integration     → Go microservice          :8083 (host) / :8080 (interna
 ---
 
 > Living document — updated after each sprint.
-> Last updated: March 2026 · v3.8.0 Released · Phases 6.0–6.7 + 6.2 complete (v3.0.0–v3.8.0) · 8 GitHub Releases published · Next: Phase 6.3 (GCP Cloud Run terraform apply)
+> Last updated: March 2026 · v3.2.0 Released (AWS ECS live) · Phases 6.0–6.7 complete (v3.0.0–v3.7.0) · v3.2.0 retroactively completed · Next: Phase 6.3 (GCP Cloud Run terraform apply)
