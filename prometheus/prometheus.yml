@@ -6,7 +6,7 @@ alerting:
   alertmanagers:
     - static_configs:
         - targets:
-            - seiko-alertmanager:9093
+            - seiko_alertmanager:9093
 
 rule_files:
   - /etc/prometheus/alerts.yml
@@ -15,16 +15,16 @@ scrape_configs:
   - job_name: seiko-backend
     static_configs:
       - targets:
-          - seiko-backend:8080
+          - seiko_backend:5000
     metrics_path: /metrics
 
   - job_name: integration-service
     static_configs:
       - targets:
-          - integration-service:8080
+          - seiko_integration:8080
     metrics_path: /metrics
 
   - job_name: alertmanager
     static_configs:
       - targets:
-          - seiko-alertmanager:9093
+          - seiko_alertmanager:9093
