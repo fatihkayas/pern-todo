@@ -86,19 +86,19 @@ This is an **engineering platform** that simulates the architecture of a real pr
 
 ### Running Services
 
-| Service | Technology | Port |
-|---|---|---|
+| Service | Technology | Host Port |
+| --- | --- | --- |
 | Frontend | React 18 + TypeScript | `3000` |
-| Backend API | Node.js 20 + Express | `5000` |
+| Backend API | Node.js 20 + Express | `5001` |
 | Auth Server | Keycloak (OIDC) | `8080` |
-| Database | PostgreSQL 15 + pgvector | `5432` |
-| DB Admin | Adminer | `8081` |
+| Database | PostgreSQL 15 | `5433` |
+| DB Admin | Adminer | `8082` |
 | Metrics | Prometheus | `9090` |
 | Dashboards | Grafana | `3001` |
-| Log Aggregation | Loki | `3100` |
-| Log Analytics | Kibana (ELK) | `5601` |
-| Message Broker | Redpanda (Kafka) | `9092` |
-| Integration Service | Go microservice | `8085` |
+| Alertmanager | Prometheus Alertmanager | `9093` |
+| Message Broker | Redpanda (Kafka-compatible) | `9092` |
+| Redpanda Console | Kafka management UI | `8084` |
+| Integration Service | Go microservice | `8083` |
 
 ---
 
@@ -121,7 +121,7 @@ Claude is used not as a chatbot decoration — but as an **operational layer** w
 ### Async AI Jobs — Trigger.dev
 
 | Trigger File | Purpose |
-|---|---|
+| --- | --- |
 | `trigger/chat-async.ts` | Offloads Claude completions to background queue — prevents HTTP timeouts |
 | `trigger/daily-report.ts` | Scheduled AI-generated business intelligence report (orders, stock, trends) |
 | `trigger/low-stock-alert.ts` | Reacts to Prometheus stock events → autonomous Claude reorder pipeline |
@@ -167,7 +167,7 @@ Grounded, accurate product recommendation
 
 ## 🔀 Event-Driven Integration Platform
 
-> **Status: 🔄 Active — Go microservice and Kafka producer live as of v3.0**
+> **Status: ✅ Active — Go microservice + Kafka producer live (v3.0.0) · Resilience + Observability + Chaos Engineering + AI Log Analyzer complete (v3.4.0–v3.7.0)**
 
 The platform now includes a fully operational event-driven layer built with Redpanda (Kafka-compatible) and a Go integration microservice.
 
@@ -189,7 +189,7 @@ PERN Backend (order placed)
 ### Integration Service (`integration-service/`)
 
 | File | Purpose |
-|---|---|
+| --- | --- |
 | `main.go` | Service entrypoint, HTTP server, health check |
 | `consumer/consumer.go` | Kafka consumer — reads `order.placed` events |
 | `adapters/servicenow.go` | ServiceNow adapter — maps order events to ITSM tickets |
@@ -199,7 +199,7 @@ PERN Backend (order placed)
 ### Kafka Producer (Node.js)
 
 | File | Purpose |
-|---|---|
+| --- | --- |
 | `server/kafka/producer.ts` | Publishes `order.placed` events to Redpanda |
 | `server/kafka/index.ts` | Kafka client initialization and connection management |
 
@@ -227,7 +227,7 @@ Terraform modules written from scratch — production-ready, modular, and review
 ### AWS Terraform Modules (`infra/aws/modules/`)
 
 | Module | Resources |
-|---|---|
+| --- | --- |
 | `vpc/` | VPC, public/private subnets, route tables, NACLs |
 | `alb/` | Application Load Balancer, target groups, ACM TLS |
 | `ecs/` | ECS Fargate cluster, task definitions, service, autoscaling |
@@ -238,10 +238,10 @@ Terraform modules written from scratch — production-ready, modular, and review
 
 > AWS RDS connection config active — `server/config/aws-rds.js`
 
-### GCP Terraform Modules (`infra/gcp/modules/`) — **Active as of v3.1**
+### GCP Terraform Modules (`infra/gcp/modules/`) — **Active as of v3.1.0**
 
 | Module | Resources |
-|---|---|
+| --- | --- |
 | `cloud_run/` | Cloud Run service, IAM bindings, traffic splitting, env vars |
 | `cloud_sql/` | PostgreSQL (Cloud SQL), private IP, automated backups |
 | `artifact_registry/` | Container registry, lifecycle policies |
@@ -251,7 +251,7 @@ Terraform modules written from scratch — production-ready, modular, and review
 ### Tri-Cloud Strategy
 
 | Layer | AWS | Azure | GCP |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Container Runtime | ECS Fargate / EKS | Container Apps / AKS | Cloud Run / GKE |
 | Database | RDS PostgreSQL | Azure Database for PostgreSQL | Cloud SQL PostgreSQL |
 | CDN | CloudFront | Azure Front Door | Cloud CDN |
@@ -268,7 +268,7 @@ Security is enforced at every layer. OWASP Top 10 aligned.
 
 ### Frontend
 | Measure | Implementation |
-|---|---|
+| --- | --- |
 | XSS Prevention | DOMPurify on all dynamic content |
 | Token Storage | HttpOnly + Secure + SameSite=Strict cookies — no localStorage |
 | Content Policy | CSP headers block inline scripts and unauthorized sources |
@@ -277,7 +277,7 @@ Security is enforced at every layer. OWASP Top 10 aligned.
 
 ### Backend
 | Measure | Implementation |
-|---|---|
+| --- | --- |
 | Authentication | Keycloak JWKS-based JWT verification |
 | Authorization | RBAC — Admin / User / Agent roles |
 | Input Validation | Zod schema validation on all endpoints |
@@ -288,7 +288,7 @@ Security is enforced at every layer. OWASP Top 10 aligned.
 
 ### Infrastructure
 | Measure | Implementation |
-|---|---|
+| --- | --- |
 | Local HTTPS | mkcert self-signed certificates |
 | Production TLS | Let's Encrypt via ACM / Azure |
 | Secrets | Environment variables only — never hardcoded |
@@ -322,20 +322,24 @@ Tracing    → Jaeger                  (distributed tracing — Phase 5, microse
 
 ## 🗺️ Roadmap
 
-| Phase | Focus | Status |
-|---|---|---|
-| **v0.9 – v1.1** | Core app · Auth · Stripe · TypeScript migration · 78 tests · OpenAPI · CI/CD · Prometheus/Grafana · k6 | ✅ Done |
-| **v2.0** | Azure production (Bicep IaC · Container Apps · PostgreSQL Flexible · OIDC) | ✅ Done |
-| **v2.1** | Trigger.dev background jobs · Async Ollama chat · Resend transactional email | ✅ Done |
-| **v3.0 — Event-Driven Integration Platform** | Redpanda (Kafka) · Go integration microservice · Adapter pattern · ServiceNow mock | 🔄 In Progress |
-| **v3.1 — Resilience Layer** | Retry + exponential backoff · Circuit breaker (gobreaker) · Idempotency keys · Dead letter queue | 📋 Planned |
-| **v3.2 — Integration Observability** | `integration_processed_total` · `integration_failed_total` · Grafana integration dashboard · Error rate alerts | 📋 Planned |
-| **v3.3 — Chaos Engineering** | Mock ServiceNow failure · Kafka broker stop · Network delay simulation · Recovery testing | 📋 Planned |
-| **v3.4 — AI Log Analyzer** | Trigger.dev task: collect failure logs → Claude analysis → Jira issue → suggested fix | 📋 Planned |
-| **v4.0 — Multi-Cloud Kafka** | AWS MSK (Terraform) · Azure EventHub · Failover simulation · DB switch strategy | 📋 Planned |
-| **v4.1 — SRE Layer** | SLO definition · Error budget tracking · Alert escalation · Integration health endpoints | 📋 Planned |
-| **v4.2 — Integration CI Tests** | Spin up compose in GHA · Produce Kafka event · Assert DB consumption · Fail on timeout | 📋 Planned |
-| **v5.0 — Kubernetes** | EKS/AKS · Helm charts · GitOps (ArgoCD) · Jaeger distributed tracing | 📋 Planned |
+| Version | Focus | Status |
+| --- | --- | --- |
+| **v0.9.0** | Core app · Auth · Stripe · Ollama chatbot · HTTPS · Helmet/CORS/Rate-limit | ✅ Released |
+| **v1.0.0** | TypeScript migration · 78 tests 86% coverage · OpenAPI · Zod schemas | ✅ Released |
+| **v1.1.0** | Prometheus/Grafana · Pino logging · Alertmanager · k6 load tests · GitHub Actions CI/CD | ✅ Released |
+| **v2.0.0** | Azure Container Apps · Bicep IaC · Key Vault · OIDC deploy | ✅ Released |
+| **v2.1.0** | Trigger.dev background jobs · Async Claude chat · Resend transactional email | ✅ Released |
+| **v3.0.0** | Event-Driven Platform — Redpanda (Kafka) · Go integration microservice · ServiceNow adapter | ✅ Released |
+| **v3.1.0** | GCP Terraform (Cloud Run · Cloud SQL · AR) · CI rebuild · 100 backend + 44 RTL + 23 E2E tests | ✅ Released |
+| **v3.2.0** | AWS ECS + RDS Terraform (VPC/ECR/RDS deployed, ECS in progress) | 🔄 In Progress |
+| **v3.3.0** | GCP Cloud Run deployment (`terraform apply`) | 📋 Planned |
+| **v3.4.0** | Resilience — retry/backoff · circuit breaker · idempotency · DLQ · graceful shutdown | ✅ Released |
+| **v3.5.0** | Integration observability — Grafana dashboard · 4 Prometheus alert rules | ✅ Released |
+| **v3.6.0** | Chaos engineering — `SERVICENOW_CHAOS_FAILURE_RATE` · 10 consumer tests | ✅ Released |
+| **v3.7.0** | AI Log Analyzer — Claude claude-opus-4-6 root-cause analysis · Jira auto-issue creation | ✅ Released |
+| **v4.0.0** | Multi-Cloud Kafka — AWS MSK · Azure EventHub · failover simulation | 📋 Planned |
+| **v5.0.0** | Kubernetes — EKS/AKS · Helm · ArgoCD GitOps · OpenTelemetry tracing | 📋 Planned |
+| **v6.0.0** | AI-Native Platform — RAG/pgvector · Autonomous stock agent · LLMOps · GraphQL | 📋 Planned |
 
 ---
 

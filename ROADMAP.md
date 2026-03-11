@@ -10,7 +10,7 @@
 ## Release Strategy
 
 | Version | Scope | Status |
-|---|---|---|
+| --- | --- | --- |
 | v0.9.0 | Phase 1 — Commerce Core + Stripe + Security | ✅ Released |
 | v1.0.0 | Phase 2 — TypeScript + Testing + API Contract | ✅ Released |
 | v1.1.0 | Phase 3 — Observability + CI/CD + SRE Foundations | ✅ Released |
@@ -30,10 +30,10 @@
 
 ---
 
-## Current Stack (v3.0.0-dev)
+## Current Stack (v3.7.0)
 
 | Layer | Technology | Status |
-|---|---|---|
+| --- | --- | --- |
 | Frontend | React 18 + TypeScript (.tsx) | ✅ Running |
 | Backend | Node.js + Express + TypeScript | ✅ Running |
 | Database | PostgreSQL 15 | ✅ Running |
@@ -63,16 +63,18 @@
 
 ### Running Services
 ```
-seiko_db              → PostgreSQL 15           :5432
-seiko_backend         → Express API             :5001 (host) / :5000 (internal)
-seiko_frontend        → React App               :3000
-seiko_nginx           → Nginx HTTPS             :8443 / :8090
-seiko_adminer         → DB Admin UI             :8082
-keycloak_server       → Keycloak IAM            :8080
-seiko_prometheus      → Prometheus              :9090
-seiko_grafana         → Grafana                 :3001
-redpanda              → Kafka-compatible broker  :9092
-integration-service   → Go microservice         :8085
+seiko_db              → PostgreSQL 15            :5433 (host) / :5432 (internal)
+seiko_backend         → Express API              :5001 (host) / :5000 (internal)
+seiko_frontend        → React App                :3000 (host) / :8080 (internal)
+seiko_nginx           → Nginx HTTPS              :8443 / :8090
+seiko_adminer         → DB Admin UI              :8082
+keycloak_server       → Keycloak IAM             :8080
+seiko_prometheus      → Prometheus               :9090
+seiko_grafana         → Grafana                  :3001
+seiko_alertmanager    → Alertmanager             :9093
+redpanda              → Kafka-compatible broker   :9092
+redpanda_console      → Redpanda Console         :8084
+seiko_integration     → Go microservice          :8083 (host) / :8080 (internal)
 ```
 
 ---
@@ -277,7 +279,7 @@ integration-service   → Go microservice         :8085
 > Timeline: June 2026
 
 | Layer | AWS | Azure | GCP |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Kafka | AWS MSK | Azure EventHub (Kafka protocol) | Pub/Sub (adapter) |
 | IaC | Terraform aws provider | Terraform azurerm provider | Terraform google provider |
 | Consumer | Same Go service, broker URL change | Same Go service | Same Go service |
@@ -359,7 +361,7 @@ integration-service   → Go microservice         :8085
 ## Certifications Roadmap
 
 | Certification | Provider | Target | Status |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Azure Fundamentals (AZ-900) | Microsoft | May 2026 | ⏳ |
 | Azure Developer Associate (AZ-204) | Microsoft | Jul 2026 | ⏳ |
 | AWS Cloud Practitioner | AWS | Aug 2026 | ⏳ |
@@ -375,23 +377,25 @@ integration-service   → Go microservice         :8085
 3. **Prometheus + Grafana** ✅ Done
 4. **GitHub Actions** ✅ Done
 5. **Pino + Structured Logging** ✅ Done
-6. **Kafka (Redpanda)** 🔄 In Progress
-7. **Go** 🔄 In Progress
-8. **Adapter Pattern / Enterprise Integration** 🔄 In Progress
-9. **Alerting** — Prometheus rules + Alertmanager ⏳ Next
-10. **k6** — load testing and SLO definition ⏳ Next
-11. **Terraform** — Infrastructure as Code ⏳ Phase 7
-12. **AWS MSK / Azure EventHub / GCP Pub/Sub** ⏳ Phase 7
-13. **Kubernetes** ⏳ Phase 8
-14. **OpenTelemetry** ⏳ Phase 8
-15. **GraphQL** ⏳ Phase 9
+6. **Kafka (Redpanda)** ✅ Done
+7. **Go** ✅ Done
+8. **Adapter Pattern / Enterprise Integration** ✅ Done
+9. **Alerting** — Prometheus rules + Alertmanager ✅ Done
+10. **k6** — load testing and SLO definition ✅ Done
+11. **Chaos Engineering** ✅ Done
+12. **AI Log Analysis** — Claude + Jira auto-issue creation ✅ Done
+13. **Terraform** — Infrastructure as Code (Azure + AWS + GCP) ✅ Done
+14. **AWS MSK / Azure EventHub / GCP Pub/Sub** ⏳ Phase 7
+15. **Kubernetes** ⏳ Phase 8
+16. **OpenTelemetry** ⏳ Phase 8
+17. **GraphQL** ⏳ Phase 9
 
 ---
 
 ## Timeline
 
 | Period | Phase | Release | Goal |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Feb 2026 | Phase 1 | v0.9.0 | ✅ Core commerce, auth, Stripe, AI chatbot |
 | Feb–Mar 2026 | Phase 2 | v1.0.0 | ✅ TypeScript, Jest 86%, Swagger, CI |
 | Mar–Apr 2026 | Phase 3 | v1.1.0 | ✅ Prometheus, Grafana, Pino, GitHub Actions CI/CD |
@@ -399,6 +403,12 @@ integration-service   → Go microservice         :8085
 | May 2026 | Phase 5 | v2.1.0 | ✅ Trigger.dev, async Claude, transactional email |
 | Mar–May 2026 | Phase 6 | v3.0.0 | 🔄 Redpanda, Go integration-service, ServiceNow adapter |
 | Mar–Apr 2026 | Phase 6.1 | v3.1.0 | ✅ GCP Terraform (Cloud Run · Cloud SQL · AR), CI rebuild, 100 backend + 44 RTL + 23 E2E tests |
+| Apr 2026 | Phase 6.2 | v3.2.0 | 🔄 AWS ECS + RDS Terraform (VPC/ECR/RDS deployed, ECS pending) |
+| Apr 2026 | Phase 6.3 | v3.3.0 | 📋 GCP Cloud Run + Cloud SQL deploy (`terraform apply`) |
+| Apr 2026 | Phase 6.4 | v3.4.0 | ✅ Resilience: retry, circuit breaker, idempotency, DLQ, graceful shutdown |
+| Apr 2026 | Phase 6.5 | v3.5.0 | ✅ Integration observability: Grafana dashboard, Prometheus scrape, 4 alert rules |
+| Apr 2026 | Phase 6.6 | v3.6.0 | ✅ Chaos engineering: SERVICENOW_CHAOS_FAILURE_RATE, 10 consumer_test.go tests |
+| Apr 2026 | Phase 6.7 | v3.7.0 | ✅ AI Log Analyzer: Claude claude-opus-4-6 root-cause analysis, Jira auto-issue creation |
 | Jun 2026 | Phase 7 | v4.0.0 | ⏳ AWS MSK, Azure EventHub, failover simulation |
 | Sep 2026 | Phase 8 | v5.0.0 | ⏳ Kubernetes (AKS/EKS), Helm, ArgoCD, OTel |
 | Oct 2026+ | Phase 9 | v6.0.0 | ⏳ RAG, Autonomous Agent, LLMOps, GraphQL |
@@ -419,4 +429,4 @@ integration-service   → Go microservice         :8085
 ---
 
 > Living document — updated after each sprint.
-> Last updated: March 2026 (Phase 6.7 ✅ Released — AI Log Analyzer (Claude + Jira) · Phases 6.4–6.7 complete · Next: Phase 6.2 AWS ECS deployment or Phase 6.3 GCP Cloud Run)
+> Last updated: March 2026 · v3.7.0 Released · Phases 6.0–6.7 complete (v3.0.0–v3.7.0) · 7 GitHub Releases published · Next: Phase 6.2 (AWS ECS deployment) or Phase 6.3 (GCP Cloud Run terraform apply)
