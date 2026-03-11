@@ -172,7 +172,7 @@ seiko_integration     → Go microservice          :8083 (host) / :8080 (interna
 
 ---
 
-## Phase 6 — Event-Driven Integration Platform 🔄 In Progress → v3.0.0
+## Phase 6 — Event-Driven Integration Platform ✅ Released → v3.0.0
 
 > Goal: Build a real enterprise integration layer with Kafka and Go.
 > Status: Kafka producer live, Go consumer live, ServiceNow adapter implemented.
