@@ -39,6 +39,8 @@ This is an **engineering platform** that simulates the architecture of a real pr
 
 ## 🏗️ Architecture
 
+> 📐 **[Interactive Architecture Diagram →](https://fatihkayas.github.io/pern-todo/architecture.html)**
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         CLIENT LAYER                            │
