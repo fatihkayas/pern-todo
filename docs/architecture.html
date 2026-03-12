@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seiko Watch Store — System Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg: #080c14;
+    --bg2: #0d1420;
+    --bg3: #111a2b;
+    --border: #1e2d45;
+    --border-glow: #2a4a7f;
+    --text: #c8d8f0;
+    --text-dim: #5a7a9a;
+    --text-bright: #e8f4ff;
+
+    --blue: #3b82f6;
+    --blue-dim: #1e3a6e;
+    --cyan: #06b6d4;
+    --cyan-dim: #0e4a5a;
+    --green: #10b981;
+    --green-dim: #0a3d2a;
+    --orange: #f59e0b;
+    --orange-dim: #4a2e05;
+    --purple: #8b5cf6;
+    --purple-dim: #2d1f5e;
+    --red: #ef4444;
+    --red-dim: #4a1010;
+    --pink: #ec4899;
+    --pink-dim: #4a1030;
+    --teal: #14b8a6;
+    --teal-dim: #0a3530;
+    --yellow: #eab308;
+    --yellow-dim: #3a2a00;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px 60px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--blue-dim);
+    border: 1px solid var(--blue);
+    border-radius: 20px;
+    padding: 4px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--blue);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .header-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-bright);
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+
+  .header h1 span { color: var(--blue); }
+
+  .header p {
+    color: var(--text-dim);
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Layer cards */
+  .layer {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg2);
+    padding: 20px 24px;
+    margin-bottom: 6px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .layer:hover {
+    border-color: var(--border-glow);
+    box-shadow: 0 0 30px rgba(59,130,246,0.06), inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+
+  .layer-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .layer-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .services {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Service pills */
+  .svc {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    white-space: nowrap;
+  }
+
+  .svc:hover { transform: translateY(-2px); filter: brightness(1.15); }
+  .svc:hover .tooltip { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+  .svc-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Color themes */
+  .blue   { background: rgba(59,130,246,0.08);  border-color: rgba(59,130,246,0.3);  color: #93c5fd; }
+  .cyan   { background: rgba(6,182,212,0.08);   border-color: rgba(6,182,212,0.3);   color: #67e8f9; }
+  .green  { background: rgba(16,185,129,0.08);  border-color: rgba(16,185,129,0.3);  color: #6ee7b7; }
+  .orange { background: rgba(245,158,11,0.08);  border-color: rgba(245,158,11,0.3);  color: #fcd34d; }
+  .purple { background: rgba(139,92,246,0.08);  border-color: rgba(139,92,246,0.3);  color: #c4b5fd; }
+  .red    { background: rgba(239,68,68,0.08);   border-color: rgba(239,68,68,0.3);   color: #fca5a5; }
+  .pink   { background: rgba(236,72,153,0.08);  border-color: rgba(236,72,153,0.3);  color: #f9a8d4; }
+  .teal   { background: rgba(20,184,166,0.08);  border-color: rgba(20,184,166,0.3);  color: #99f6e4; }
+  .yellow { background: rgba(234,179,8,0.08);   border-color: rgba(234,179,8,0.3);   color: #fde047; }
+
+  .blue   .svc-dot { background: #3b82f6; }
+  .cyan   .svc-dot { background: #06b6d4; }
+  .green  .svc-dot { background: #10b981; }
+  .orange .svc-dot { background: #f59e0b; }
+  .purple .svc-dot { background: #8b5cf6; }
+  .red    .svc-dot { background: #ef4444; }
+  .pink   .svc-dot { background: #ec4899; }
+  .teal   .svc-dot { background: #14b8a6; }
+  .yellow .svc-dot { background: #eab308; }
+
+  /* Tooltip */
+  .tooltip {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    background: #0d1a2e;
+    border: 1px solid var(--border-glow);
+    border-radius: 8px;
+    padding: 10px 14px;
+    min-width: 200px;
+    max-width: 260px;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    text-align: left;
+  }
+
+  .tooltip-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+  }
+
+  .tooltip-desc {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .tooltip-port {
+    display: inline-block;
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    color: var(--cyan);
+  }
+
+  /* Arrow connector */
+  .arrow {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 32px;
+    position: relative;
+    margin: 0;
+  }
+
+  .arrow-line {
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--border-glow), transparent);
+    position: relative;
+  }
+
+  .arrow-label {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(12px, -50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    background: var(--bg);
+    padding: 0 6px;
+  }
+
+  /* Animated flow dot */
+  .flow-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--blue);
+    border-radius: 50%;
+    position: absolute;
+    left: -2px;
+    box-shadow: 0 0 8px var(--blue);
+    animation: flowDown 2s infinite linear;
+  }
+
+  @keyframes flowDown {
+    0%   { top: 0; opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+
+  /* Split layout for side-by-side */
+  .split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  /* Three-col for cloud */
+  .triple {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .triple .layer, .split .layer { margin-bottom: 0; }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 40px;
+    padding: 16px 24px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-dim);
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+
+  .status-dot.live { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+  .status-dot.ready { background: var(--orange); }
+  .status-dot.planned { background: var(--text-dim); }
+
+  /* Section title */
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    margin-top: 40px;
+  }
+
+  .section-title h2 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .section-title::before {
+    content: '//';
+    color: var(--blue);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  /* Data flow section */
+  .flow-diagram {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    overflow-x: auto;
+    padding: 24px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+
+  .flow-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .flow-box {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .flow-sublabel {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  .flow-arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 8px;
+    flex-shrink: 0;
+  }
+
+  .flow-arrow-line {
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(to right, var(--border-glow), var(--blue));
+    position: relative;
+    overflow: visible;
+  }
+
+  .flow-arrow-line::after {
+    content: '';
+    position: absolute;
+    right: -1px;
+    top: -3px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid var(--blue);
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+  }
+
+  .flow-arrow-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    white-space: nowrap;
+  }
+
+  .flow-dot-h {
+    width: 8px;
+    height: 8px;
+    background: var(--blue);
+    border-radius: 50%;
+    position: absolute;
+    top: -3px;
+    left: 0;
+    box-shadow: 0 0 8px var(--blue);
+    animation: flowRight 1.8s infinite linear;
+  }
+
+  @keyframes flowRight {
+    0%   { left: 0; opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { left: 100%; opacity: 0; }
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 32px;
+    padding: 16px 24px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 700px) {
+    .split, .triple { grid-template-columns: 1fr; }
+    .flow-diagram { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-badge">System Architecture · v3.7.0</div>
+    <h1>⌚ Seiko Watch Store <span>Platform</span></h1>
+    <p>AI-Native · Event-Driven · Tri-Cloud · Production-Grade</p>
+  </div>
+
+  <!-- CLIENT -->
+  <div class="layer">
+    <div class="layer-label" style="color:#3b82f6">🖥 Client Layer</div>
+    <div class="services">
+      <span class="svc blue"><span class="svc-dot"></span>React 18 + TypeScript
+        <span class="tooltip"><div class="tooltip-title">React SPA</div><div class="tooltip-desc">Full frontend with shopping cart, dark mode, drag & drop, admin panel, chat widget</div><span class="tooltip-port">:3000</span></span>
+      </span>
+      <span class="svc blue"><span class="svc-dot"></span>DOMPurify (XSS)
+        <span class="tooltip"><div class="tooltip-title">XSS Prevention</div><div class="tooltip-desc">All dynamic content sanitized with DOMPurify before render</div></span>
+      </span>
+      <span class="svc blue"><span class="svc-dot"></span>HttpOnly Cookies
+        <span class="tooltip"><div class="tooltip-title">Secure Token Storage</div><div class="tooltip-desc">JWT stored in HttpOnly + SameSite=Strict cookies — no localStorage</div></span>
+      </span>
+      <span class="svc blue"><span class="svc-dot"></span>CSP Headers
+        <span class="tooltip"><div class="tooltip-title">Content Security Policy</div><div class="tooltip-desc">Inline scripts and unauthorized sources blocked at browser level</div></span>
+      </span>
+      <span class="svc blue"><span class="svc-dot"></span>44 RTL Tests
+        <span class="tooltip"><div class="tooltip-title">React Testing Library</div><div class="tooltip-desc">44 component/service tests across 5 test files</div></span>
+      </span>
+      <span class="svc blue"><span class="svc-dot"></span>23 E2E Playwright
+        <span class="tooltip"><div class="tooltip-title">End-to-End Tests</div><div class="tooltip-desc">23 Playwright tests with webServer auto-start, chromium, CI artifact</div></span>
+      </span>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-line"><div class="flow-dot"></div></div><span class="arrow-label">HTTPS · Nginx Reverse Proxy</span></div>
+
+  <!-- BACKEND -->
+  <div class="layer">
+    <div class="layer-label" style="color:#06b6d4">⚙️ Backend — Express API</div>
+    <div class="services">
+      <span class="svc cyan"><span class="svc-dot"></span>Node.js 20 + TypeScript
+        <span class="tooltip"><div class="tooltip-title">Express API</div><div class="tooltip-desc">Fully typed backend, strict tsconfig, zero type errors</div><span class="tooltip-port">:5001</span></span>
+      </span>
+      <span class="svc cyan"><span class="svc-dot"></span>Keycloak OIDC
+        <span class="tooltip"><div class="tooltip-title">Authentication</div><div class="tooltip-desc">JWKS-based JWT verification, RBAC roles: Admin / User / Agent</div><span class="tooltip-port">:8080</span></span>
+      </span>
+      <span class="svc cyan"><span class="svc-dot"></span>Zod Validation
+        <span class="tooltip"><div class="tooltip-title">Input Validation</div><div class="tooltip-desc">Schema validation on every endpoint. No unvalidated input reaches the DB</div></span>
+      </span>
+      <span class="svc cyan"><span class="svc-dot"></span>Helmet.js
+        <span class="tooltip"><div class="tooltip-title">Security Headers</div><div class="tooltip-desc">X-Frame-Options, HSTS, CSP, X-Content-Type-Options set automatically</div></span>
+      </span>
+      <span class="svc cyan"><span class="svc-dot"></span>Rate Limiting
+        <span class="tooltip"><div class="tooltip-title">express-rate-limit</div><div class="tooltip-desc">Per-user and per-IP request limits. AI chat: 10 req/min</div></span>
+      </span>
+      <span class="svc cyan"><span class="svc-dot"></span>Stripe Webhooks
+        <span class="tooltip"><div class="tooltip-title">Payment Processing</div><div class="tooltip-desc">Payment Intents + webhook signature verification. Hardened in v3.1</div></span>
+      </span>
+      <span class="svc cyan"><span class="svc-dot"></span>Kafka Producer
+        <span class="tooltip"><div class="tooltip-title">server/kafka/producer.ts</div><div class="tooltip-desc">Publishes order.placed events to Redpanda on every successful order</div></span>
+      </span>
+      <span class="svc cyan"><span class="svc-dot"></span>100 Tests · 97% Cov
+        <span class="tooltip"><div class="tooltip-title">Jest + Supertest</div><div class="tooltip-desc">100 backend tests, 97% route coverage. Runs in CI on every push</div></span>
+      </span>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-line"><div class="flow-dot"></div></div></div>
+
+  <!-- SPLIT: DB + AI + Observability -->
+  <div class="split">
+    <div class="layer">
+      <div class="layer-label" style="color:#10b981">🗄 Database</div>
+      <div class="services">
+        <span class="svc green"><span class="svc-dot"></span>PostgreSQL 15
+          <span class="tooltip"><div class="tooltip-title">Primary Database</div><div class="tooltip-desc">Parameterized queries throughout — SQL injection impossible by design</div><span class="tooltip-port">:5433</span></span>
+        </span>
+        <span class="svc green"><span class="svc-dot"></span>pgvector
+          <span class="tooltip"><div class="tooltip-title">Vector Embeddings</div><div class="tooltip-desc">Ready for RAG semantic search — Phase 9 activation</div></span>
+        </span>
+        <span class="svc green"><span class="svc-dot"></span>node-pg-migrate
+          <span class="tooltip"><div class="tooltip-title">DB Migrations</div><div class="tooltip-desc">Version-controlled schema migrations, reproducible across environments</div></span>
+        </span>
+        <span class="svc green"><span class="svc-dot"></span>integration_logs
+          <span class="tooltip"><div class="tooltip-title">Audit Table</div><div class="tooltip-desc">Every integration event (success/failure/DLQ/AI analysis) persisted here</div></span>
+        </span>
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="layer-label" style="color:#8b5cf6">🤖 Claude AI Agent</div>
+      <div class="services">
+        <span class="svc purple"><span class="svc-dot"></span>Claude claude-opus-4-6
+          <span class="tooltip"><div class="tooltip-title">LLM Backbone</div><div class="tooltip-desc">Server-side only — API key never exposed to client (backend proxy pattern)</div></span>
+        </span>
+        <span class="svc purple"><span class="svc-dot"></span>Trigger.dev Jobs
+          <span class="tooltip"><div class="tooltip-title">Async Background Queue</div><div class="tooltip-desc">chat-async · daily-report · low-stock-alert · order-confirmation · log-analyzer</div></span>
+        </span>
+        <span class="svc purple"><span class="svc-dot"></span>AI Log Analyzer
+          <span class="tooltip"><div class="tooltip-title">Autonomous Ops (v3.7)</div><div class="tooltip-desc">Hourly: queries integration_logs → Claude root-cause analysis → Jira ticket auto-created</div></span>
+        </span>
+        <span class="svc purple"><span class="svc-dot"></span>RAG / pgvector
+          <span class="tooltip"><div class="tooltip-title">Semantic Search (Phase 9)</div><div class="tooltip-desc">Natural language product search: "waterproof under €200" → vector similarity</div></span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-line"><div class="flow-dot"></div></div></div>
+
+  <!-- OBSERVABILITY -->
+  <div class="layer">
+    <div class="layer-label" style="color:#f59e0b">📊 Observability Stack</div>
+    <div class="services">
+      <span class="svc orange"><span class="svc-dot"></span>Prometheus
+        <span class="tooltip"><div class="tooltip-title">Metrics Collection</div><div class="tooltip-desc">RED metrics + business metrics: orders_created_total, watches_low_stock, ollama_chat_duration_ms</div><span class="tooltip-port">:9090</span></span>
+      </span>
+      <span class="svc orange"><span class="svc-dot"></span>Grafana
+        <span class="tooltip"><div class="tooltip-title">Dashboards</div><div class="tooltip-desc">API Health · Stock Intelligence · AI Operations · Integration Platform · Infrastructure</div><span class="tooltip-port">:3001</span></span>
+      </span>
+      <span class="svc orange"><span class="svc-dot"></span>Alertmanager
+        <span class="tooltip"><div class="tooltip-title">Alert Routing</div><div class="tooltip-desc">4 rules: IntegrationServiceDown · HighFailureRate · DLQMessages · CircuitBreakerOpen</div><span class="tooltip-port">:9093</span></span>
+      </span>
+      <span class="svc orange"><span class="svc-dot"></span>Pino + Correlation ID
+        <span class="tooltip"><div class="tooltip-title">Structured Logging</div><div class="tooltip-desc">JSON logs with x-correlation-id on every request. pino-pretty for local dev</div></span>
+      </span>
+      <span class="svc orange"><span class="svc-dot"></span>Loki · ELK · Splunk
+        <span class="tooltip"><div class="tooltip-title">Log Aggregation</div><div class="tooltip-desc">Loki+Promtail for K8s-native logs. ELK for full-text analytics. Splunk for enterprise SIEM</div></span>
+      </span>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-line"><div class="flow-dot"></div></div><span class="arrow-label">order.placed event</span></div>
+
+  <!-- EVENT-DRIVEN -->
+  <div class="layer">
+    <div class="layer-label" style="color:#14b8a6">🔀 Event-Driven Integration Platform</div>
+    <div class="services">
+      <span class="svc teal"><span class="svc-dot"></span>Redpanda (Kafka)
+        <span class="tooltip"><div class="tooltip-title">Message Broker</div><div class="tooltip-desc">Kafka-compatible. Topics: order.placed · orders.created.dlq</div><span class="tooltip-port">:9092</span></span>
+      </span>
+      <span class="svc teal"><span class="svc-dot"></span>Go Consumer
+        <span class="tooltip"><div class="tooltip-title">integration-service/consumer</div><div class="tooltip-desc">Reads order.placed events, routes to adapters. Goroutine-based concurrency</div><span class="tooltip-port">:8083</span></span>
+      </span>
+      <span class="svc teal"><span class="svc-dot"></span>ServiceNow Adapter
+        <span class="tooltip"><div class="tooltip-title">adapters/servicenow.go</div><div class="tooltip-desc">Adapter pattern — maps OrderEvent to ITSM incident/change ticket</div></span>
+      </span>
+      <span class="svc teal"><span class="svc-dot"></span>Circuit Breaker
+        <span class="tooltip"><div class="tooltip-title">gobreaker (v3.4)</div><div class="tooltip-desc">Opens after 5 consecutive adapter failures. Prevents cascade failure</div></span>
+      </span>
+      <span class="svc teal"><span class="svc-dot"></span>Retry + Backoff
+        <span class="tooltip"><div class="tooltip-title">Resilience (v3.4)</div><div class="tooltip-desc">1s → 2s → 4s exponential backoff, 3 attempts before DLQ</div></span>
+      </span>
+      <span class="svc teal"><span class="svc-dot"></span>Dead Letter Queue
+        <span class="tooltip"><div class="tooltip-title">orders.created.dlq</div><div class="tooltip-desc">Exhausted retries routed here. Grafana alert fires when DLQ fills</div></span>
+      </span>
+      <span class="svc teal"><span class="svc-dot"></span>Chaos Engineering
+        <span class="tooltip"><div class="tooltip-title">SERVICENOW_CHAOS_FAILURE_RATE</div><div class="tooltip-desc">Env var injects N% random failures. 10 consumer_test.go tests verify all resilience paths</div></span>
+      </span>
+      <span class="svc teal"><span class="svc-dot"></span>Redpanda Console
+        <span class="tooltip"><div class="tooltip-title">Kafka Management UI</div><div class="tooltip-desc">Topic browser, consumer group lag, message inspector</div><span class="tooltip-port">:8084</span></span>
+      </span>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-line"><div class="flow-dot"></div></div></div>
+
+  <!-- CLOUD: THREE COLUMNS -->
+  <div class="triple">
+    <div class="layer">
+      <div class="layer-label" style="color:#f59e0b">☁️ AWS · Live</div>
+      <div class="services">
+        <span class="svc orange"><span class="svc-dot"></span>ECS Fargate
+          <span class="tooltip"><div class="tooltip-title">Container Runtime</div><div class="tooltip-desc">Backend 512 CPU/1GB · Frontend 256/512. Serverless containers</div></span>
+        </span>
+        <span class="svc orange"><span class="svc-dot"></span>RDS PostgreSQL
+          <span class="tooltip"><div class="tooltip-title">Managed Database</div><div class="tooltip-desc">PostgreSQL 15, KMS encryption, automated backups, parameter group</div></span>
+        </span>
+        <span class="svc orange"><span class="svc-dot"></span>ALB
+          <span class="tooltip"><div class="tooltip-title">Application Load Balancer</div><div class="tooltip-desc">Path routing: /api/* → backend · /* → frontend · eu-central-1</div></span>
+        </span>
+        <span class="svc orange"><span class="svc-dot"></span>Secrets Manager
+          <span class="tooltip"><div class="tooltip-title">Secret Storage</div><div class="tooltip-desc">DB password, Stripe keys, JWT secret. IAM least-privilege access</div></span>
+        </span>
+        <span class="svc orange"><span class="svc-dot"></span>CloudWatch
+          <span class="tooltip"><div class="tooltip-title">Monitoring</div><div class="tooltip-desc">Log groups, CPU/mem/ALB/RDS dashboard, 4 alarms</div></span>
+        </span>
+        <span class="svc orange"><span class="svc-dot"></span>ECR
+          <span class="tooltip"><div class="tooltip-title">Container Registry</div><div class="tooltip-desc">Backend + frontend image repos. OIDC push from GitHub Actions</div></span>
+        </span>
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="layer-label" style="color:#3b82f6">☁️ Azure · Live</div>
+      <div class="services">
+        <span class="svc blue"><span class="svc-dot"></span>Container Apps
+          <span class="tooltip"><div class="tooltip-title">Container Runtime</div><div class="tooltip-desc">Serverless containers, westeurope region, auto-scaling</div></span>
+        </span>
+        <span class="svc blue"><span class="svc-dot"></span>PostgreSQL Flexible
+          <span class="tooltip"><div class="tooltip-title">Managed Database</div><div class="tooltip-desc">Azure Database for PostgreSQL, private networking</div></span>
+        </span>
+        <span class="svc blue"><span class="svc-dot"></span>Key Vault
+          <span class="tooltip"><div class="tooltip-title">Secret Management</div><div class="tooltip-desc">Managed Identity — no credentials in code or env vars</div></span>
+        </span>
+        <span class="svc blue"><span class="svc-dot"></span>Front Door
+          <span class="tooltip"><div class="tooltip-title">CDN + Ingress</div><div class="tooltip-desc">HTTPS, custom domain, global CDN layer</div></span>
+        </span>
+        <span class="svc blue"><span class="svc-dot"></span>ACR
+          <span class="tooltip"><div class="tooltip-title">Artifact Registry</div><div class="tooltip-desc">Azure Container Registry. OIDC GitHub Actions push</div></span>
+        </span>
+        <span class="svc blue"><span class="svc-dot"></span>Bicep / Terraform
+          <span class="tooltip"><div class="tooltip-title">IaC</div><div class="tooltip-desc">Bicep for Azure-native, Terraform azurerm for multi-cloud parity</div></span>
+        </span>
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="layer-label" style="color:#10b981">☁️ GCP · Ready</div>
+      <div class="services">
+        <span class="svc green"><span class="svc-dot"></span>Cloud Run
+          <span class="tooltip"><div class="tooltip-title">Container Runtime</div><div class="tooltip-desc">Terraform module: service, IAM bindings, traffic splitting</div></span>
+        </span>
+        <span class="svc green"><span class="svc-dot"></span>Cloud SQL
+          <span class="tooltip"><div class="tooltip-title">Managed Database</div><div class="tooltip-desc">PostgreSQL, private IP, automated backups. terraform apply pending</div></span>
+        </span>
+        <span class="svc green"><span class="svc-dot"></span>Artifact Registry
+          <span class="tooltip"><div class="tooltip-title">Container Registry</div><div class="tooltip-desc">Lifecycle policies, image scanning. Workload Identity Federation for OIDC</div></span>
+        </span>
+        <span class="svc green"><span class="svc-dot"></span>Secret Manager
+          <span class="tooltip"><div class="tooltip-title">Secret Storage</div><div class="tooltip-desc">DB password, Stripe keys, JWT. Workload Identity — no long-lived keys</div></span>
+        </span>
+        <span class="svc green"><span class="svc-dot"></span>Terraform Modules
+          <span class="tooltip"><div class="tooltip-title">infra/gcp/modules/</div><div class="tooltip-desc">cloud_run · cloud_sql · artifact_registry — all written, deploy pending</div></span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CI/CD -->
+  <div class="layer">
+    <div class="layer-label" style="color:#ec4899">🚀 CI/CD Pipeline — GitHub Actions</div>
+    <div class="services">
+      <span class="svc pink"><span class="svc-dot"></span>tsc + ESLint
+        <span class="tooltip"><div class="tooltip-title">Type Check + Lint</div><div class="tooltip-desc">TypeScript strict compile + ESLint on every push. Fails build on error</div></span>
+      </span>
+      <span class="svc pink"><span class="svc-dot"></span>Jest (100 tests)
+        <span class="tooltip"><div class="tooltip-title">Backend Tests</div><div class="tooltip-desc">100 tests, 97% coverage. Coverage HTML artifact uploaded</div></span>
+      </span>
+      <span class="svc pink"><span class="svc-dot"></span>Playwright E2E
+        <span class="tooltip"><div class="tooltip-title">E2E Tests in CI</div><div class="tooltip-desc">23 tests, chromium. webServer auto-start. Report uploaded as artifact</div></span>
+      </span>
+      <span class="svc pink"><span class="svc-dot"></span>Go Build
+        <span class="tooltip"><div class="tooltip-title">Integration Service</div><div class="tooltip-desc">Go build + test for integration-service on every push</div></span>
+      </span>
+      <span class="svc pink"><span class="svc-dot"></span>ECR Push
+        <span class="tooltip"><div class="tooltip-title">Image Build & Push</div><div class="tooltip-desc">Docker/Podman build → GHCR + ECR. Tagged :latest and :<git-sha></div></span>
+      </span>
+      <span class="svc pink"><span class="svc-dot"></span>OIDC (no secrets)
+        <span class="tooltip"><div class="tooltip-title">Secretless Deploy</div><div class="tooltip-desc">GitHub OIDC federation → AWS + Azure. No long-lived credentials stored</div></span>
+      </span>
+      <span class="svc pink"><span class="svc-dot"></span>Husky + commitlint
+        <span class="tooltip"><div class="tooltip-title">Pre-commit Gates</div><div class="tooltip-desc">type-check + lint-staged on commit. Conventional commits enforced</div></span>
+      </span>
+    </div>
+  </div>
+
+  <!-- ORDER FLOW SECTION -->
+  <div class="section-title"><h2>Order Event Flow</h2></div>
+
+  <div class="flow-diagram">
+    <div class="flow-node">
+      <div class="flow-box blue" style="background:rgba(59,130,246,0.1);border-color:rgba(59,130,246,0.4);color:#93c5fd">Customer</div>
+      <div class="flow-sublabel">React SPA</div>
+    </div>
+    <div class="flow-arrow">
+      <div class="flow-arrow-line"><div class="flow-dot-h"></div></div>
+      <div class="flow-arrow-label">POST /api/v1/orders</div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-box cyan" style="background:rgba(6,182,212,0.1);border-color:rgba(6,182,212,0.4);color:#67e8f9">Express API</div>
+      <div class="flow-sublabel">Zod · RBAC · Stripe</div>
+    </div>
+    <div class="flow-arrow">
+      <div class="flow-arrow-line"><div class="flow-dot-h" style="animation-delay:0.3s"></div></div>
+      <div class="flow-arrow-label">order.placed</div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-box teal" style="background:rgba(20,184,166,0.1);border-color:rgba(20,184,166,0.4);color:#99f6e4">Redpanda</div>
+      <div class="flow-sublabel">Kafka topic</div>
+    </div>
+    <div class="flow-arrow">
+      <div class="flow-arrow-line"><div class="flow-dot-h" style="animation-delay:0.6s"></div></div>
+      <div class="flow-arrow-label">consume</div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-box" style="background:rgba(20,184,166,0.1);border-color:rgba(20,184,166,0.4);color:#99f6e4">Go Service</div>
+      <div class="flow-sublabel">Retry · CB · DLQ</div>
+    </div>
+    <div class="flow-arrow">
+      <div class="flow-arrow-line"><div class="flow-dot-h" style="animation-delay:0.9s"></div></div>
+      <div class="flow-arrow-label">adapt</div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-box" style="background:rgba(20,184,166,0.1);border-color:rgba(20,184,166,0.4);color:#99f6e4">ServiceNow</div>
+      <div class="flow-sublabel">ITSM Ticket</div>
+    </div>
+    <div class="flow-arrow">
+      <div class="flow-arrow-line"><div class="flow-dot-h" style="animation-delay:1.2s"></div></div>
+      <div class="flow-arrow-label">if failure</div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-box purple" style="background:rgba(139,92,246,0.1);border-color:rgba(139,92,246,0.4);color:#c4b5fd">Claude AI</div>
+      <div class="flow-sublabel">Log Analysis → Jira</div>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <div class="status-item"><div class="status-dot live"></div>AWS ECS · eu-central-1 · Live</div>
+    <div class="status-item"><div class="status-dot live"></div>Azure Container Apps · westeurope · Live</div>
+    <div class="status-item"><div class="status-dot ready"></div>GCP Cloud Run · Terraform Ready</div>
+    <div class="status-item"><div class="status-dot planned"></div>Kubernetes · Phase 8</div>
+    <div style="margin-left:auto;color:var(--text-dim);font-size:10px">v3.7.0 · 167 tests · 97% coverage</div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>Frontend / AWS</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#06b6d4"></div>Backend API</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>Database / GCP</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6"></div>AI / Claude</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>Observability / AWS Cloud</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#14b8a6"></div>Event-Driven / Kafka</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ec4899"></div>CI/CD</div>
+    <div class="legend-item" style="margin-left:auto;font-size:10px;color:var(--text-dim)">Hover over any service for details</div>
+  </div>
+
+</div>
+</body>
+</html>
