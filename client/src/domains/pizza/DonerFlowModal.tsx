@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Pizza, PizzaCartItem } from "../../types";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface DonerFlowModalProps {
   item: Pizza;
@@ -17,14 +18,62 @@ const drinks = [
   "fritz-limo apfel-kirsch-holunder",
 ];
 
-const steps = [
-  "Beilage",
-  "Soße",
-  "Getränk",
-  "Warenkorb",
-];
+const copy = {
+  en: {
+    kicker: "Doner flow",
+    steps: ["Side", "Sauce", "Drink", "Cart"],
+    step1Title: "Choose your side",
+    step1Subtitle: "Choose one or skip.",
+    step2Title: "Choose your sauce",
+    step2Subtitle: "Multi-select is enabled.",
+    step3Title: "Add a drink?",
+    step3Subtitle: "All soft drinks are 2,50 €.",
+    step4Title: "Order summary",
+    step4Subtitle: "Review and add to cart.",
+    skip: "Skip",
+    next: "Next",
+    back: "Back",
+    withoutDrink: "Continue without drink",
+    withDrink: "Continue with drink",
+    summaryItem: "Doner",
+    summarySide: "Side",
+    summarySauces: "Sauces",
+    summaryDrink: "Drink",
+    summaryTotal: "Total",
+    none: "None",
+    noDrink: "No drink",
+    addToCart: "Add to cart",
+  },
+  de: {
+    kicker: "Döner Flow",
+    steps: ["Beilage", "Soße", "Getränk", "Warenkorb"],
+    step1Title: "Wähle deine Beilage",
+    step1Subtitle: "Wähle eine Beilage oder überspringe.",
+    step2Title: "Wähle deine Soße",
+    step2Subtitle: "Mehrfachauswahl ist möglich.",
+    step3Title: "Getränk hinzufügen?",
+    step3Subtitle: "Alle Softdrinks kosten 2,50 €.",
+    step4Title: "Bestellübersicht",
+    step4Subtitle: "Prüfe alles und lege es in den Warenkorb.",
+    skip: "Überspringen",
+    next: "Weiter",
+    back: "Zurück",
+    withoutDrink: "Weiter ohne Getränk",
+    withDrink: "Mit Getränk weiter",
+    summaryItem: "Döner",
+    summarySide: "Beilage",
+    summarySauces: "Soßen",
+    summaryDrink: "Getränk",
+    summaryTotal: "Gesamt",
+    none: "Keine",
+    noDrink: "Kein Getränk",
+    addToCart: "In den Warenkorb",
+  },
+} as const;
 
 const DonerFlowModal: React.FC<DonerFlowModalProps> = ({ item, onClose, onAddToCart }) => {
+  const { language } = useLanguage();
+  const t = copy[language];
   const [step, setStep] = useState(0);
   const [side, setSide] = useState<string>("");
   const [selectedSauces, setSelectedSauces] = useState<string[]>([]);
@@ -36,7 +85,7 @@ const DonerFlowModal: React.FC<DonerFlowModalProps> = ({ item, onClose, onAddToC
     return base + drinkPrice;
   }, [drink, item.base_price]);
 
-  const goNext = () => setStep((current) => Math.min(current + 1, steps.length - 1));
+  const goNext = () => setStep((current) => Math.min(current + 1, t.steps.length - 1));
   const goBack = () => setStep((current) => Math.max(current - 1, 0));
 
   const toggleSauce = (sauce: string) => {
@@ -68,7 +117,7 @@ const DonerFlowModal: React.FC<DonerFlowModalProps> = ({ item, onClose, onAddToC
         <button style={styles.closeButton} onClick={onClose}>x</button>
 
         <div style={styles.progressRow}>
-          {steps.map((label, index) => (
+          {t.steps.map((label, index) => (
             <div key={label} style={styles.progressItem}>
               <div
                 style={{
@@ -84,13 +133,13 @@ const DonerFlowModal: React.FC<DonerFlowModalProps> = ({ item, onClose, onAddToC
         </div>
 
         <div style={styles.header}>
-          <div style={styles.kicker}>Döner Flow</div>
+          <div style={styles.kicker}>{t.kicker}</div>
           <h2 style={styles.title}>{item.name}</h2>
           <p style={styles.description}>{item.description}</p>
         </div>
 
         {step === 0 ? (
-          <StepCard title="Wähle deine Beilage" subtitle="Choose one or skip.">
+          <StepCard title={t.step1Title} subtitle={t.step1Subtitle}>
             <OptionGrid>
               {sides.map((entry) => (
                 <ChoiceButton
@@ -102,14 +151,14 @@ const DonerFlowModal: React.FC<DonerFlowModalProps> = ({ item, onClose, onAddToC
               ))}
             </OptionGrid>
             <ActionRow>
-              <GhostButton onClick={goNext}>Überspringen</GhostButton>
-              <PrimaryButton onClick={goNext}>Weiter</PrimaryButton>
+              <GhostButton onClick={goNext}>{t.skip}</GhostButton>
+              <PrimaryButton onClick={goNext}>{t.next}</PrimaryButton>
             </ActionRow>
           </StepCard>
         ) : null}
 
         {step === 1 ? (
-          <StepCard title="Wähle deine Soße" subtitle="Multi-select is enabled.">
+          <StepCard title={t.step2Title} subtitle={t.step2Subtitle}>
             <OptionGrid>
               {sauces.map((entry) => (
                 <ChoiceButton
@@ -121,15 +170,15 @@ const DonerFlowModal: React.FC<DonerFlowModalProps> = ({ item, onClose, onAddToC
               ))}
             </OptionGrid>
             <ActionRow>
-              <GhostButton onClick={goBack}>Zurück</GhostButton>
-              <GhostButton onClick={goNext}>Überspringen</GhostButton>
-              <PrimaryButton onClick={goNext}>Weiter</PrimaryButton>
+              <GhostButton onClick={goBack}>{t.back}</GhostButton>
+              <GhostButton onClick={goNext}>{t.skip}</GhostButton>
+              <PrimaryButton onClick={goNext}>{t.next}</PrimaryButton>
             </ActionRow>
           </StepCard>
         ) : null}
 
         {step === 2 ? (
-          <StepCard title="Getränk hinzufügen?" subtitle="All soft drinks are 2,50 €.">
+          <StepCard title={t.step3Title} subtitle={t.step3Subtitle}>
             <OptionGrid>
               {drinks.map((entry) => (
                 <ChoiceButton
@@ -141,25 +190,28 @@ const DonerFlowModal: React.FC<DonerFlowModalProps> = ({ item, onClose, onAddToC
               ))}
             </OptionGrid>
             <ActionRow>
-              <GhostButton onClick={goBack}>Zurück</GhostButton>
-              <GhostButton onClick={goNext}>Weiter ohne Getränk</GhostButton>
-              <PrimaryButton onClick={goNext}>Mit Getränk weiter</PrimaryButton>
+              <GhostButton onClick={goBack}>{t.back}</GhostButton>
+              <GhostButton onClick={goNext}>{t.withoutDrink}</GhostButton>
+              <PrimaryButton onClick={goNext}>{t.withDrink}</PrimaryButton>
             </ActionRow>
           </StepCard>
         ) : null}
 
         {step === 3 ? (
-          <StepCard title="Bestellübersicht" subtitle="Review and add to cart.">
+          <StepCard title={t.step4Title} subtitle={t.step4Subtitle}>
             <div style={styles.summaryBox}>
-              <SummaryRow label="Döner" value={item.name} />
-              <SummaryRow label="Beilage" value={side || "Keine"} />
-              <SummaryRow label="Soßen" value={selectedSauces.length ? selectedSauces.join(", ") : "Keine"} />
-              <SummaryRow label="Getränk" value={drink || "Kein Getränk"} />
-              <SummaryRow label="Gesamt" value={`${total.toFixed(2).replace(".", ",")} €`} strong />
+              <SummaryRow label={t.summaryItem} value={item.name} />
+              <SummaryRow label={t.summarySide} value={side || t.none} />
+              <SummaryRow
+                label={t.summarySauces}
+                value={selectedSauces.length ? selectedSauces.join(", ") : t.none}
+              />
+              <SummaryRow label={t.summaryDrink} value={drink || t.noDrink} />
+              <SummaryRow label={t.summaryTotal} value={`${total.toFixed(2).replace(".", ",")} €`} strong />
             </div>
             <ActionRow>
-              <GhostButton onClick={goBack}>Zurück</GhostButton>
-              <PrimaryButton onClick={addToCart}>In den Warenkorb</PrimaryButton>
+              <GhostButton onClick={goBack}>{t.back}</GhostButton>
+              <PrimaryButton onClick={addToCart}>{t.addToCart}</PrimaryButton>
             </ActionRow>
           </StepCard>
         ) : null}

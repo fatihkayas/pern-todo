@@ -1,4 +1,5 @@
 import React from "react";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface OrderModalProps {
   onClose: () => void;
@@ -6,6 +7,9 @@ interface OrderModalProps {
 }
 
 const OrderModal: React.FC<OrderModalProps> = ({ onClose, onDirectOrder }) => {
+  const { language } = useLanguage();
+  const t = copy[language];
+
   return (
     <div style={styles.overlay} onClick={onClose}>
       <div id="order" style={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -13,9 +17,9 @@ const OrderModal: React.FC<OrderModalProps> = ({ onClose, onDirectOrder }) => {
           x
         </button>
 
-        <div style={styles.kicker}>Jetzt bestellen!</div>
-        <h2 style={styles.title}>Choose how you want to order</h2>
-        <p style={styles.sub}>Use Lieferando, Uber Eats, or order directly on this page.</p>
+        <div style={styles.kicker}>{t.kicker}</div>
+        <h2 style={styles.title}>{t.title}</h2>
+        <p style={styles.sub}>{t.sub}</p>
 
         <div style={styles.buttons}>
           <a
@@ -25,7 +29,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ onClose, onDirectOrder }) => {
             style={{ ...styles.btn, ...styles.lieferando }}
           >
             <div style={styles.btnTitle}>Lieferando</div>
-            <div style={styles.btnSub}>Open marketplace ordering</div>
+            <div style={styles.btnSub}>{t.lieferando}</div>
           </a>
 
           <a
@@ -35,7 +39,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ onClose, onDirectOrder }) => {
             style={{ ...styles.btn, ...styles.ubereats }}
           >
             <div style={styles.btnTitle}>Uber Eats</div>
-            <div style={styles.btnSub}>Fast app-based delivery</div>
+            <div style={styles.btnSub}>{t.ubereats}</div>
           </a>
 
           <button
@@ -43,14 +47,35 @@ const OrderModal: React.FC<OrderModalProps> = ({ onClose, onDirectOrder }) => {
             onClick={onDirectOrder}
             style={{ ...styles.btn, ...styles.directButton }}
           >
-            <div style={styles.btnTitle}>Direkt auf der Seite</div>
-            <div style={styles.btnSub}>Add items to the site cart and checkout here</div>
+            <div style={styles.btnTitle}>{t.directTitle}</div>
+            <div style={styles.btnSub}>{t.directSub}</div>
           </button>
         </div>
       </div>
     </div>
   );
 };
+
+const copy = {
+  en: {
+    kicker: "Order now!",
+    title: "How would you like to order?",
+    sub: "Use Lieferando, Uber Eats, or order directly on this page.",
+    lieferando: "Open marketplace ordering",
+    ubereats: "Fast app-based delivery",
+    directTitle: "Order directly here",
+    directSub: "Add items to the site cart and checkout here",
+  },
+  de: {
+    kicker: "Jetzt bestellen!",
+    title: "Wie möchtest du bestellen?",
+    sub: "Nutze Lieferando, Uber Eats oder bestelle direkt auf dieser Seite.",
+    lieferando: "Zum Marktplatz wechseln",
+    ubereats: "Schnelle Lieferung per App",
+    directTitle: "Direkt auf der Seite",
+    directSub: "Produkte in den Warenkorb legen und hier bezahlen",
+  },
+} as const;
 
 const styles: Record<string, React.CSSProperties> = {
   overlay: {

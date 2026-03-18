@@ -3,17 +3,57 @@ import { Pizza, PizzaCartItem } from "../../types";
 import { apiUrl } from "../../config";
 import OrderModal from "./OrderModal";
 import DonerFlowModal from "./DonerFlowModal";
+import { useLanguage } from "../../context/LanguageContext";
+import heroImage from "../../assets/ranch-kebab-hero.png";
 
 const POPULAR_ITEMS = new Set(["Special Doner", "Calabrese", "Diavola", "Dorum Hahnchen"]);
 
-const sectionMatches: Array<{ title: string; match: (item: Pizza) => boolean }> = [
-  { title: "Doner Kebab", match: (item) => item.name.includes("Doner Kebab") },
-  { title: "Durum", match: (item) => item.name.includes("Durum") },
-  { title: "Spezial Doner", match: (item) => item.name.includes("Special Doner") && !item.name.includes("Teller") },
-  { title: "Doner Teller", match: (item) => item.name.includes("Teller") },
-  { title: "Doner Box", match: (item) => item.name.includes("Box") },
-  { title: "Lahmacun", match: (item) => item.name.includes("Lahmacun") },
-];
+const copy = {
+  en: {
+    heroLabel: "Signature grill house experience",
+    heroText: "Ranch Kebab with a bold full-screen hero, fast ordering, and touch-friendly food cards.",
+    orderNow: "Order now",
+    pizzaLabel: "Pizza menu",
+    pizzaTitle: "Left side: Pizza",
+    donerLabel: "Doner menu",
+    donerTitle: "Right side: Doner",
+    footerText: "Large touch-friendly food cards, a guided doner builder, and direct checkout.",
+    directOrder: "Order directly",
+    popular: "Popular",
+    startFlow: "Start flow",
+    loading: "Loading menu...",
+    sections: {
+      kebab: "Doner Kebab",
+      durum: "Durum",
+      special: "Special Doner",
+      teller: "Doner Teller",
+      box: "Doner Box",
+      lahmacun: "Lahmacun",
+    },
+  },
+  de: {
+    heroLabel: "Signature Grillhaus Erlebnis",
+    heroText: "Ranch Kebab mit starkem Vollbild-Hero, schnellem Bestellfluss und touchfreundlichen Food Cards.",
+    orderNow: "Jetzt bestellen",
+    pizzaLabel: "Pizza Menü",
+    pizzaTitle: "Links: Pizza",
+    donerLabel: "Döner Menü",
+    donerTitle: "Rechts: Döner",
+    footerText: "Große Food Cards, ein geführter Döner-Builder und direkter Checkout.",
+    directOrder: "Direkt bestellen",
+    popular: "Beliebt",
+    startFlow: "Flow starten",
+    loading: "Menü wird geladen...",
+    sections: {
+      kebab: "Döner Kebab",
+      durum: "Dürüm",
+      special: "Spezial Döner",
+      teller: "Döner Teller",
+      box: "Döner Box",
+      lahmacun: "Lahmacun",
+    },
+  },
+} as const;
 
 interface RestaurantPageProps {
   onDirectOrder: (item: PizzaCartItem) => void;
@@ -21,6 +61,8 @@ interface RestaurantPageProps {
 }
 
 const RestaurantPage: React.FC<RestaurantPageProps> = ({ onDirectOrder, onOpenCart }) => {
+  const { language } = useLanguage();
+  const t = copy[language];
   const [items, setItems] = useState<Pizza[]>([]);
   const [loading, setLoading] = useState(true);
   const [orderOpen, setOrderOpen] = useState(false);
@@ -42,6 +84,15 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ onDirectOrder, onOpenCa
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  const sections = [
+    { title: t.sections.kebab, match: (item: Pizza) => item.name.includes("Doner Kebab") },
+    { title: t.sections.durum, match: (item: Pizza) => item.name.includes("Durum") },
+    { title: t.sections.special, match: (item: Pizza) => item.name.includes("Special Doner") && !item.name.includes("Teller") },
+    { title: t.sections.teller, match: (item: Pizza) => item.name.includes("Teller") },
+    { title: t.sections.box, match: (item: Pizza) => item.name.includes("Box") },
+    { title: t.sections.lahmacun, match: (item: Pizza) => item.name.includes("Lahmacun") },
+  ];
 
   const pizzas = useMemo(
     () => items.filter((item) => item.category === "pizza" || !item.category),
@@ -83,19 +134,17 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ onDirectOrder, onOpenCa
         <div style={styles.heroShade} />
         <div style={styles.heroGlow} />
         <div style={styles.heroContent}>
-          <div style={styles.heroLabel}>Pizza and doner ordering experience</div>
-          <h1 style={styles.heroTitle}>PIZZA & DONER</h1>
-          <p style={styles.heroText}>
-            Dark, fast, and touch-friendly ordering with rich food cards and a guided doner flow.
-          </p>
+          <div style={styles.heroLabel}>{t.heroLabel}</div>
+          <h1 style={styles.heroTitle}>RANCH KEBAB</h1>
+          <p style={styles.heroText}>{t.heroText}</p>
           <button style={styles.heroButton} onClick={() => setOrderOpen(true)}>
-            Jetzt bestellen
+            {t.orderNow}
           </button>
         </div>
       </section>
 
       <button style={styles.stickyButton} onClick={() => setOrderOpen(true)}>
-        Jetzt bestellen
+        {t.orderNow}
       </button>
 
       <section id="menu" style={styles.menuWrap}>
@@ -107,30 +156,35 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ onDirectOrder, onOpenCa
         >
           <MenuColumn
             anchor="pizza"
-            label="Pizza menu"
-            title="Left side: Pizza"
+            label={t.pizzaLabel}
+            title={t.pizzaTitle}
             loading={loading}
+            loadingText={t.loading}
             items={pizzas}
             onOrder={handleCardOrder}
+            buttonText={t.directOrder}
+            popularText={t.popular}
           />
 
           {isCompact ? null : <div style={styles.divider} />}
 
           <div id="doner" style={styles.column}>
             <div style={styles.columnHeader}>
-              <span style={styles.columnLabel}>Doner menu</span>
-              <h2 style={styles.columnTitle}>Right side: Doner</h2>
+              <span style={styles.columnLabel}>{t.donerLabel}</span>
+              <h2 style={styles.columnTitle}>{t.donerTitle}</h2>
             </div>
             {loading ? (
               <MenuSkeleton />
             ) : (
               <div style={styles.sectionStack}>
-                {sectionMatches.map((section) => (
+                {sections.map((section) => (
                   <DonerSection
                     key={section.title}
                     title={section.title}
                     items={doners.filter(section.match)}
                     onOrder={handleCardOrder}
+                    buttonText={t.startFlow}
+                    popularText={t.popular}
                   />
                 ))}
               </div>
@@ -141,9 +195,9 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ onDirectOrder, onOpenCa
 
       <footer style={styles.footer}>
         <strong style={styles.footerBrand}>Pizza & Doner Haus</strong>
-        <div>Large touch-friendly food cards, a guided doner builder, and direct checkout.</div>
+        <div>{t.footerText}</div>
         <button style={styles.footerDirectButton} onClick={onOpenCart}>
-          Direkt bestellen
+          {t.directOrder}
         </button>
       </footer>
 
@@ -167,9 +221,12 @@ const MenuColumn: React.FC<{
   label: string;
   title: string;
   loading: boolean;
+  loadingText: string;
   items: Pizza[];
   onOrder: (item: Pizza) => void;
-}> = ({ anchor, label, title, loading, items, onOrder }) => (
+  buttonText: string;
+  popularText: string;
+}> = ({ anchor, label, title, loading, loadingText, items, onOrder, buttonText, popularText }) => (
   <div id={anchor} style={styles.column}>
     <div style={styles.columnHeader}>
       <span style={styles.columnLabel}>{label}</span>
@@ -177,12 +234,20 @@ const MenuColumn: React.FC<{
     </div>
     {loading ? (
       <MenuSkeleton />
-    ) : (
+    ) : items.length ? (
       <div style={styles.cardGrid}>
         {items.map((item) => (
-          <FoodCard key={item.pizza_id} item={item} onOrder={onOrder} />
+          <FoodCard
+            key={item.pizza_id}
+            item={item}
+            onOrder={onOrder}
+            buttonText={buttonText}
+            popularText={popularText}
+          />
         ))}
       </div>
+    ) : (
+      <p style={styles.loadingText}>{loadingText}</p>
     )}
   </div>
 );
@@ -191,7 +256,9 @@ const DonerSection: React.FC<{
   title: string;
   items: Pizza[];
   onOrder: (item: Pizza) => void;
-}> = ({ title, items, onOrder }) => {
+  buttonText: string;
+  popularText: string;
+}> = ({ title, items, onOrder, buttonText, popularText }) => {
   if (!items.length) return null;
 
   return (
@@ -199,14 +266,25 @@ const DonerSection: React.FC<{
       <div style={styles.sectionTitle}>{title}</div>
       <div style={styles.cardGrid}>
         {items.map((item) => (
-          <FoodCard key={item.pizza_id} item={item} onOrder={onOrder} />
+          <FoodCard
+            key={item.pizza_id}
+            item={item}
+            onOrder={onOrder}
+            buttonText={buttonText}
+            popularText={popularText}
+          />
         ))}
       </div>
     </div>
   );
 };
 
-const FoodCard: React.FC<{ item: Pizza; onOrder: (item: Pizza) => void }> = ({ item, onOrder }) => {
+const FoodCard: React.FC<{
+  item: Pizza;
+  onOrder: (item: Pizza) => void;
+  buttonText: string;
+  popularText: string;
+}> = ({ item, onOrder, buttonText, popularText }) => {
   const [hovered, setHovered] = useState(false);
   const isPopular = POPULAR_ITEMS.has(item.name);
 
@@ -226,7 +304,7 @@ const FoodCard: React.FC<{ item: Pizza; onOrder: (item: Pizza) => void }> = ({ i
           alt={item.name}
           style={styles.image}
         />
-        {isPopular ? <span style={styles.popularBadge}>Popular</span> : null}
+        {isPopular ? <span style={styles.popularBadge}>{popularText}</span> : null}
       </div>
 
       <div style={styles.cardBody}>
@@ -242,7 +320,7 @@ const FoodCard: React.FC<{ item: Pizza; onOrder: (item: Pizza) => void }> = ({ i
             onOrder(item);
           }}
         >
-          {item.category === "doner" ? "Flow starten" : "Direkt bestellen"}
+          {buttonText}
         </button>
       </div>
     </article>
@@ -291,7 +369,7 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: "center",
     padding: "140px 20px 110px",
     background:
-      "linear-gradient(rgba(8,8,8,0.45), rgba(8,8,8,0.82)), url('https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1800&q=80') center/cover no-repeat",
+      `linear-gradient(rgba(8,8,8,0.34), rgba(8,8,8,0.78)), url(${heroImage}) center top /cover no-repeat`,
     overflow: "hidden",
   },
   heroShade: {
@@ -404,6 +482,9 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 34,
     lineHeight: 1.05,
     fontWeight: 900,
+  },
+  loadingText: {
+    color: "rgba(255,247,240,0.7)",
   },
   cardGrid: {
     display: "grid",
