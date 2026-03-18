@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import toast from "react-hot-toast";
-import { CartItem } from "../types";
+import { CartItem, PizzaCartItem } from "../types";
 import { apiUrl } from "../config";
+import { IS_PIZZA } from "../config/branding";
 
 const stripePublishableKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
@@ -44,11 +45,11 @@ function CheckoutForm({ orderId, onSuccess }: CheckoutFormProps) {
         });
         const data = await res.json();
         if (data.success) {
-          toast.success("Payment successful! 🎉");
+          toast.success("Payment successful!");
           onSuccess(orderId);
         }
       }
-    } catch (_err) {
+    } catch {
       toast.error("Payment failed");
     } finally {
       setLoading(false);
@@ -67,7 +68,7 @@ function CheckoutForm({ orderId, onSuccess }: CheckoutFormProps) {
         {loading ? (
           <span><span className="spinner-border spinner-border-sm me-2" />Processing...</span>
         ) : (
-          "Pay Now 💳"
+          "Pay Now"
         )}
       </button>
     </form>
@@ -76,10 +77,11 @@ function CheckoutForm({ orderId, onSuccess }: CheckoutFormProps) {
 
 interface CheckoutProps {
   cart: CartItem[];
+  pizzaCart?: PizzaCartItem[];
   onOrderSuccess: () => void;
 }
 
-const Checkout = ({ cart, onOrderSuccess }: CheckoutProps) => {
+const Checkout = ({ cart, pizzaCart = [], onOrderSuccess }: CheckoutProps) => {
   const navigate = useNavigate();
   const [clientSecret, setClientSecret] = useState("");
   const [orderId, setOrderId] = useState<number | null>(null);
@@ -87,27 +89,42 @@ const Checkout = ({ cart, onOrderSuccess }: CheckoutProps) => {
   const [loading, setLoading] = useState(false);
   const token = localStorage.getItem("token");
 
-  const total = cart.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
+  const activeItems = IS_PIZZA ? pizzaCart : cart;
+  const total = IS_PIZZA
+    ? pizzaCart.reduce((sum, item) => sum + Number(item.base_price) * item.quantity, 0)
+    : cart.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
 
   useEffect(() => {
     if (!token) navigate("/login");
-    if (cart.length === 0) navigate("/");
+    if (activeItems.length === 0) navigate("/");
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const createOrder = async () => {
     setLoading(true);
     try {
-      const orderRes = await fetch(apiUrl("/api/v1/orders"), {
+      const orderRes = await fetch(apiUrl(IS_PIZZA ? "/api/v1/pizza/orders" : "/api/v1/orders"), {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-        body: JSON.stringify({
-          items: cart.map((item) => ({
-            watch_id: item.watch_id,
-            quantity: item.quantity,
-            unit_price: item.price,
-          })),
-        }),
+        body: JSON.stringify(
+          IS_PIZZA
+            ? {
+                items: pizzaCart.map((item) => ({
+                  pizza_id: item.pizza_id,
+                  quantity: item.quantity,
+                  unit_price: item.base_price,
+                  options: item.options,
+                })),
+              }
+            : {
+                items: cart.map((item) => ({
+                  watch_id: item.watch_id,
+                  quantity: item.quantity,
+                  unit_price: item.price,
+                })),
+              }
+        ),
       });
+
       const orderData = await orderRes.json();
       if (!orderRes.ok) throw new Error(orderData.error);
       setOrderId(orderData.order_id);
@@ -128,30 +145,42 @@ const Checkout = ({ cart, onOrderSuccess }: CheckoutProps) => {
     }
   };
 
-  const handleSuccess = (_oid: number) => {
+  const handleSuccess = () => {
     setStep("success");
     onOrderSuccess?.();
   };
 
   return (
     <div className="container mt-4" style={{ maxWidth: 600 }}>
-      <h3 className="fw-bold mb-4">💳 Checkout</h3>
+      <h3 className="fw-bold mb-4">{IS_PIZZA ? "Restaurant Checkout" : "Checkout"}</h3>
 
       {step === "confirm" && (
         <div className="card border-0 shadow-sm rounded-4 p-4">
           <h5 className="fw-bold mb-3">Order Summary</h5>
-          {cart.map((item) => (
-            <div key={item.watch_id} className="d-flex justify-content-between py-2 border-bottom">
-              <span>{item.watch_name} x{item.quantity}</span>
-              <span>${(Number(item.price) * item.quantity).toFixed(2)}</span>
-            </div>
-          ))}
+          {IS_PIZZA
+            ? pizzaCart.map((item) => (
+                <div key={item.cart_item_id} className="d-flex justify-content-between py-2 border-bottom">
+                  <span>
+                    {item.name} x{item.quantity}
+                    {item.options.side ? ` · ${item.options.side}` : ""}
+                    {item.options.sauces?.length ? ` · ${item.options.sauces.join(", ")}` : ""}
+                    {item.options.drink ? ` · ${item.options.drink}` : ""}
+                  </span>
+                  <span>€{(Number(item.base_price) * item.quantity).toFixed(2)}</span>
+                </div>
+              ))
+            : cart.map((item) => (
+                <div key={item.watch_id} className="d-flex justify-content-between py-2 border-bottom">
+                  <span>{item.watch_name} x{item.quantity}</span>
+                  <span>${(Number(item.price) * item.quantity).toFixed(2)}</span>
+                </div>
+              ))}
           <div className="d-flex justify-content-between mt-3 fw-bold fs-5">
             <span>Total</span>
-            <span>${total.toFixed(2)}</span>
+            <span>{IS_PIZZA ? "€" : "$"}{total.toFixed(2)}</span>
           </div>
           <button className="btn btn-dark w-100 rounded-pill mt-4" onClick={createOrder} disabled={loading}>
-            {loading ? "Processing..." : "Proceed to Payment →"}
+            {loading ? "Processing..." : "Proceed to Payment"}
           </button>
         </div>
       )}
@@ -160,7 +189,7 @@ const Checkout = ({ cart, onOrderSuccess }: CheckoutProps) => {
         <div className="card border-0 shadow-sm rounded-4 p-4">
           <h5 className="fw-bold mb-3">Payment Details</h5>
           <div className="alert alert-info small mb-3">
-            🔒 Your payment is secured by Stripe. We never store your card details.
+            Your payment is secured by Stripe. We never store your card details.
           </div>
           {!stripePromise ? (
             <div className="alert alert-danger mb-0">
@@ -176,7 +205,7 @@ const Checkout = ({ cart, onOrderSuccess }: CheckoutProps) => {
 
       {step === "success" && (
         <div className="card border-0 shadow-sm rounded-4 p-4 text-center">
-          <div style={{ fontSize: 64 }}>🎉</div>
+          <div style={{ fontSize: 64 }}>Done</div>
           <h4 className="fw-bold mt-3">Payment Successful!</h4>
           <p className="text-muted">Order #{orderId} has been placed successfully.</p>
           <div className="d-flex gap-2 justify-content-center mt-3">

@@ -2,7 +2,7 @@ export interface Watch {
   watch_id: number;
   watch_name: string;
   brand: string;
-  price: string; // PostgreSQL DECIMAL returns as string
+  price: string;
   image_url: string;
   stock_quantity: number;
   description?: string;
@@ -42,7 +42,6 @@ export interface Order {
   shipping_address: string;
   order_date: string;
   items?: OrderItem[];
-  // admin-only fields
   full_name?: string;
   email?: string;
 }
@@ -52,4 +51,30 @@ export interface AdminStats {
   customers: { total: string };
   revenue: { total: string };
   watches: { total: string; low_stock: string };
+}
+
+export interface PizzaOptions {
+  size: string;
+  toppings: string[];
+  side?: string;
+  sauces?: string[];
+  drink?: string;
+}
+
+export interface Pizza {
+  pizza_id: string;
+  name: string;
+  description?: string;
+  base_price: string;
+  image_url?: string;
+  sizes: string[];
+  toppings: string[];
+  is_available: boolean;
+  category?: "pizza" | "doner" | "panini";
+}
+
+export interface PizzaCartItem extends Pizza {
+  cart_item_id: string;
+  quantity: number;
+  options: PizzaOptions;
 }

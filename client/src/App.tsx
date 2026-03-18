@@ -17,12 +17,15 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import { ThemeProvider } from "./context/ThemeContext";
 import { LanguageProvider } from "./context/LanguageContext";
-import { Watch, CartItem, Customer } from "./types";
+import { Watch, CartItem, Customer, PizzaCartItem } from "./types";
 import { apiUrl } from "./config";
+import { IS_PIZZA } from "./config/branding";
+import RestaurantPage from "./domains/pizza/RestaurantPage";
 
 function App() {
   const [watches, setWatches] = useState<Watch[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [pizzaCart, setPizzaCart] = useState<PizzaCartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [customer, setCustomer] = useState<Customer | null>(() => {
     const saved = localStorage.getItem("customer");
@@ -30,6 +33,10 @@ function App() {
   });
 
   useEffect(() => {
+    if (IS_PIZZA) {
+      return;
+    }
+
     fetch(apiUrl("/api/v1/watches"))
       .then((res) => {
         if (!res.ok) throw new Error("Connection refused");
@@ -37,11 +44,11 @@ function App() {
       })
       .then((data: Watch[]) => {
         setWatches(Array.isArray(data) ? data : []);
-        if (data.length > 0) toast.success("Watches loaded successfully! ✅");
+        if (data.length > 0) toast.success("Watches loaded successfully!");
       })
       .catch((err: Error) => {
         console.error("Fetch error:", err);
-        toast.error("Connection error: Backend unreachable ❌");
+        toast.error("Connection error: Backend unreachable");
       });
   }, []);
 
@@ -54,7 +61,8 @@ function App() {
     localStorage.removeItem("customer");
     setCustomer(null);
     setCart([]);
-    toast.success("Logged out. See you soon! 👋");
+    setPizzaCart([]);
+    toast.success("Logged out. See you soon!");
   };
 
   const addToCart = (watch: Watch) => {
@@ -66,7 +74,7 @@ function App() {
           item.watch_id === watch.watch_id ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-      toast.success(`${watch.watch_name} added to cart ✅`);
+      toast.success(`${watch.watch_name} added to cart`);
       return [...prev, { ...watch, quantity: 1 }];
     });
     setCartOpen(true);
@@ -76,6 +84,35 @@ function App() {
     setCart((prev) => prev.filter((item) => item.watch_id !== watch_id));
   };
 
+  const removePizzaFromCart = (cart_item_id: string) => {
+    setPizzaCart((prev) => prev.filter((item) => item.cart_item_id !== cart_item_id));
+  };
+
+  const updatePizzaQuantity = (cart_item_id: string, quantity: number) => {
+    if (quantity < 1) return removePizzaFromCart(cart_item_id);
+    setPizzaCart((prev) =>
+      prev.map((item) =>
+        item.cart_item_id === cart_item_id ? { ...item, quantity } : item
+      )
+    );
+  };
+
+  const addPizzaToCart = (item: PizzaCartItem) => {
+    setPizzaCart((prev) => {
+      const key = item.cart_item_id;
+      const existing = prev.find((p) => p.cart_item_id === key);
+      if (existing) {
+        toast.success(`${item.name} quantity increased`);
+        return prev.map((p) =>
+          p.cart_item_id === key ? { ...p, quantity: p.quantity + 1 } : p
+        );
+      }
+      toast.success(`${item.name} added to cart`);
+      return [...prev, item];
+    });
+    setCartOpen(true);
+  };
+
   const updateQuantity = (watch_id: number, quantity: number) => {
     if (quantity < 1) return removeFromCart(watch_id);
     setCart((prev) =>
@@ -83,7 +120,9 @@ function App() {
     );
   };
 
-  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const cartCount = IS_PIZZA
+    ? pizzaCart.reduce((sum, item) => sum + item.quantity, 0)
+    : cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <ThemeProvider>
@@ -103,18 +142,51 @@ function App() {
             removeFromCart={removeFromCart}
             updateQuantity={updateQuantity}
             onOrderSuccess={() => setCart([])}
+            pizzaCart={pizzaCart}
+            removePizzaFromCart={removePizzaFromCart}
+            updatePizzaQuantity={updatePizzaQuantity}
           />
           <Routes>
-            <Route path="/" element={<Store watches={watches} addToCart={addToCart} />} />
+            <Route
+              path="/"
+              element={
+                IS_PIZZA ? (
+                  <RestaurantPage
+                    onDirectOrder={addPizzaToCart}
+                    onOpenCart={() => setCartOpen(true)}
+                  />
+                ) : (
+                  <Store watches={watches} addToCart={addToCart} />
+                )
+              }
+            />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/returns" element={<Returns />} />
             <Route path="/watch/:id" element={<ProductDetail addToCart={addToCart} />} />
-            <Route path="/login" element={customer ? <Navigate to="/" /> : <Login onLogin={handleLogin} />} />
-            <Route path="/checkout" element={<Checkout cart={cart} onOrderSuccess={() => setCart([])} />} />
+            <Route
+              path="/login"
+              element={customer ? <Navigate to="/" /> : <Login onLogin={handleLogin} />}
+            />
+            <Route
+              path="/checkout"
+              element={
+                <Checkout
+                  cart={cart}
+                  pizzaCart={pizzaCart}
+                  onOrderSuccess={() => {
+                    setCart([]);
+                    setPizzaCart([]);
+                  }}
+                />
+              }
+            />
             <Route path="/orders" element={<MyOrders />} />
             <Route path="/admin" element={<AdminPanel />} />
-            <Route path="/register" element={customer ? <Navigate to="/" /> : <Register onLogin={handleLogin} />} />
+            <Route
+              path="/register"
+              element={customer ? <Navigate to="/" /> : <Register onLogin={handleLogin} />}
+            />
           </Routes>
           <ChatWidget />
         </Router>

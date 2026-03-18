@@ -16,6 +16,7 @@ import stripeRouter from "./routes/stripe";
 import adminRouter from "./routes/admin";
 import authRouter from "./routes/auth";
 import ordersRouter from "./routes/orders";
+import pizzaRouter from "./routes/pizza";
 
 // Stock gauge — async collect queries DB on every Prometheus scrape
 new client.Gauge({
@@ -126,6 +127,7 @@ app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/orders", ordersRouter);
 app.use("/api/v1/chat", chatRouter);
+app.use("/api/v1/pizza", pizzaRouter);
 app.use("/api/v1/checkout", checkoutRouter);
 
 app.get("/health", (_req: Request, res: Response) => res.json({ status: "ok" }));

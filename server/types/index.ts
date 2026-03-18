@@ -45,3 +45,29 @@ export interface OrderItem {
   unit_price: string; // DECIMAL
   subtotal: string; // DECIMAL
 }
+
+// --- Pizza Domain ---
+
+export interface Pizza {
+  pizza_id: string; // UUID
+  name: string;
+  description?: string;
+  base_price: string; // PostgreSQL DECIMAL → string (Watch.price ile aynı pattern)
+  image_url?: string;
+  sizes: string[]; // ["S", "M", "L"]
+  toppings: string[]; // ["mushroom", "olive", "pepperoni", ...]
+  is_available: boolean;
+}
+
+export interface PizzaOrderItem {
+  item_id: number;
+  order_id: number;
+  pizza_id: string;
+  quantity: number;
+  unit_price: string; // DECIMAL
+  subtotal: string; // DECIMAL
+  options: {
+    size: "S" | "M" | "L";
+    toppings: string[];
+  };
+}

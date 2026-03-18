@@ -46,3 +46,23 @@ export const updateOrderStatusSchema = z.object({
 export const updateStockSchema = z.object({
   stock_quantity: z.coerce.number().int().min(0),
 });
+
+export const createPizzaOrderSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        pizza_id: z.string().uuid(),
+        quantity: z.coerce.number().int().positive(),
+        unit_price: z.coerce.number().positive(),
+        options: z.object({
+          size: z.string().min(1),
+          toppings: z.array(z.string()).default([]),
+          side: z.string().optional(),
+          sauces: z.array(z.string()).optional(),
+          drink: z.string().optional(),
+        }),
+      })
+    )
+    .min(1),
+  delivery_address: z.string().optional(),
+});

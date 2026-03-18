@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useLanguage } from "../context/LanguageContext";
+import { IS_PIZZA, SHOP } from "../config/branding";
 
 interface NavbarProps {
   userDisplayName: string | null;
@@ -31,7 +32,7 @@ const copy = {
     promo: "15% Rabatt auf alle Seiko-Modelle | Kostenloser Versand",
     support: "Kundendienst: 0850 ...",
     store: "Shop",
-    about: "Über Uns",
+    about: "Uber Uns",
     contact: "Kontakt",
     brands: "Marken",
     automatic: "Automatik",
@@ -59,15 +60,79 @@ const Navbar = ({ userDisplayName, cartCount, logout, onCartClick }: NavbarProps
     onCartClick();
   };
 
+  if (IS_PIZZA) {
+    return (
+      <header className="fixed-top shadow-sm">
+        <div
+          className="text-white py-2 px-4 d-flex justify-content-between align-items-center small"
+          style={{ letterSpacing: "0.08em", background: "#1b1212", borderBottom: "1px solid #332020" }}
+        >
+          <div>{SHOP.tagline}</div>
+          <div className="d-flex gap-3 align-items-center">
+            <span>DE / EN</span>
+            <span>Lieferung ab 20 Min.</span>
+          </div>
+        </div>
+
+        <nav className="navbar p-3" style={{ background: "rgba(10, 10, 10, 0.95)", backdropFilter: "blur(14px)" }}>
+          <div className="container-fluid d-flex justify-content-between align-items-center">
+            <Link className="navbar-brand fw-bold fs-4 m-0 text-white" to="/" style={{ letterSpacing: "0.08em" }}>
+              PIZZA & DONER HAUS
+            </Link>
+
+            <div className="d-none d-lg-flex gap-4">
+              <a className="nav-link fw-semibold text-uppercase small text-white" href="#menu">Menu</a>
+              <a className="nav-link fw-semibold text-uppercase small text-white" href="#pizza">Pizza</a>
+              <a className="nav-link fw-semibold text-uppercase small text-white" href="#doner">Doner</a>
+              <a className="nav-link fw-semibold text-uppercase small text-white" href="#order">Bestellen</a>
+            </div>
+
+            <div className="d-flex align-items-center gap-3">
+              <div className="btn-group btn-group-sm" role="group" aria-label="Language selector">
+                <button
+                  type="button"
+                  className={`btn ${language === "en" ? "btn-light" : "btn-outline-light"}`}
+                  onClick={() => setLanguage("en")}
+                >
+                  EN
+                </button>
+                <button
+                  type="button"
+                  className={`btn ${language === "de" ? "btn-light" : "btn-outline-light"}`}
+                  onClick={() => setLanguage("de")}
+                >
+                  DE
+                </button>
+              </div>
+
+              <button className="btn btn-link p-0 text-white" onClick={toggle} style={{ fontSize: "1.2rem" }}>
+                {isDark ? "Sun" : "Moon"}
+              </button>
+
+              <div className="position-relative text-white" style={{ cursor: "pointer" }} onClick={handleCart}>
+                <span style={{ fontSize: "1.4rem" }}>Cart</span>
+                {cartCount > 0 && (
+                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white">
+                    {cartCount}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </nav>
+      </header>
+    );
+  }
+
   return (
     <header className="fixed-top shadow-sm">
       <div
-        className="bg-dark text-white py-2 px-4 d-flex justify-content-between align-items-center small fw-light"
-        style={{ letterSpacing: "0.05em" }}
+        className="text-white py-2 px-4 d-flex justify-content-between align-items-center small fw-light"
+        style={{ letterSpacing: "0.05em", background: "#212529" }}
       >
-        <div>🏷️ {t.promo}</div>
+        <div>{t.promo}</div>
         <div className="d-flex gap-3 align-items-center">
-          <span>🇬🇧 EN / 🇩🇪 DE</span>
+          <span>EN / DE</span>
           <span>{t.support}</span>
         </div>
       </div>
@@ -75,7 +140,7 @@ const Navbar = ({ userDisplayName, cartCount, logout, onCartClick }: NavbarProps
       <nav className={`navbar p-3 ${isDark ? "navbar-dark bg-dark" : "navbar-light bg-white"}`}>
         <div className="container-fluid d-flex justify-content-between align-items-center">
           <Link className="navbar-brand fw-bold fs-4 mx-auto mx-lg-0" to="/" style={{ letterSpacing: "0.1em" }}>
-            ⌚ SEIKO & TISSOT STORE
+            SEIKO & TISSOT STORE
           </Link>
 
           <div className="d-none d-lg-flex gap-4">
@@ -117,11 +182,11 @@ const Navbar = ({ userDisplayName, cartCount, logout, onCartClick }: NavbarProps
             </div>
 
             <button className="btn btn-link p-0" onClick={toggle} style={{ fontSize: "1.2rem" }}>
-              {isDark ? "☀️" : "🌙"}
+              {isDark ? "Sun" : "Moon"}
             </button>
 
             <div className="position-relative" style={{ cursor: "pointer" }} onClick={handleCart}>
-              <span style={{ fontSize: "1.5rem" }}>👜</span>
+              <span style={{ fontSize: "1.5rem" }}>Cart</span>
               {cartCount > 0 && (
                 <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary border border-white">
                   {cartCount}
