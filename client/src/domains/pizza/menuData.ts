@@ -1,0 +1,408 @@
+import {
+  RestaurantMenuData,
+  RestaurantMenuCategory,
+  RestaurantMenuItem,
+} from "../../types";
+
+const categoryImages: Record<string, string> = {
+  doener: "https://images.unsplash.com/photo-1529006557810-274b9b2fc783?auto=format&fit=crop&w=900&q=80",
+  vegetarisch: "https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&w=900&q=80",
+  falafel: "https://images.unsplash.com/photo-1562967916-eb82221dfb92?auto=format&fit=crop&w=900&q=80",
+  salateBeilagen: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=900&q=80",
+};
+
+function item(
+  categoryId: string,
+  categoryName: string,
+  data: Omit<RestaurantMenuItem, "pizza_id" | "image_url" | "categoryId" | "categoryName">
+): RestaurantMenuItem {
+  return {
+    ...data,
+    pizza_id: `00000000-0000-4000-8000-${String(data.id).padStart(12, "0")}`,
+    image_url: categoryImages[categoryId],
+    categoryId,
+    categoryName,
+  };
+}
+
+const categories: RestaurantMenuCategory[] = [
+  {
+    id: "doener",
+    name: "Döner",
+    items: [
+      item("doener", "Döner", {
+        id: 1,
+        name: "Döner Kebab Kalb",
+        price: 7.5,
+        description: "Kalbfleisch, Salat, Soße",
+        allergens: ["A", "4"],
+        flow: { sideRequired: false, saucesIncluded: 3, drinkOptional: true },
+      }),
+      item("doener", "Döner", {
+        id: 2,
+        name: "Döner Kebab Hähnchen",
+        price: 8,
+        description: "Hähnchenfleisch, Salat, Soße",
+        allergens: ["A", "4"],
+        flow: { sideRequired: false, saucesIncluded: 3, drinkOptional: true },
+      }),
+      item("doener", "Döner", {
+        id: 3,
+        name: "Döner Kebab mit extra Fleisch",
+        price: 9.5,
+        description: "Kalb- oder Hähnchenfleisch, Salat, Soße",
+        allergens: ["A", "4"],
+        flow: { sideRequired: false, saucesIncluded: 3, drinkOptional: true },
+      }),
+      item("doener", "Döner", {
+        id: 4,
+        name: "Döner Kebab mit Käse",
+        price: 8,
+        description: "Kalb- oder Hähnchenfleisch, Salat, Soße, Käse",
+        allergens: ["A", "G", "4"],
+        flow: { sideRequired: false, saucesIncluded: 3, drinkOptional: true },
+      }),
+      item("doener", "Döner", {
+        id: 5,
+        name: "Dürüm Kalb",
+        price: 8.5,
+        description: "Kalbfleisch, Salat, Soße, Käse",
+        allergens: ["A", "G", "4"],
+        flow: { sideRequired: false, saucesIncluded: 3, drinkOptional: true },
+      }),
+      item("doener", "Döner", {
+        id: 6,
+        name: "Dürüm Hähnchen",
+        price: 8.5,
+        description: "Hähnchenfleisch, Salat, Soße",
+        allergens: ["A", "4"],
+        flow: { sideRequired: false, saucesIncluded: 3, drinkOptional: true },
+      }),
+      item("doener", "Döner", {
+        id: 7,
+        name: "Dürüm mit extra Fleisch",
+        price: 9.5,
+        description: "Kalb- oder Hähnchenfleisch, Salat, Soße",
+        allergens: ["A", "4"],
+        flow: { sideRequired: false, saucesIncluded: 3, drinkOptional: true },
+      }),
+      item("doener", "Döner", {
+        id: 8,
+        name: "Special Döner",
+        price: 8.5,
+        description: "Kalb- & Hähnchenfleisch, Salat, Soße, Käse, gebratenes Gemüse",
+        allergens: ["A", "G", "4"],
+        flow: { sideRequired: false, saucesIncluded: 3, drinkOptional: true },
+      }),
+      item("doener", "Döner", {
+        id: 9,
+        name: "Döner Teller Kalb",
+        price: 13.5,
+        description: "Kalbfleisch mit Pommes oder Reis, dazu Salat",
+        allergens: ["A", "4"],
+        flow: {
+          sideRequired: true,
+          sideOptions: [
+            { name: "Pommes", price: 0 },
+            { name: "Reis", price: 0 },
+          ],
+          saucesIncluded: 3,
+          drinkOptional: true,
+        },
+      }),
+      item("doener", "Döner", {
+        id: 10,
+        name: "Döner Teller Hähnchen",
+        price: 12.5,
+        description: "Hähnchenfleisch mit Pommes oder Reis, dazu Salat",
+        allergens: ["A", "4"],
+        flow: {
+          sideRequired: true,
+          sideOptions: [
+            { name: "Pommes", price: 0 },
+            { name: "Reis", price: 0 },
+          ],
+          saucesIncluded: 3,
+          drinkOptional: true,
+        },
+      }),
+      item("doener", "Döner", {
+        id: 11,
+        name: "Special Döner Teller",
+        price: 13.5,
+        description: "Kalb- & Hähnchenfleisch, Pommes oder Reis, dazu Salat, Käse, gebratenes Gemüse",
+        allergens: ["A", "G", "4"],
+        flow: {
+          sideRequired: true,
+          sideOptions: [
+            { name: "Pommes", price: 0 },
+            { name: "Reis", price: 0 },
+          ],
+          saucesIncluded: 3,
+          drinkOptional: true,
+        },
+      }),
+      item("doener", "Döner", {
+        id: 12,
+        name: "Döner Box Kalb",
+        price: 8,
+        description: "Mit Pommes oder Reis, dazu Salat",
+        allergens: ["A", "4"],
+        flow: {
+          sideRequired: true,
+          sideOptions: [
+            { name: "Pommes", price: 0 },
+            { name: "Reis", price: 0 },
+          ],
+          saucesIncluded: 3,
+          drinkOptional: true,
+        },
+      }),
+      item("doener", "Döner", {
+        id: 13,
+        name: "Döner Box Hähnchen",
+        price: 8,
+        description: "Mit Pommes oder Reis, dazu Salat",
+        allergens: ["A", "4"],
+        flow: {
+          sideRequired: true,
+          sideOptions: [
+            { name: "Pommes", price: 0 },
+            { name: "Reis", price: 0 },
+          ],
+          saucesIncluded: 3,
+          drinkOptional: true,
+        },
+      }),
+      item("doener", "Döner", {
+        id: 14,
+        name: "Lahmacun mit Salat",
+        price: 7,
+        description: "Mit Salat",
+        allergens: ["A"],
+        flow: { sideRequired: false, saucesIncluded: 3, drinkOptional: true },
+      }),
+      item("doener", "Döner", {
+        id: 15,
+        name: "Lahmacun Spezial",
+        price: 8.5,
+        description: "Mit Fleisch, Käse, Salat",
+        allergens: ["A", "G", "4"],
+        flow: { sideRequired: false, saucesIncluded: 3, drinkOptional: true },
+      }),
+    ],
+  },
+  {
+    id: "vegetarisch",
+    name: "Vegetarisch",
+    items: [
+      item("vegetarisch", "Vegetarisch", {
+        id: 17,
+        name: "Veggi Döner",
+        price: 7,
+        description: "Salat, Soße, Käse",
+        allergens: ["A", "G"],
+        flow: { sideRequired: false, saucesIncluded: 3, drinkOptional: true },
+      }),
+      item("vegetarisch", "Vegetarisch", {
+        id: 18,
+        name: "Veggi Dürüm",
+        price: 7,
+        description: "Salat, Soße, Käse",
+        allergens: ["A", "G"],
+        flow: { sideRequired: false, saucesIncluded: 3, drinkOptional: true },
+      }),
+      item("vegetarisch", "Vegetarisch", {
+        id: 19,
+        name: "Veggi Special Teller",
+        price: 12,
+        description: "Pommes oder Reis, dazu Salat, Soße, Käse, gebratenes Gemüse",
+        allergens: ["A", "G"],
+        flow: {
+          sideRequired: true,
+          sideOptions: [
+            { name: "Pommes", price: 0 },
+            { name: "Reis", price: 0 },
+          ],
+          saucesIncluded: 3,
+          drinkOptional: true,
+        },
+      }),
+    ],
+  },
+  {
+    id: "falafel",
+    name: "Falafel",
+    items: [
+      item("falafel", "Falafel", {
+        id: 20,
+        name: "Falafel im Brot",
+        price: 7.5,
+        description: "Falafel, Salat, Soße",
+        allergens: ["A", "K", "N"],
+        flow: { sideRequired: false, saucesIncluded: 3, drinkOptional: true },
+      }),
+      item("falafel", "Falafel", {
+        id: 21,
+        name: "Falafel Dürüm",
+        price: 7.5,
+        description: "Falafel, Salat, Soße",
+        allergens: ["A", "K", "N"],
+        flow: { sideRequired: false, saucesIncluded: 3, drinkOptional: true },
+      }),
+      item("falafel", "Falafel", {
+        id: 22,
+        name: "Falafel Box",
+        price: 7.5,
+        description: "Falafel, Pommes oder Reis, dazu Salat",
+        allergens: ["A", "K", "N"],
+        flow: {
+          sideRequired: true,
+          sideOptions: [
+            { name: "Pommes", price: 0 },
+            { name: "Reis", price: 0 },
+          ],
+          saucesIncluded: 3,
+          drinkOptional: true,
+        },
+      }),
+      item("falafel", "Falafel", {
+        id: 23,
+        name: "Falafel Teller",
+        price: 12,
+        description: "Falafel, Pommes oder Reis, dazu Salat",
+        allergens: ["A", "K", "N"],
+        flow: {
+          sideRequired: true,
+          sideOptions: [
+            { name: "Pommes", price: 0 },
+            { name: "Reis", price: 0 },
+          ],
+          saucesIncluded: 3,
+          drinkOptional: true,
+        },
+      }),
+    ],
+  },
+  {
+    id: "salateBeilagen",
+    name: "Salate & Beilagen",
+    items: [
+      item("salateBeilagen", "Salate & Beilagen", {
+        id: 24,
+        name: "Salat Box",
+        price: 5,
+        description: "Gemischter Salat",
+        flow: { sideRequired: false, saucesIncluded: 0, drinkOptional: true },
+      }),
+      item("salateBeilagen", "Salate & Beilagen", {
+        id: 25,
+        name: "Käsebrot",
+        price: 5,
+        description: "Käse, Soße",
+        flow: { sideRequired: false, saucesIncluded: 3, drinkOptional: true },
+      }),
+      item("salateBeilagen", "Salate & Beilagen", {
+        id: 26,
+        name: "Bauern Salat",
+        price: 8.5,
+        description: "Tomaten, Paprika, Gurken, Petersilie",
+        flow: { sideRequired: false, saucesIncluded: 0, drinkOptional: true },
+      }),
+      item("salateBeilagen", "Salate & Beilagen", {
+        id: 27,
+        name: "Hähnchen Salat",
+        price: 12,
+        description: "Hähnchenfleisch, gemischter Salat",
+        flow: { sideRequired: false, saucesIncluded: 0, drinkOptional: true },
+      }),
+      item("salateBeilagen", "Salate & Beilagen", {
+        id: 28,
+        name: "Mix Salat",
+        price: 7,
+        description: "Gemischter Salat",
+        flow: { sideRequired: false, saucesIncluded: 0, drinkOptional: true },
+      }),
+      item("salateBeilagen", "Salate & Beilagen", {
+        id: 29,
+        name: "Falafel Salat",
+        price: 8,
+        description: "Falafel, gemischter Salat",
+        flow: { sideRequired: false, saucesIncluded: 0, drinkOptional: true },
+      }),
+      item("salateBeilagen", "Salate & Beilagen", {
+        id: 30,
+        name: "Special Salat",
+        price: 12,
+        description: "Kalb & Hähnchenfleisch, Käse, gebratenes Gemüse, gemischter Salat",
+        flow: { sideRequired: false, saucesIncluded: 0, drinkOptional: true },
+      }),
+      item("salateBeilagen", "Salate & Beilagen", {
+        id: 31,
+        name: "Zigaretten Börek 1 Stk.",
+        price: 2,
+        description: "1 Stück",
+        flow: { sideRequired: false, saucesIncluded: 0, drinkOptional: true },
+      }),
+      item("salateBeilagen", "Salate & Beilagen", {
+        id: 32,
+        name: "Pommes Klein",
+        price: 3,
+        description: "Kleine Portion",
+        flow: { sideRequired: false, saucesIncluded: 0, drinkOptional: true },
+      }),
+      item("salateBeilagen", "Salate & Beilagen", {
+        id: 33,
+        name: "Pommes Groß",
+        price: 4,
+        description: "Große Portion",
+        flow: { sideRequired: false, saucesIncluded: 0, drinkOptional: true },
+      }),
+      item("salateBeilagen", "Salate & Beilagen", {
+        id: 34,
+        name: "Süßkartoffeln Fritten",
+        price: 5,
+        description: "Süßkartoffel Pommes",
+        flow: { sideRequired: false, saucesIncluded: 0, drinkOptional: true },
+      }),
+      item("salateBeilagen", "Salate & Beilagen", {
+        id: 35,
+        name: "Baklava 2 Stk.",
+        price: 4,
+        description: "2 Stück",
+        flow: { sideRequired: false, saucesIncluded: 0, drinkOptional: true },
+      }),
+    ],
+  },
+];
+
+export const restaurantMenuData: RestaurantMenuData = {
+  categories,
+  sauces: {
+    title: "Soßen",
+    maxFree: 3,
+    options: [
+      { id: "knoblauch", name: "Knoblauch", price: 0 },
+      { id: "kraeuter", name: "Kräuter", price: 0 },
+      { id: "scharf", name: "Scharf", price: 0 },
+    ],
+  },
+  drinks: {
+    title: "Softdrinks",
+    size: "0,33 l",
+    items: [
+      { id: "drink1", name: "fritz-kola", price: 2.5 },
+      { id: "drink2", name: "fritz-kola superzero", price: 2.5 },
+      { id: "drink3", name: "fritz-kola bio kola", price: 2.5 },
+      { id: "drink4", name: "fritz-limo apfel-kirsch-holunder", price: 2.5 },
+      { id: "drink5", name: "fritz-limo honigmelone", price: 2.5 },
+      { id: "drink6", name: "fritz-limo orange", price: 2.5 },
+      { id: "drink7", name: "fritz-limo zitrone", price: 2.5 },
+      { id: "drink8", name: "fritz-spritz bio apfelschorle", price: 2.5 },
+      { id: "drink9", name: "fritz-spritz bio rhabarberschorle", price: 2.5 },
+      { id: "drink10", name: "fritz-spritz bio traubenschorle", price: 2.5 },
+      { id: "drink11", name: "mischmasch kola + orange", price: 2.5 },
+      { id: "drink12", name: "anjola bio-limonade ananas & limette", price: 2.5 },
+    ],
+  },
+};

@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useLanguage } from "../context/LanguageContext";
-import { IS_PIZZA, SHOP } from "../config/branding";
+import { IS_PIZZA } from "../config/branding";
 
 interface NavbarProps {
   userDisplayName: string | null;
@@ -67,9 +67,9 @@ const Navbar = ({ userDisplayName, cartCount, logout, onCartClick }: NavbarProps
           className="text-white py-2 px-4 d-flex justify-content-between align-items-center small"
           style={{ letterSpacing: "0.08em", background: "#1b1212", borderBottom: "1px solid #332020" }}
         >
-          <div>{SHOP.tagline}</div>
+          <div>Direktbestellung mit Schritt-für-Schritt Konfiguration</div>
           <div className="d-flex gap-3 align-items-center">
-            <span>DE / EN</span>
+            <span>DE</span>
             <span>Lieferung ab 20 Min.</span>
           </div>
         </div>
@@ -77,40 +77,25 @@ const Navbar = ({ userDisplayName, cartCount, logout, onCartClick }: NavbarProps
         <nav className="navbar p-3" style={{ background: "rgba(10, 10, 10, 0.95)", backdropFilter: "blur(14px)" }}>
           <div className="container-fluid d-flex justify-content-between align-items-center">
             <Link className="navbar-brand fw-bold fs-4 m-0 text-white" to="/" style={{ letterSpacing: "0.08em" }}>
-              PIZZA & DONER HAUS
+              RANCH-TRADE
             </Link>
 
             <div className="d-none d-lg-flex gap-4">
-              <a className="nav-link fw-semibold text-uppercase small text-white" href="#menu">Menu</a>
-              <a className="nav-link fw-semibold text-uppercase small text-white" href="#pizza">Pizza</a>
-              <a className="nav-link fw-semibold text-uppercase small text-white" href="#doner">Doner</a>
-              <a className="nav-link fw-semibold text-uppercase small text-white" href="#order">Bestellen</a>
+              <a className="nav-link fw-semibold text-uppercase small text-white" href="#menu-top">Speisekarte</a>
+              <a className="nav-link fw-semibold text-uppercase small text-white" href="#doener">Döner</a>
+              <a className="nav-link fw-semibold text-uppercase small text-white" href="#vegetarisch">Vegetarisch</a>
+              <a className="nav-link fw-semibold text-uppercase small text-white" href="#falafel">Falafel</a>
+              <a className="nav-link fw-semibold text-uppercase small text-white" href="#salateBeilagen">Salate & Beilagen</a>
+              <a className="nav-link fw-semibold text-uppercase small text-white" href="#menu-top">Bestellen</a>
             </div>
 
             <div className="d-flex align-items-center gap-3">
-              <div className="btn-group btn-group-sm" role="group" aria-label="Language selector">
-                <button
-                  type="button"
-                  className={`btn ${language === "en" ? "btn-light" : "btn-outline-light"}`}
-                  onClick={() => setLanguage("en")}
-                >
-                  EN
-                </button>
-                <button
-                  type="button"
-                  className={`btn ${language === "de" ? "btn-light" : "btn-outline-light"}`}
-                  onClick={() => setLanguage("de")}
-                >
-                  DE
-                </button>
-              </div>
-
               <button className="btn btn-link p-0 text-white" onClick={toggle} style={{ fontSize: "1.2rem" }}>
-                {isDark ? "Sun" : "Moon"}
+                {isDark ? "Sonne" : "Mond"}
               </button>
 
               <div className="position-relative text-white" style={{ cursor: "pointer" }} onClick={handleCart}>
-                <span style={{ fontSize: "1.4rem" }}>Cart</span>
+                <span style={{ fontSize: "1.4rem" }}>Warenkorb</span>
                 {cartCount > 0 && (
                   <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white">
                     {cartCount}

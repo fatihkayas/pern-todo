@@ -45,12 +45,14 @@ function CheckoutForm({ orderId, onSuccess }: CheckoutFormProps) {
         });
         const data = await res.json();
         if (data.success) {
-          toast.success("Payment successful!");
+          toast.success(IS_PIZZA ? "Zahlung erfolgreich!" : "Payment successful!");
           onSuccess(orderId);
+        } else {
+          toast.error(IS_PIZZA ? "Bestellung konnte nicht bestätigt werden." : "Order confirmation failed.");
         }
       }
     } catch {
-      toast.error("Payment failed");
+      toast.error(IS_PIZZA ? "Zahlung fehlgeschlagen" : "Payment failed");
     } finally {
       setLoading(false);
     }
@@ -66,9 +68,9 @@ function CheckoutForm({ orderId, onSuccess }: CheckoutFormProps) {
         style={{ padding: "12px" }}
       >
         {loading ? (
-          <span><span className="spinner-border spinner-border-sm me-2" />Processing...</span>
+          <span><span className="spinner-border spinner-border-sm me-2" />{IS_PIZZA ? "Wird verarbeitet..." : "Processing..."}</span>
         ) : (
-          "Pay Now"
+          IS_PIZZA ? "Jetzt bezahlen" : "Pay Now"
         )}
       </button>
     </form>
@@ -96,8 +98,8 @@ const Checkout = ({ cart, pizzaCart = [], onOrderSuccess }: CheckoutProps) => {
 
   useEffect(() => {
     if (!token) navigate("/login");
-    if (activeItems.length === 0) navigate("/");
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    else if (activeItems.length === 0) navigate("/");
+  }, [token, activeItems.length, navigate]);
 
   const createOrder = async () => {
     setLoading(true);
@@ -111,7 +113,7 @@ const Checkout = ({ cart, pizzaCart = [], onOrderSuccess }: CheckoutProps) => {
                 items: pizzaCart.map((item) => ({
                   pizza_id: item.pizza_id,
                   quantity: item.quantity,
-                  unit_price: item.base_price,
+                  unit_price: Number(item.base_price),
                   options: item.options,
                 })),
               }
@@ -152,11 +154,11 @@ const Checkout = ({ cart, pizzaCart = [], onOrderSuccess }: CheckoutProps) => {
 
   return (
     <div className="container mt-4" style={{ maxWidth: 600 }}>
-      <h3 className="fw-bold mb-4">{IS_PIZZA ? "Restaurant Checkout" : "Checkout"}</h3>
+      <h3 className="fw-bold mb-4">{IS_PIZZA ? "Kasse" : "Checkout"}</h3>
 
       {step === "confirm" && (
         <div className="card border-0 shadow-sm rounded-4 p-4">
-          <h5 className="fw-bold mb-3">Order Summary</h5>
+          <h5 className="fw-bold mb-3">{IS_PIZZA ? "Bestellübersicht" : "Order Summary"}</h5>
           {IS_PIZZA
             ? pizzaCart.map((item) => (
                 <div key={item.cart_item_id} className="d-flex justify-content-between py-2 border-bottom">
@@ -176,20 +178,22 @@ const Checkout = ({ cart, pizzaCart = [], onOrderSuccess }: CheckoutProps) => {
                 </div>
               ))}
           <div className="d-flex justify-content-between mt-3 fw-bold fs-5">
-            <span>Total</span>
+            <span>{IS_PIZZA ? "Gesamt" : "Total"}</span>
             <span>{IS_PIZZA ? "€" : "$"}{total.toFixed(2)}</span>
           </div>
           <button className="btn btn-dark w-100 rounded-pill mt-4" onClick={createOrder} disabled={loading}>
-            {loading ? "Processing..." : "Proceed to Payment"}
+            {loading ? (IS_PIZZA ? "Wird verarbeitet..." : "Processing...") : (IS_PIZZA ? "Weiter zur Zahlung" : "Proceed to Payment")}
           </button>
         </div>
       )}
 
       {step === "payment" && clientSecret && orderId !== null && (
         <div className="card border-0 shadow-sm rounded-4 p-4">
-          <h5 className="fw-bold mb-3">Payment Details</h5>
+          <h5 className="fw-bold mb-3">{IS_PIZZA ? "Zahlungsdetails" : "Payment Details"}</h5>
           <div className="alert alert-info small mb-3">
-            Your payment is secured by Stripe. We never store your card details.
+            {IS_PIZZA
+              ? "Deine Zahlung wird sicher über Stripe abgewickelt. Kartendaten werden nicht gespeichert."
+              : "Your payment is secured by Stripe. We never store your card details."}
           </div>
           {!stripePromise ? (
             <div className="alert alert-danger mb-0">
@@ -206,14 +210,16 @@ const Checkout = ({ cart, pizzaCart = [], onOrderSuccess }: CheckoutProps) => {
       {step === "success" && (
         <div className="card border-0 shadow-sm rounded-4 p-4 text-center">
           <div style={{ fontSize: 64 }}>Done</div>
-          <h4 className="fw-bold mt-3">Payment Successful!</h4>
-          <p className="text-muted">Order #{orderId} has been placed successfully.</p>
+          <h4 className="fw-bold mt-3">{IS_PIZZA ? "Zahlung erfolgreich!" : "Payment Successful!"}</h4>
+          <p className="text-muted">
+            {IS_PIZZA ? `Bestellung #${orderId} wurde erfolgreich angelegt.` : `Order #${orderId} has been placed successfully.`}
+          </p>
           <div className="d-flex gap-2 justify-content-center mt-3">
             <button className="btn btn-dark rounded-pill" onClick={() => navigate("/orders")}>
-              View My Orders
+              {IS_PIZZA ? "Meine Bestellungen" : "View My Orders"}
             </button>
             <button className="btn btn-outline-dark rounded-pill" onClick={() => navigate("/")}>
-              Continue Shopping
+              {IS_PIZZA ? "Weiter bestellen" : "Continue Shopping"}
             </button>
           </div>
         </div>

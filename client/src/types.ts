@@ -54,11 +54,13 @@ export interface AdminStats {
 }
 
 export interface PizzaOptions {
-  size: string;
+  size?: string;
   toppings: string[];
   side?: string;
+  sidePrice?: number;
   sauces?: string[];
   drink?: string;
+  drinkPrice?: number;
 }
 
 export interface Pizza {
@@ -70,11 +72,69 @@ export interface Pizza {
   sizes: string[];
   toppings: string[];
   is_available: boolean;
-  category?: "pizza" | "doner" | "panini";
+  category?: string;
 }
 
 export interface PizzaCartItem extends Pizza {
   cart_item_id: string;
   quantity: number;
   options: PizzaOptions;
+  allergens?: string[];
+}
+
+export interface MenuSideOption {
+  name: string;
+  price: number;
+}
+
+export interface MenuItemFlow {
+  sideRequired: boolean;
+  sideOptions?: MenuSideOption[];
+  saucesIncluded: number;
+  drinkOptional: boolean;
+}
+
+export interface RestaurantMenuItem {
+  id: number;
+  pizza_id: string;
+  name: string;
+  price: number;
+  description: string;
+  allergens?: string[];
+  image_url?: string;
+  categoryId: string;
+  categoryName: string;
+  flow: MenuItemFlow;
+}
+
+export interface RestaurantMenuCategory {
+  id: string;
+  name: string;
+  items: RestaurantMenuItem[];
+}
+
+export interface MenuSauceOption {
+  id: string;
+  name: string;
+  price: number;
+}
+
+export interface MenuDrinkItem {
+  id: string;
+  name: string;
+  price: number;
+}
+
+export interface RestaurantMenuData {
+  categories: RestaurantMenuCategory[];
+  sauces: {
+    title: string;
+    maxFree: number;
+    options: MenuSauceOption[];
+  };
+  drinks: {
+    title: string;
+    size: string;
+    items: MenuDrinkItem[];
+  };
 }

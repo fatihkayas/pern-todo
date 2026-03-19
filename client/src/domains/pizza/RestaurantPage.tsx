@@ -1,240 +1,211 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Pizza, PizzaCartItem } from "../../types";
-import { apiUrl } from "../../config";
-import OrderModal from "./OrderModal";
+import React from "react";
+import { MenuDrinkItem, PizzaCartItem, RestaurantMenuItem } from "../../types";
 import DonerFlowModal from "./DonerFlowModal";
-import { useLanguage } from "../../context/LanguageContext";
+import { restaurantMenuData } from "./menuData";
 import heroImage from "../../assets/ranch-kebab-hero.png";
-
-const POPULAR_ITEMS = new Set(["Special Doner", "Calabrese", "Diavola", "Dorum Hahnchen"]);
-
-const copy = {
-  en: {
-    heroLabel: "Signature grill house experience",
-    heroText: "Ranch Kebab with a bold full-screen hero, fast ordering, and touch-friendly food cards.",
-    orderNow: "Order now",
-    pizzaLabel: "Pizza menu",
-    pizzaTitle: "Left side: Pizza",
-    donerLabel: "Doner menu",
-    donerTitle: "Right side: Doner",
-    footerText: "Large touch-friendly food cards, a guided doner builder, and direct checkout.",
-    directOrder: "Order directly",
-    popular: "Popular",
-    startFlow: "Start flow",
-    loading: "Loading menu...",
-    sections: {
-      kebab: "Doner Kebab",
-      durum: "Durum",
-      special: "Special Doner",
-      teller: "Doner Teller",
-      box: "Doner Box",
-      lahmacun: "Lahmacun",
-    },
-  },
-  de: {
-    heroLabel: "Signature Grillhaus Erlebnis",
-    heroText: "Ranch Kebab mit starkem Vollbild-Hero, schnellem Bestellfluss und touchfreundlichen Food Cards.",
-    orderNow: "Jetzt bestellen",
-    pizzaLabel: "Pizza Menü",
-    pizzaTitle: "Links: Pizza",
-    donerLabel: "Döner Menü",
-    donerTitle: "Rechts: Döner",
-    footerText: "Große Food Cards, ein geführter Döner-Builder und direkter Checkout.",
-    directOrder: "Direkt bestellen",
-    popular: "Beliebt",
-    startFlow: "Flow starten",
-    loading: "Menü wird geladen...",
-    sections: {
-      kebab: "Döner Kebab",
-      durum: "Dürüm",
-      special: "Spezial Döner",
-      teller: "Döner Teller",
-      box: "Döner Box",
-      lahmacun: "Lahmacun",
-    },
-  },
-} as const;
 
 interface RestaurantPageProps {
   onDirectOrder: (item: PizzaCartItem) => void;
   onOpenCart: () => void;
+  cartCount: number;
+  cartTotal: number;
 }
 
-const RestaurantPage: React.FC<RestaurantPageProps> = ({ onDirectOrder, onOpenCart }) => {
-  const { language } = useLanguage();
-  const t = copy[language];
-  const emptyMessage =
-    language === "de"
-      ? "Aktuell sind keine Menueintraege verfuegbar."
-      : "No menu items are available right now.";
-  const [items, setItems] = useState<Pizza[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [orderOpen, setOrderOpen] = useState(false);
-  const [selectedDoner, setSelectedDoner] = useState<Pizza | null>(null);
-  const [isCompact, setIsCompact] = useState(() => window.innerWidth < 960);
+type SectionConfig = {
+  id: string;
+  label: string;
+  subtitle: string;
+  type: "menu" | "drinks";
+};
 
-  useEffect(() => {
-    fetch(apiUrl("/api/v1/pizza"))
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`Pizza menu request failed with status ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data: Pizza[]) => {
-        setItems(Array.isArray(data) ? data : []);
-        setLoadError(null);
-        setLoading(false);
-      })
-      .catch((error: Error) => {
-        console.error("Pizza menu fetch error:", error);
-        setItems([]);
-        setLoadError(
-          language === "de"
-            ? "Das Menue konnte nicht geladen werden. Bitte pruefe, ob die Pizza-API im Backend laeuft."
-            : "Menu could not be loaded. Please check that the backend pizza API is running."
-        );
-        setLoading(false);
-      });
-  }, [language]);
+const SECTION_CONFIG: SectionConfig[] = [
+  { id: "doener", label: "Döner", subtitle: "Klassiker vom Spieß, als Brot, Dürüm, Box oder Teller.", type: "menu" },
+  { id: "vegetarisch", label: "Vegetarisch", subtitle: "Gemüsebetonte Favoriten mit vollem Ranch-Trade Charakter.", type: "menu" },
+  { id: "falafel", label: "Falafel", subtitle: "Knusprige Falafel-Varianten, klar präsentiert und schnell konfiguriert.", type: "menu" },
+  { id: "salateBeilagen", label: "Salate & Beilagen", subtitle: "Leichte Teller, warme Beilagen und kleine Extras.", type: "menu" },
+  { id: "getraenke", label: "Getränke", subtitle: "Softdrinks aus der Karte, optional im Konfigurator wählbar.", type: "drinks" },
+];
 
-  useEffect(() => {
-    const onResize = () => setIsCompact(window.innerWidth < 960);
+const PALETTE = {
+  background: "#111111",
+  surface: "#1E1A17",
+  elevated: "#2A241F",
+  light: "#E7D7BE",
+  sand: "#D6C2A1",
+  gold: "#C1863B",
+  leather: "#8B5E3C",
+  saddle: "#A66A43",
+  text: "#F7F1E8",
+  muted: "#D8CBB8",
+  textOnLight: "#2A1F18",
+};
+
+const RestaurantPage: React.FC<RestaurantPageProps> = ({
+  onDirectOrder,
+  onOpenCart,
+  cartCount,
+  cartTotal,
+}) => {
+  const [selectedItem, setSelectedItem] = React.useState<RestaurantMenuItem | null>(null);
+  const [activeSection, setActiveSection] = React.useState<string>("doener");
+  const [isCompact, setIsCompact] = React.useState(() => window.innerWidth < 992);
+
+  React.useEffect(() => {
+    const onResize = () => setIsCompact(window.innerWidth < 992);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const sections = [
-    { title: t.sections.kebab, match: (item: Pizza) => item.name.includes("Doner Kebab") },
-    { title: t.sections.durum, match: (item: Pizza) => item.name.includes("Durum") },
-    { title: t.sections.special, match: (item: Pizza) => item.name.includes("Special Doner") && !item.name.includes("Teller") },
-    { title: t.sections.teller, match: (item: Pizza) => item.name.includes("Teller") },
-    { title: t.sections.box, match: (item: Pizza) => item.name.includes("Box") },
-    { title: t.sections.lahmacun, match: (item: Pizza) => item.name.includes("Lahmacun") },
-  ];
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
 
-  const pizzas = useMemo(
-    () => items.filter((item) => item.category === "pizza" || !item.category),
-    [items]
-  );
-  const doners = useMemo(
-    () => items.filter((item) => item.category === "doner"),
-    [items]
-  );
-
-  const addPizzaItem = (item: Pizza) => {
-    onDirectOrder({
-      ...item,
-      cart_item_id: `${item.pizza_id}:${Date.now()}`,
-      quantity: 1,
-      options: {
-        size: item.sizes[0] || "Regular",
-        toppings: [],
+        if (visible?.target.id) {
+          setActiveSection(visible.target.id);
+        }
       },
+      { rootMargin: "-25% 0px -50% 0px", threshold: [0.2, 0.45, 0.7] }
+    );
+
+    SECTION_CONFIG.forEach((section) => {
+      const element = document.getElementById(section.id);
+      if (element) observer.observe(element);
     });
-  };
 
-  const handleCardOrder = (item: Pizza) => {
-    if (item.category === "doner") {
-      setSelectedDoner(item);
-      return;
-    }
-    addPizzaItem(item);
-  };
+    return () => observer.disconnect();
+  }, []);
 
-  const handleWebsiteOrder = () => {
-    setOrderOpen(false);
-    document.getElementById("menu")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
     <div style={styles.page}>
       <section style={styles.hero}>
-        <div style={styles.heroShade} />
-        <div style={styles.heroGlow} />
+        <div style={styles.heroBackdrop} />
+        <div style={styles.heroOverlay} />
+        <div style={styles.heroAccentLeft} />
+        <div style={styles.heroAccentRight} />
         <div style={styles.heroContent}>
-          <div style={styles.heroLabel}>{t.heroLabel}</div>
-          <h1 style={styles.heroTitle}>RANCH KEBAB</h1>
-          <p style={styles.heroText}>{t.heroText}</p>
-          <button style={styles.heroButton} onClick={() => setOrderOpen(true)}>
-            {t.orderNow}
-          </button>
-        </div>
-      </section>
-
-      <button style={styles.stickyButton} onClick={() => setOrderOpen(true)}>
-        {t.orderNow}
-      </button>
-
-      <section id="menu" style={styles.menuWrap}>
-        <div
-          style={{
-            ...styles.menuGrid,
-            gridTemplateColumns: isCompact ? "1fr" : "minmax(0, 1fr) 1px minmax(0, 1fr)",
-          }}
-        >
-          <MenuColumn
-            anchor="pizza"
-            label={t.pizzaLabel}
-            title={t.pizzaTitle}
-            loading={loading}
-            loadingText={t.loading}
-            emptyText={emptyMessage}
-            errorText={loadError}
-            items={pizzas}
-            onOrder={handleCardOrder}
-            buttonText={t.directOrder}
-            popularText={t.popular}
-          />
-
-          {isCompact ? null : <div style={styles.divider} />}
-
-          <div id="doner" style={styles.column}>
-            <div style={styles.columnHeader}>
-              <span style={styles.columnLabel}>{t.donerLabel}</span>
-              <h2 style={styles.columnTitle}>{t.donerTitle}</h2>
-            </div>
-            {loading ? (
-              <MenuSkeleton />
-            ) : loadError ? (
-              <p style={styles.errorText}>{loadError}</p>
-            ) : doners.length ? (
-              <div style={styles.sectionStack}>
-                {sections.map((section) => (
-                  <DonerSection
-                    key={section.title}
-                    title={section.title}
-                    items={doners.filter(section.match)}
-                    onOrder={handleCardOrder}
-                    buttonText={t.startFlow}
-                    popularText={t.popular}
-                  />
-                ))}
-              </div>
-            ) : (
-              <p style={styles.loadingText}>{emptyMessage}</p>
-            )}
+          <div style={styles.eyebrow}>Ranch-Trade Signature Menu</div>
+          <h1 style={styles.heroTitle}>Ranch-Trade bringt den Westen auf den Teller.</h1>
+          <p style={styles.heroText}>
+            Premium Döner, Falafel, Salate und Beilagen in einer modernen Bestellstrecke mit
+            klaren Schritten, ruhiger Typografie und einer warmen Ranch-Atmosphäre.
+          </p>
+          <div style={styles.heroActions}>
+            <button style={styles.primaryCta} onClick={onOpenCart}>
+              Jetzt bestellen
+            </button>
+            <button style={styles.secondaryCta} onClick={() => scrollToSection("menu-top")}>
+              Menü entdecken
+            </button>
+          </div>
+          <div style={styles.heroStats}>
+            <HeroStat label="Bestellfluss" value="Klar & schnell" />
+            <HeroStat label="Soßen" value="Bis zu 3 gratis" />
+            <HeroStat label="Getränke" value="Optional addierbar" />
           </div>
         </div>
       </section>
 
-      <footer style={styles.footer}>
-        <strong style={styles.footerBrand}>Pizza & Doner Haus</strong>
-        <div>{t.footerText}</div>
-        <button style={styles.footerDirectButton} onClick={onOpenCart}>
-          {t.directOrder}
-        </button>
-      </footer>
+      <section id="menu-top" style={styles.shell}>
+        <div style={styles.stickyNavWrap}>
+          <div style={styles.stickyNav}>
+            {SECTION_CONFIG.map((section) => {
+              const isActive = activeSection === section.id;
+              return (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() => scrollToSection(section.id)}
+                  style={{
+                    ...styles.navPill,
+                    ...(isActive ? styles.navPillActive : {}),
+                  }}
+                >
+                  {section.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-      {orderOpen ? (
-        <OrderModal onClose={() => setOrderOpen(false)} onDirectOrder={handleWebsiteOrder} />
+        <div style={{ ...styles.contentGrid, gridTemplateColumns: isCompact ? "1fr" : "minmax(0, 1fr) 320px" }}>
+          <div style={styles.contentColumn}>
+            {SECTION_CONFIG.map((section) =>
+              section.type === "menu" ? (
+                <MenuSection
+                  key={section.id}
+                  id={section.id}
+                  title={section.label}
+                  subtitle={section.subtitle}
+                  items={restaurantMenuData.categories.find((category) => category.id === section.id)?.items || []}
+                  onSelect={setSelectedItem}
+                />
+              ) : (
+                <DrinksSection
+                  key={section.id}
+                  id={section.id}
+                  title={section.label}
+                  subtitle={section.subtitle}
+                  drinks={restaurantMenuData.drinks.items}
+                />
+              )
+            )}
+          </div>
+
+          {!isCompact ? (
+            <aside style={styles.summaryAside}>
+              <div style={styles.summaryCard}>
+                <div style={styles.summaryEyebrow}>Warenkorb</div>
+                <h3 style={styles.summaryTitle}>Deine Ranch-Trade Auswahl</h3>
+                <p style={styles.summaryText}>
+                  Auf Desktop bleibt die Zusammenfassung sichtbar. So behältst du Menge und
+                  Gesamtpreis jederzeit im Blick.
+                </p>
+                <div style={styles.summaryMetrics}>
+                  <SummaryMetric label="Artikel" value={String(cartCount)} />
+                  <SummaryMetric label="Gesamtpreis" value={formatEuro(cartTotal)} />
+                </div>
+                <button style={styles.summaryButton} onClick={onOpenCart}>
+                  Zum Warenkorb
+                </button>
+              </div>
+            </aside>
+          ) : null}
+        </div>
+      </section>
+
+      {isCompact ? (
+        <div style={styles.mobileSummaryBar}>
+          <div>
+            <div style={styles.mobileSummaryLabel}>Warenkorb</div>
+            <div style={styles.mobileSummaryValue}>
+              {cartCount} Artikel · {formatEuro(cartTotal)}
+            </div>
+          </div>
+          <button style={styles.mobileSummaryButton} onClick={onOpenCart}>
+            Öffnen
+          </button>
+        </div>
       ) : null}
 
-      {selectedDoner ? (
+      <footer style={styles.footer}>
+        <strong style={styles.footerBrand}>Ranch-Trade</strong>
+        <div>Modernes Cowboy-Feeling, klare Produktstruktur und ein ruhiger Bestellfluss von Auswahl bis Checkout.</div>
+      </footer>
+
+      {selectedItem ? (
         <DonerFlowModal
-          item={selectedDoner}
-          onClose={() => setSelectedDoner(null)}
+          item={selectedItem}
+          drinks={restaurantMenuData.drinks.items}
+          sauces={restaurantMenuData.sauces.options}
+          maxFreeSauces={restaurantMenuData.sauces.maxFree}
+          onClose={() => setSelectedItem(null)}
           onAddToCart={onDirectOrder}
         />
       ) : null}
@@ -242,427 +213,563 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ onDirectOrder, onOpenCa
   );
 };
 
-const MenuColumn: React.FC<{
-  anchor: string;
-  label: string;
+const MenuSection: React.FC<{
+  id: string;
   title: string;
-  loading: boolean;
-  loadingText: string;
-  emptyText: string;
-  errorText: string | null;
-  items: Pizza[];
-  onOrder: (item: Pizza) => void;
-  buttonText: string;
-  popularText: string;
-}> = ({ anchor, label, title, loading, loadingText, emptyText, errorText, items, onOrder, buttonText, popularText }) => (
-  <div id={anchor} style={styles.column}>
-    <div style={styles.columnHeader}>
-      <span style={styles.columnLabel}>{label}</span>
-      <h2 style={styles.columnTitle}>{title}</h2>
+  subtitle: string;
+  items: RestaurantMenuItem[];
+  onSelect: (item: RestaurantMenuItem) => void;
+}> = ({ id, title, subtitle, items, onSelect }) => (
+  <section id={id} style={styles.sectionCard}>
+    <SectionHeader title={title} subtitle={subtitle} />
+    <div style={styles.menuGrid}>
+      {items.map((item) => (
+        <article key={item.id} style={styles.productCard}>
+          <div style={styles.productMedia}>
+            <img src={item.image_url} alt={item.name} style={styles.productImage} />
+            <div style={styles.priceTag}>{formatEuro(item.price)}</div>
+          </div>
+          <div style={styles.productBody}>
+            <div style={styles.productTop}>
+              <h3 style={styles.productTitle}>{item.name}</h3>
+              {item.allergens?.length ? (
+                <span style={styles.allergenTag}>Allergene {item.allergens.join(", ")}</span>
+              ) : null}
+            </div>
+            <p style={styles.productDescription}>{item.description}</p>
+            <div style={styles.productMeta}>
+              <span>{item.flow.sideRequired ? "Mit Beilage" : "Ohne Beilage"}</span>
+              <span>
+                {item.flow.saucesIncluded > 0
+                  ? `${item.flow.saucesIncluded} kostenlose Soßen`
+                  : "Keine Soßen-Auswahl"}
+              </span>
+            </div>
+            <button style={styles.selectButton} onClick={() => onSelect(item)}>
+              Auswählen
+            </button>
+          </div>
+        </article>
+      ))}
     </div>
-    {loading ? (
-      <MenuSkeleton />
-    ) : errorText ? (
-      <p style={styles.errorText}>{errorText}</p>
-    ) : items.length ? (
-      <div style={styles.cardGrid}>
-        {items.map((item) => (
-          <FoodCard
-            key={item.pizza_id}
-            item={item}
-            onOrder={onOrder}
-            buttonText={buttonText}
-            popularText={popularText}
-          />
+  </section>
+);
+
+const DrinksSection: React.FC<{
+  id: string;
+  title: string;
+  subtitle: string;
+  drinks: MenuDrinkItem[];
+}> = ({ id, title, subtitle, drinks }) => (
+  <section id={id} style={styles.sectionCard}>
+    <SectionHeader title={title} subtitle={subtitle} />
+    <div style={styles.drinksPanel}>
+      <div style={styles.drinksInfo}>
+        <div style={styles.drinksEyebrow}>Softdrinks 0,33 l</div>
+        <p style={styles.drinksText}>
+          Diese Auswahl steht im Konfigurator zur Verfügung und wird direkt zum Gesamtpreis
+          addiert, sobald ein Getränk gewählt wird.
+        </p>
+      </div>
+      <div style={styles.drinksGrid}>
+        {drinks.map((drink) => (
+          <div key={drink.id} style={styles.drinkCard}>
+            <div style={styles.drinkName}>{drink.name}</div>
+            <div style={styles.drinkPrice}>{formatEuro(drink.price)}</div>
+          </div>
         ))}
       </div>
-    ) : (
-      <p style={styles.loadingText}>{emptyText || loadingText}</p>
-    )}
+    </div>
+  </section>
+);
+
+const SectionHeader: React.FC<{ title: string; subtitle: string }> = ({ title, subtitle }) => (
+  <div style={styles.sectionHeader}>
+    <div style={styles.sectionRule} />
+    <div>
+      <div style={styles.sectionEyebrow}>Kategorie</div>
+      <h2 style={styles.sectionTitle}>{title}</h2>
+      <p style={styles.sectionSubtitle}>{subtitle}</p>
+    </div>
   </div>
 );
 
-const DonerSection: React.FC<{
-  title: string;
-  items: Pizza[];
-  onOrder: (item: Pizza) => void;
-  buttonText: string;
-  popularText: string;
-}> = ({ title, items, onOrder, buttonText, popularText }) => {
-  if (!items.length) return null;
-
-  return (
-    <div style={styles.sectionBlock}>
-      <div style={styles.sectionTitle}>{title}</div>
-      <div style={styles.cardGrid}>
-        {items.map((item) => (
-          <FoodCard
-            key={item.pizza_id}
-            item={item}
-            onOrder={onOrder}
-            buttonText={buttonText}
-            popularText={popularText}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const FoodCard: React.FC<{
-  item: Pizza;
-  onOrder: (item: Pizza) => void;
-  buttonText: string;
-  popularText: string;
-}> = ({ item, onOrder, buttonText, popularText }) => {
-  const [hovered, setHovered] = useState(false);
-  const isPopular = POPULAR_ITEMS.has(item.name);
-
-  return (
-    <article
-      style={{
-        ...styles.foodCard,
-        ...(hovered ? styles.foodCardHover : {}),
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onClick={() => onOrder(item)}
-    >
-      <div style={styles.imageWrap}>
-        <img
-          src={item.image_url || fallbackImage(item.category)}
-          alt={item.name}
-          style={styles.image}
-        />
-        {isPopular ? <span style={styles.popularBadge}>{popularText}</span> : null}
-      </div>
-
-      <div style={styles.cardBody}>
-        <div style={styles.cardHeader}>
-          <h3 style={styles.cardTitle}>{item.name}</h3>
-          <span style={styles.cardPrice}>{formatEuro(item.base_price)}</span>
-        </div>
-        <p style={styles.cardDescription}>{item.description}</p>
-        <button
-          style={styles.cardButton}
-          onClick={(event) => {
-            event.stopPropagation();
-            onOrder(item);
-          }}
-        >
-          {buttonText}
-        </button>
-      </div>
-    </article>
-  );
-};
-
-const MenuSkeleton: React.FC = () => (
-  <div style={styles.cardGrid}>
-    {Array.from({ length: 4 }).map((_, index) => (
-      <div key={index} style={styles.skeletonCard}>
-        <div style={styles.skeletonImage} />
-        <div style={styles.skeletonLineWide} />
-        <div style={styles.skeletonLine} />
-        <div style={styles.skeletonButton} />
-      </div>
-    ))}
+const HeroStat: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+  <div style={styles.heroStat}>
+    <div style={styles.heroStatValue}>{value}</div>
+    <div style={styles.heroStatLabel}>{label}</div>
   </div>
 );
 
-function fallbackImage(category?: string) {
-  if (category === "doner") {
-    return "https://images.unsplash.com/photo-1529006557810-274b9b2fc783?auto=format&fit=crop&w=900&q=80";
-  }
-  return "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=900&q=80";
-}
+const SummaryMetric: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+  <div style={styles.summaryMetric}>
+    <div style={styles.summaryMetricLabel}>{label}</div>
+    <div style={styles.summaryMetricValue}>{value}</div>
+  </div>
+);
 
-function formatEuro(price: string) {
-  const numeric = Number(price);
-  return `${numeric.toFixed(2).replace(".", ",")} €`;
+function formatEuro(value: number) {
+  return `${value.toFixed(2).replace(".", ",")} €`;
 }
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
     background:
-      "radial-gradient(circle at top, rgba(180, 30, 30, 0.18), transparent 32%), linear-gradient(180deg, #090909 0%, #131010 48%, #090909 100%)",
-    color: "#fff7f0",
-    paddingBottom: 80,
+      `linear-gradient(180deg, ${PALETTE.background} 0%, #171311 48%, ${PALETTE.background} 100%)`,
+    color: PALETTE.text,
+    paddingBottom: 120,
   },
   hero: {
     position: "relative",
-    minHeight: 680,
+    minHeight: 760,
     display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    textAlign: "center",
-    padding: "140px 20px 110px",
-    background:
-      `linear-gradient(rgba(8,8,8,0.34), rgba(8,8,8,0.78)), url(${heroImage}) center top /cover no-repeat`,
+    alignItems: "flex-end",
+    padding: "140px 24px 88px",
+    background: `${PALETTE.background}`,
     overflow: "hidden",
   },
-  heroShade: {
+  heroBackdrop: {
     position: "absolute",
     inset: 0,
-    background: "linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(10,10,10,0.76) 100%)",
+    background: `linear-gradient(100deg, rgba(17,17,17,0.82) 12%, rgba(17,17,17,0.45) 50%, rgba(17,17,17,0.9) 100%), url(${heroImage}) center top / cover no-repeat`,
   },
-  heroGlow: {
+  heroOverlay: {
     position: "absolute",
-    width: 520,
-    height: 520,
+    inset: 0,
+    background: "radial-gradient(circle at top right, rgba(193,134,59,0.18) 0%, rgba(193,134,59,0) 42%)",
+  },
+  heroAccentLeft: {
+    position: "absolute",
+    left: -120,
+    top: 120,
+    width: 320,
+    height: 320,
     borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(230,57,70,0.32) 0%, rgba(230,57,70,0) 72%)",
-    filter: "blur(12px)",
+    border: `1px solid rgba(231, 215, 190, 0.12)`,
+    opacity: 0.4,
+  },
+  heroAccentRight: {
+    position: "absolute",
+    right: -100,
+    bottom: 60,
+    width: 280,
+    height: 280,
+    borderRadius: "50%",
+    border: `1px solid rgba(193, 134, 59, 0.18)`,
+    opacity: 0.5,
   },
   heroContent: {
     position: "relative",
     maxWidth: 820,
+    margin: "0 auto",
+    width: "100%",
     zIndex: 1,
   },
-  heroLabel: {
-    display: "inline-block",
-    padding: "8px 14px",
-    borderRadius: 999,
-    background: "rgba(255,255,255,0.08)",
-    border: "1px solid rgba(255,255,255,0.12)",
-    fontSize: 12,
-    letterSpacing: "0.16em",
+  eyebrow: {
+    color: PALETTE.sand,
     textTransform: "uppercase",
-    marginBottom: 20,
+    letterSpacing: "0.22em",
+    fontSize: 12,
+    fontWeight: 800,
+    marginBottom: 18,
   },
   heroTitle: {
-    fontSize: "clamp(56px, 13vw, 132px)",
-    lineHeight: 0.95,
-    margin: "0 0 18px",
+    margin: 0,
+    fontSize: "clamp(48px, 8vw, 88px)",
+    lineHeight: 1.02,
     fontWeight: 900,
-    color: "#ff4d57",
-    letterSpacing: "0.04em",
-    textShadow: "0 14px 45px rgba(230,57,70,0.28)",
+    maxWidth: 780,
   },
   heroText: {
-    maxWidth: 640,
-    margin: "0 auto 28px",
-    color: "rgba(255,247,240,0.85)",
+    margin: "24px 0 0",
+    color: PALETTE.muted,
     fontSize: 18,
-    lineHeight: 1.7,
+    lineHeight: 1.85,
+    maxWidth: 700,
   },
-  heroButton: {
-    border: "none",
+  heroActions: {
+    display: "flex",
+    gap: 14,
+    flexWrap: "wrap",
+    marginTop: 34,
+  },
+  primaryCta: {
+    minHeight: 56,
+    padding: "0 28px",
     borderRadius: 999,
-    padding: "16px 32px",
-    background: "linear-gradient(135deg, #e63946 0%, #ff6b35 100%)",
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: 800,
-    letterSpacing: "0.08em",
-    textTransform: "uppercase",
-    cursor: "pointer",
-    boxShadow: "0 24px 45px rgba(230,57,70,0.28)",
-  },
-  stickyButton: {
-    position: "fixed",
-    right: 22,
-    bottom: 22,
-    zIndex: 1200,
     border: "none",
+    background: `linear-gradient(135deg, ${PALETTE.gold} 0%, ${PALETTE.saddle} 100%)`,
+    color: PALETTE.textOnLight,
+    fontWeight: 900,
+    cursor: "pointer",
+    boxShadow: "0 18px 40px rgba(166,106,67,0.22)",
+  },
+  secondaryCta: {
+    minHeight: 56,
+    padding: "0 28px",
     borderRadius: 999,
-    padding: "14px 22px",
-    background: "linear-gradient(135deg, #e63946 0%, #ff7a00 100%)",
-    color: "#fff",
+    border: `1px solid rgba(231, 215, 190, 0.24)`,
+    background: "rgba(255,255,255,0.04)",
+    color: PALETTE.text,
     fontWeight: 800,
     cursor: "pointer",
-    boxShadow: "0 18px 40px rgba(230,57,70,0.28)",
   },
-  menuWrap: {
-    maxWidth: 1400,
-    margin: "-44px auto 0",
-    padding: "0 24px",
+  heroStats: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: 16,
+    marginTop: 42,
+    maxWidth: 760,
+  },
+  heroStat: {
+    padding: "18px 20px",
+    borderRadius: 22,
+    background: "rgba(30,26,23,0.72)",
+    border: `1px solid rgba(214,194,161,0.12)`,
+    backdropFilter: "blur(6px)",
+  },
+  heroStatValue: {
+    fontSize: 22,
+    fontWeight: 800,
+    color: PALETTE.text,
+  },
+  heroStatLabel: {
+    marginTop: 6,
+    color: PALETTE.muted,
+    fontSize: 13,
+  },
+  shell: {
+    maxWidth: 1380,
+    margin: "-38px auto 0",
+    padding: "0 20px",
     position: "relative",
-    zIndex: 1,
+    zIndex: 2,
+  },
+  stickyNavWrap: {
+    position: "sticky",
+    top: 112,
+    zIndex: 20,
+    marginBottom: 22,
+  },
+  stickyNav: {
+    display: "flex",
+    gap: 10,
+    overflowX: "auto",
+    padding: 12,
+    borderRadius: 999,
+    background: "rgba(30,26,23,0.92)",
+    border: `1px solid rgba(214,194,161,0.12)`,
+    backdropFilter: "blur(12px)",
+    boxShadow: "0 18px 35px rgba(0,0,0,0.18)",
+  },
+  navPill: {
+    border: "none",
+    borderRadius: 999,
+    padding: "12px 18px",
+    background: "transparent",
+    color: PALETTE.muted,
+    fontWeight: 700,
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    transition: "background 160ms ease, color 160ms ease, transform 160ms ease",
+  },
+  navPillActive: {
+    background: `linear-gradient(135deg, rgba(193,134,59,0.24) 0%, rgba(139,94,60,0.24) 100%)`,
+    color: PALETTE.text,
+    transform: "translateY(-1px)",
+  },
+  contentGrid: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr) 320px",
+    gap: 24,
+  },
+  contentColumn: {
+    display: "grid",
+    gap: 28,
+  },
+  summaryAside: {
+    position: "sticky",
+    top: 188,
+    alignSelf: "start",
+  },
+  summaryCard: {
+    padding: 24,
+    borderRadius: 28,
+    background: `linear-gradient(180deg, ${PALETTE.surface} 0%, ${PALETTE.elevated} 100%)`,
+    border: `1px solid rgba(214,194,161,0.12)`,
+    boxShadow: "0 22px 50px rgba(0,0,0,0.24)",
+  },
+  summaryEyebrow: {
+    color: PALETTE.gold,
+    textTransform: "uppercase",
+    letterSpacing: "0.16em",
+    fontSize: 12,
+    marginBottom: 12,
+    fontWeight: 800,
+  },
+  summaryTitle: {
+    margin: 0,
+    fontSize: 28,
+    lineHeight: 1.1,
+    fontWeight: 900,
+  },
+  summaryText: {
+    color: PALETTE.muted,
+    lineHeight: 1.75,
+    margin: "12px 0 20px",
+  },
+  summaryMetrics: {
+    display: "grid",
+    gap: 12,
+  },
+  summaryMetric: {
+    padding: "14px 16px",
+    borderRadius: 18,
+    background: "rgba(255,255,255,0.03)",
+    border: `1px solid rgba(214,194,161,0.1)`,
+  },
+  summaryMetricLabel: {
+    color: PALETTE.muted,
+    fontSize: 12,
+    textTransform: "uppercase",
+    letterSpacing: "0.08em",
+    marginBottom: 6,
+  },
+  summaryMetricValue: {
+    fontSize: 22,
+    fontWeight: 800,
+  },
+  summaryButton: {
+    width: "100%",
+    minHeight: 54,
+    marginTop: 18,
+    border: "none",
+    borderRadius: 999,
+    background: `linear-gradient(135deg, ${PALETTE.gold} 0%, ${PALETTE.saddle} 100%)`,
+    color: PALETTE.textOnLight,
+    fontWeight: 900,
+    cursor: "pointer",
+  },
+  sectionCard: {
+    padding: "30px 28px",
+    borderRadius: 32,
+    background: `linear-gradient(180deg, ${PALETTE.surface} 0%, ${PALETTE.elevated} 100%)`,
+    border: `1px solid rgba(214,194,161,0.1)`,
+    boxShadow: "0 24px 60px rgba(0,0,0,0.18)",
+  },
+  sectionHeader: {
+    display: "grid",
+    gridTemplateColumns: "80px minmax(0, 1fr)",
+    gap: 18,
+    alignItems: "start",
+    marginBottom: 24,
+  },
+  sectionRule: {
+    height: 2,
+    marginTop: 18,
+    background: `linear-gradient(90deg, ${PALETTE.gold} 0%, rgba(193,134,59,0) 100%)`,
+  },
+  sectionEyebrow: {
+    color: PALETTE.sand,
+    textTransform: "uppercase",
+    letterSpacing: "0.16em",
+    fontSize: 12,
+    fontWeight: 800,
+    marginBottom: 10,
+  },
+  sectionTitle: {
+    margin: 0,
+    fontSize: 38,
+    lineHeight: 1.08,
+    fontWeight: 900,
+  },
+  sectionSubtitle: {
+    margin: "10px 0 0",
+    color: PALETTE.muted,
+    lineHeight: 1.8,
+    maxWidth: 620,
   },
   menuGrid: {
     display: "grid",
-    gridTemplateColumns: "minmax(0, 1fr) 1px minmax(0, 1fr)",
-    background: "rgba(17, 14, 14, 0.92)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 32,
-    overflow: "hidden",
-    boxShadow: "0 30px 70px rgba(0,0,0,0.32)",
-  },
-  divider: {
-    background: "linear-gradient(180deg, transparent 0%, rgba(230,57,70,0.4) 18%, rgba(230,57,70,0.4) 82%, transparent 100%)",
-  },
-  column: {
-    padding: "34px 28px 30px",
-  },
-  columnHeader: {
-    marginBottom: 22,
-  },
-  columnLabel: {
-    display: "inline-block",
-    color: "#ff8b8b",
-    fontSize: 12,
-    textTransform: "uppercase",
-    letterSpacing: "0.16em",
-    marginBottom: 10,
-  },
-  columnTitle: {
-    margin: 0,
-    fontSize: 34,
-    lineHeight: 1.05,
-    fontWeight: 900,
-  },
-  loadingText: {
-    color: "rgba(255,247,240,0.7)",
-  },
-  errorText: {
-    color: "#ffb3b3",
-    lineHeight: 1.7,
-    maxWidth: 540,
-  },
-  cardGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))",
     gap: 18,
   },
-  sectionStack: {
-    display: "grid",
-    gap: 26,
-  },
-  sectionBlock: {
-    display: "grid",
-    gap: 14,
-  },
-  sectionTitle: {
-    color: "#ff8b8b",
-    fontSize: 13,
-    fontWeight: 900,
-    letterSpacing: "0.14em",
-    textTransform: "uppercase",
-  },
-  foodCard: {
-    overflow: "hidden",
+  productCard: {
     borderRadius: 24,
-    border: "1px solid rgba(255,255,255,0.08)",
-    background: "rgba(255,255,255,0.03)",
-    cursor: "pointer",
-    transition: "transform 180ms ease, box-shadow 180ms ease, background 180ms ease",
+    overflow: "hidden",
+    background: "rgba(255,255,255,0.02)",
+    border: `1px solid rgba(214,194,161,0.08)`,
+    boxShadow: "0 18px 34px rgba(0,0,0,0.12)",
+    transition: "transform 160ms ease, border-color 160ms ease, background 160ms ease",
   },
-  foodCardHover: {
-    transform: "translateY(-4px)",
-    boxShadow: "0 20px 35px rgba(0,0,0,0.28)",
-    background: "rgba(255,255,255,0.05)",
-  },
-  imageWrap: {
+  productMedia: {
     position: "relative",
-    aspectRatio: "4 / 3",
+    aspectRatio: "1.45 / 1",
     overflow: "hidden",
   },
-  image: {
+  productImage: {
     width: "100%",
     height: "100%",
     objectFit: "cover",
     display: "block",
   },
-  popularBadge: {
+  priceTag: {
     position: "absolute",
-    top: 14,
-    left: 14,
+    right: 14,
+    bottom: 14,
+    padding: "8px 12px",
+    borderRadius: 999,
+    background: "rgba(17,17,17,0.82)",
+    color: PALETTE.text,
+    fontWeight: 900,
+    boxShadow: "0 10px 20px rgba(0,0,0,0.18)",
+  },
+  productBody: {
+    padding: 20,
+  },
+  productTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 12,
+    alignItems: "start",
+  },
+  productTitle: {
+    margin: 0,
+    fontSize: 23,
+    lineHeight: 1.18,
+    fontWeight: 800,
+    color: PALETTE.text,
+  },
+  allergenTag: {
+    flexShrink: 0,
     borderRadius: 999,
     padding: "6px 10px",
-    background: "rgba(255, 180, 0, 0.15)",
-    border: "1px solid rgba(255, 180, 0, 0.3)",
-    color: "#ffcb54",
+    background: "rgba(231,215,190,0.08)",
+    color: PALETTE.sand,
     fontSize: 11,
-    fontWeight: 800,
-    textTransform: "uppercase",
+    fontWeight: 700,
   },
-  cardBody: {
-    padding: 18,
+  productDescription: {
+    margin: "12px 0 0",
+    color: PALETTE.muted,
+    lineHeight: 1.7,
+    minHeight: 54,
   },
-  cardHeader: {
-    display: "grid",
-    gap: 8,
-    marginBottom: 10,
+  productMeta: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 18,
+    color: PALETTE.sand,
+    fontSize: 12,
+    fontWeight: 700,
   },
-  cardTitle: {
-    margin: 0,
-    color: "#fff",
-    fontSize: 22,
-    lineHeight: 1.1,
-    fontWeight: 800,
-  },
-  cardPrice: {
-    color: "#ff676f",
-    fontWeight: 900,
-    fontSize: 18,
-  },
-  cardDescription: {
-    color: "rgba(255,247,240,0.7)",
-    lineHeight: 1.6,
-    minHeight: 68,
-  },
-  cardButton: {
+  selectButton: {
     width: "100%",
     minHeight: 52,
-    borderRadius: 999,
+    marginTop: 20,
     border: "none",
-    background: "linear-gradient(135deg, #e63946 0%, #ff6b35 100%)",
-    color: "#fff",
-    fontWeight: 800,
+    borderRadius: 999,
+    background: `linear-gradient(135deg, ${PALETTE.gold} 0%, ${PALETTE.saddle} 100%)`,
+    color: PALETTE.textOnLight,
+    fontWeight: 900,
     cursor: "pointer",
   },
-  skeletonCard: {
-    borderRadius: 24,
-    border: "1px solid rgba(255,255,255,0.08)",
+  drinksPanel: {
+    display: "grid",
+    gap: 18,
+  },
+  drinksInfo: {
+    padding: "18px 20px",
+    borderRadius: 22,
     background: "rgba(255,255,255,0.03)",
-    padding: 18,
+    border: `1px solid rgba(214,194,161,0.08)`,
   },
-  skeletonImage: {
-    aspectRatio: "4 / 3",
-    borderRadius: 18,
-    background: "rgba(255,255,255,0.08)",
-    marginBottom: 14,
+  drinksEyebrow: {
+    color: PALETTE.gold,
+    textTransform: "uppercase",
+    letterSpacing: "0.12em",
+    fontSize: 12,
+    fontWeight: 800,
+    marginBottom: 8,
   },
-  skeletonLineWide: {
-    height: 18,
+  drinksText: {
+    margin: 0,
+    color: PALETTE.muted,
+    lineHeight: 1.75,
+  },
+  drinksGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: 14,
+  },
+  drinkCard: {
+    padding: "18px 18px",
+    borderRadius: 20,
+    background: "rgba(255,255,255,0.03)",
+    border: `1px solid rgba(214,194,161,0.08)`,
+  },
+  drinkName: {
+    color: PALETTE.text,
+    fontWeight: 700,
+    lineHeight: 1.55,
+  },
+  drinkPrice: {
+    marginTop: 8,
+    color: PALETTE.gold,
+    fontWeight: 900,
+  },
+  mobileSummaryBar: {
+    position: "fixed",
+    left: 14,
+    right: 14,
+    bottom: 14,
+    zIndex: 60,
+    borderRadius: 22,
+    padding: "14px 16px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    background: "rgba(30,26,23,0.95)",
+    border: `1px solid rgba(214,194,161,0.12)`,
+    boxShadow: "0 20px 38px rgba(0,0,0,0.25)",
+    backdropFilter: "blur(12px)",
+  },
+  mobileSummaryLabel: {
+    color: PALETTE.muted,
+    fontSize: 12,
+    textTransform: "uppercase",
+    letterSpacing: "0.08em",
+  },
+  mobileSummaryValue: {
+    color: PALETTE.text,
+    fontWeight: 800,
+    marginTop: 4,
+  },
+  mobileSummaryButton: {
+    minHeight: 48,
+    padding: "0 18px",
+    border: "none",
     borderRadius: 999,
-    background: "rgba(255,255,255,0.08)",
-    marginBottom: 10,
-  },
-  skeletonLine: {
-    height: 12,
-    borderRadius: 999,
-    background: "rgba(255,255,255,0.06)",
-    marginBottom: 18,
-  },
-  skeletonButton: {
-    height: 44,
-    borderRadius: 999,
-    background: "rgba(255,255,255,0.08)",
+    background: `linear-gradient(135deg, ${PALETTE.gold} 0%, ${PALETTE.saddle} 100%)`,
+    color: PALETTE.textOnLight,
+    fontWeight: 900,
+    cursor: "pointer",
+    flexShrink: 0,
   },
   footer: {
     textAlign: "center",
-    color: "rgba(255,247,240,0.65)",
-    padding: "34px 20px 8px",
+    color: PALETTE.muted,
+    padding: "52px 20px 24px",
     fontSize: 14,
   },
   footerBrand: {
     display: "block",
-    color: "#fff",
-    marginBottom: 6,
+    color: PALETTE.text,
+    marginBottom: 8,
     letterSpacing: "0.08em",
-  },
-  footerDirectButton: {
-    marginTop: 18,
-    border: "none",
-    borderRadius: 999,
-    padding: "12px 18px",
-    background: "linear-gradient(135deg, #e63946 0%, #ff7a00 100%)",
-    color: "#fff",
-    fontWeight: 800,
-    cursor: "pointer",
   },
 };
 

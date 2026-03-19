@@ -154,6 +154,8 @@ function App() {
                   <RestaurantPage
                     onDirectOrder={addPizzaToCart}
                     onOpenCart={() => setCartOpen(true)}
+                    cartCount={pizzaCart.reduce((sum, item) => sum + item.quantity, 0)}
+                    cartTotal={pizzaCart.reduce((sum, item) => sum + Number(item.base_price) * item.quantity, 0)}
                   />
                 ) : (
                   <Store watches={watches} addToCart={addToCart} />
