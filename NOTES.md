@@ -273,3 +273,9 @@ podman build -t localhost/seiko-frontend:latest ./client
 
 > 📝 Add new lessons and decisions as you go. Small notes now = big time savings later.
 > Last updated: February 2026
+
+
+## Start app
+podman machine start
+podman-compose up -d db
+npm run dev:pizza

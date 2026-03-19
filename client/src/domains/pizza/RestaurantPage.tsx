@@ -63,21 +63,41 @@ interface RestaurantPageProps {
 const RestaurantPage: React.FC<RestaurantPageProps> = ({ onDirectOrder, onOpenCart }) => {
   const { language } = useLanguage();
   const t = copy[language];
+  const emptyMessage =
+    language === "de"
+      ? "Aktuell sind keine Menueintraege verfuegbar."
+      : "No menu items are available right now.";
   const [items, setItems] = useState<Pizza[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [orderOpen, setOrderOpen] = useState(false);
   const [selectedDoner, setSelectedDoner] = useState<Pizza | null>(null);
   const [isCompact, setIsCompact] = useState(() => window.innerWidth < 960);
 
   useEffect(() => {
     fetch(apiUrl("/api/v1/pizza"))
-      .then((response) => response.json())
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Pizza menu request failed with status ${response.status}`);
+        }
+        return response.json();
+      })
       .then((data: Pizza[]) => {
         setItems(Array.isArray(data) ? data : []);
+        setLoadError(null);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
-  }, []);
+      .catch((error: Error) => {
+        console.error("Pizza menu fetch error:", error);
+        setItems([]);
+        setLoadError(
+          language === "de"
+            ? "Das Menue konnte nicht geladen werden. Bitte pruefe, ob die Pizza-API im Backend laeuft."
+            : "Menu could not be loaded. Please check that the backend pizza API is running."
+        );
+        setLoading(false);
+      });
+  }, [language]);
 
   useEffect(() => {
     const onResize = () => setIsCompact(window.innerWidth < 960);
@@ -160,6 +180,8 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ onDirectOrder, onOpenCa
             title={t.pizzaTitle}
             loading={loading}
             loadingText={t.loading}
+            emptyText={emptyMessage}
+            errorText={loadError}
             items={pizzas}
             onOrder={handleCardOrder}
             buttonText={t.directOrder}
@@ -175,7 +197,9 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ onDirectOrder, onOpenCa
             </div>
             {loading ? (
               <MenuSkeleton />
-            ) : (
+            ) : loadError ? (
+              <p style={styles.errorText}>{loadError}</p>
+            ) : doners.length ? (
               <div style={styles.sectionStack}>
                 {sections.map((section) => (
                   <DonerSection
@@ -188,6 +212,8 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ onDirectOrder, onOpenCa
                   />
                 ))}
               </div>
+            ) : (
+              <p style={styles.loadingText}>{emptyMessage}</p>
             )}
           </div>
         </div>
@@ -222,11 +248,13 @@ const MenuColumn: React.FC<{
   title: string;
   loading: boolean;
   loadingText: string;
+  emptyText: string;
+  errorText: string | null;
   items: Pizza[];
   onOrder: (item: Pizza) => void;
   buttonText: string;
   popularText: string;
-}> = ({ anchor, label, title, loading, loadingText, items, onOrder, buttonText, popularText }) => (
+}> = ({ anchor, label, title, loading, loadingText, emptyText, errorText, items, onOrder, buttonText, popularText }) => (
   <div id={anchor} style={styles.column}>
     <div style={styles.columnHeader}>
       <span style={styles.columnLabel}>{label}</span>
@@ -234,6 +262,8 @@ const MenuColumn: React.FC<{
     </div>
     {loading ? (
       <MenuSkeleton />
+    ) : errorText ? (
+      <p style={styles.errorText}>{errorText}</p>
     ) : items.length ? (
       <div style={styles.cardGrid}>
         {items.map((item) => (
@@ -247,7 +277,7 @@ const MenuColumn: React.FC<{
         ))}
       </div>
     ) : (
-      <p style={styles.loadingText}>{loadingText}</p>
+      <p style={styles.loadingText}>{emptyText || loadingText}</p>
     )}
   </div>
 );
@@ -485,6 +515,11 @@ const styles: Record<string, React.CSSProperties> = {
   },
   loadingText: {
     color: "rgba(255,247,240,0.7)",
+  },
+  errorText: {
+    color: "#ffb3b3",
+    lineHeight: 1.7,
+    maxWidth: 540,
   },
   cardGrid: {
     display: "grid",
