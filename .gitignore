@@ -72,4 +72,4 @@ NUL
 
 # Playwright E2E
 playwright-report/
-test-results/
+test-results/cloud-sql-proxy.exe
