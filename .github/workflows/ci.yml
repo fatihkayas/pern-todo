@@ -335,13 +335,23 @@ jobs:
           AR_HOST="$(printf '%s' '${{ secrets.GCP_AR_HOSTNAME }}' | tr -d '\r\n[:space:]')"
           gcloud auth configure-docker "$AR_HOST" --quiet
 
+      - name: Normalize GCP settings
+        id: gcp_settings
+        run: |
+          GCP_AR_HOSTNAME="$(printf '%s' '${{ secrets.GCP_AR_HOSTNAME }}' | tr -d '\r\n[:space:]')"
+          GCP_PROJECT_ID="$(printf '%s' '${{ secrets.GCP_PROJECT_ID }}' | tr -d '\r\n[:space:]')"
+          GCP_REGION="$(printf '%s' '${{ secrets.GCP_REGION }}' | tr -d '\r\n[:space:]')"
+          AR_REPO="${GCP_AR_HOSTNAME}/${GCP_PROJECT_ID}/seiko"
+          echo "ar_host=${GCP_AR_HOSTNAME}" >> "$GITHUB_OUTPUT"
+          echo "project_id=${GCP_PROJECT_ID}" >> "$GITHUB_OUTPUT"
+          echo "region=${GCP_REGION}" >> "$GITHUB_OUTPUT"
+          echo "ar_repo=${AR_REPO}" >> "$GITHUB_OUTPUT"
+
       - name: Resolve GCP deploy URLs
         id: gcp_urls
         run: |
-          GCP_REGION="$(printf '%s' '${{ secrets.GCP_REGION }}' | tr -d '\r\n[:space:]')"
-          GCP_PROJECT_ID="$(printf '%s' '${{ secrets.GCP_PROJECT_ID }}' | tr -d '\r\n[:space:]')"
-          BACKEND_URL="$(gcloud run services describe seiko-backend --region "$GCP_REGION" --project "$GCP_PROJECT_ID" --format='value(status.url)')"
-          FRONTEND_URL="$(gcloud run services describe seiko-frontend --region "$GCP_REGION" --project "$GCP_PROJECT_ID" --format='value(status.url)')"
+          BACKEND_URL="$(gcloud run services describe seiko-backend --region "${{ steps.gcp_settings.outputs.region }}" --project "${{ steps.gcp_settings.outputs.project_id }}" --format='value(status.url)')"
+          FRONTEND_URL="$(gcloud run services describe seiko-frontend --region "${{ steps.gcp_settings.outputs.region }}" --project "${{ steps.gcp_settings.outputs.project_id }}" --format='value(status.url)')"
           echo "backend_url=${BACKEND_URL}" >> "$GITHUB_OUTPUT"
           echo "frontend_url=${FRONTEND_URL}" >> "$GITHUB_OUTPUT"
 
@@ -351,8 +361,8 @@ jobs:
           context: ./server
           push: true
           tags: |
-            ${{ secrets.GCP_AR_HOSTNAME }}/${{ secrets.GCP_PROJECT_ID }}/seiko/backend:latest
-            ${{ secrets.GCP_AR_HOSTNAME }}/${{ secrets.GCP_PROJECT_ID }}/seiko/backend:${{ github.sha }}
+            ${{ steps.gcp_settings.outputs.ar_repo }}/backend:latest
+            ${{ steps.gcp_settings.outputs.ar_repo }}/backend:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -365,33 +375,25 @@ jobs:
             REACT_APP_API_URL=${{ steps.gcp_urls.outputs.backend_url }}
             REACT_APP_STRIPE_PUBLISHABLE_KEY=${{ secrets.GCP_STRIPE_PUBLISHABLE_KEY }}
           tags: |
-            ${{ secrets.GCP_AR_HOSTNAME }}/${{ secrets.GCP_PROJECT_ID }}/seiko/frontend:latest
-            ${{ secrets.GCP_AR_HOSTNAME }}/${{ secrets.GCP_PROJECT_ID }}/seiko/frontend:${{ github.sha }}
+            ${{ steps.gcp_settings.outputs.ar_repo }}/frontend:latest
+            ${{ steps.gcp_settings.outputs.ar_repo }}/frontend:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Deploy backend to Cloud Run
         run: |
-          GCP_AR_HOSTNAME="$(printf '%s' '${{ secrets.GCP_AR_HOSTNAME }}' | tr -d '\r\n[:space:]')"
-          GCP_PROJECT_ID="$(printf '%s' '${{ secrets.GCP_PROJECT_ID }}' | tr -d '\r\n[:space:]')"
-          GCP_REGION="$(printf '%s' '${{ secrets.GCP_REGION }}' | tr -d '\r\n[:space:]')"
-          AR="${GCP_AR_HOSTNAME}/${GCP_PROJECT_ID}/seiko"
           gcloud run deploy seiko-backend \
-            --image ${AR}/backend:${{ github.sha }} \
-            --region "$GCP_REGION" \
-            --project "$GCP_PROJECT_ID" \
+            --image ${{ steps.gcp_settings.outputs.ar_repo }}/backend:${{ github.sha }} \
+            --region "${{ steps.gcp_settings.outputs.region }}" \
+            --project "${{ steps.gcp_settings.outputs.project_id }}" \
             --quiet
 
       - name: Deploy frontend to Cloud Run
         run: |
-          GCP_AR_HOSTNAME="$(printf '%s' '${{ secrets.GCP_AR_HOSTNAME }}' | tr -d '\r\n[:space:]')"
-          GCP_PROJECT_ID="$(printf '%s' '${{ secrets.GCP_PROJECT_ID }}' | tr -d '\r\n[:space:]')"
-          GCP_REGION="$(printf '%s' '${{ secrets.GCP_REGION }}' | tr -d '\r\n[:space:]')"
-          AR="${GCP_AR_HOSTNAME}/${GCP_PROJECT_ID}/seiko"
           gcloud run deploy seiko-frontend \
-            --image ${AR}/frontend:${{ github.sha }} \
-            --region "$GCP_REGION" \
-            --project "$GCP_PROJECT_ID" \
+            --image ${{ steps.gcp_settings.outputs.ar_repo }}/frontend:${{ github.sha }} \
+            --region "${{ steps.gcp_settings.outputs.region }}" \
+            --project "${{ steps.gcp_settings.outputs.project_id }}" \
             --quiet
 
       - name: Smoke test GCP services
