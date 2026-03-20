@@ -19,7 +19,7 @@
 | v3.0.0 | Phase 6 — Event-Driven Integration Platform (Go + Kafka) | ✅ Released |
 | v3.1.0 | Phase 6.1 — GCP Terraform + CI Rebuild + Test Expansion | ✅ Released |
 | v3.2.0 | Phase 6.2 — AWS ECS + RDS Production Deployment (Terraform) | ✅ Released |
-| v3.3.0 | Phase 6.3 — GCP Cloud Run + Cloud SQL Deployment | 📋 Planned |
+| v3.3.0 | Phase 6.3 — GCP Cloud Run + Cloud SQL Deployment | ✅ Released |
 | v3.4.0 | Phase 6.4 — Resilience Layer | ✅ Released |
 | v3.5.0 | Phase 6.5 — Integration Observability | ✅ Released |
 | v3.6.0 | Phase 6.6 — Chaos Engineering | ✅ Released |
@@ -227,7 +227,7 @@ seiko_integration     → Go microservice          :8083 (host) / :8080 (interna
 
 **Deliverable:** Release v3.2.0 ✅
 
-### 6.3 — GCP Cloud Run + Cloud SQL Deployment 📋 Planned
+### 6.3 — GCP Cloud Run + Cloud SQL Deployment ✅ Done
 
 - [x] Terraform root module — `infra/gcp/main.tf` (Cloud Run + Cloud SQL + Artifact Registry)
 - [x] GCP module: `artifact_registry/` — container registry + lifecycle policies
@@ -235,10 +235,14 @@ seiko_integration     → Go microservice          :8083 (host) / :8080 (interna
 - [x] GCP module: `cloud_run/` — Cloud Run service, IAM bindings, traffic splitting
 - [x] Workload Identity Federation — GitHub Actions OIDC (no long-lived keys)
 - [x] Secret Manager — DB password, Stripe keys, JWT secret
-- [ ] `terraform apply` — deploy all GCP resources
-- [ ] Push container images to Artifact Registry
-- [ ] Run DB migrations against Cloud SQL
-- [ ] Verify app running on Cloud Run URL
+- [x] `terraform apply` — 32 GCP resources deployed (europe-west1)
+- [x] Container images pushed to Artifact Registry
+- [x] DB migrations + seed ran against Cloud SQL via Cloud SQL Auth Proxy
+- [x] CORS configured via `CORS_ORIGIN` env var on Cloud Run backend
+- [x] Frontend built with `REACT_APP_API_URL` pointing to Cloud Run backend
+- [x] App live: frontend `https://seiko-frontend-90422197529.europe-west1.run.app` · backend `https://seiko-backend-90422197529.europe-west1.run.app`
+
+**Deliverable:** Release v3.3.0 ✅
 
 ### 6.4 — Resilience Layer ✅ Done
 - [x] Retry + exponential backoff on Kafka consumer (1s → 2s → 4s, 3 attempts)
