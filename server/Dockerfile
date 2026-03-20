@@ -5,4 +5,4 @@ RUN npm install
 COPY . .
 RUN npm run build
 EXPOSE 8080
-CMD ["sh", "-c", "npx sequelize-cli db:migrate && node dist/index.js"]
+CMD ["sh", "-c", "npx sequelize-cli db:migrate --config config/config.js && node dist/index.js"]
