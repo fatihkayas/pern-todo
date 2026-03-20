@@ -30,7 +30,7 @@
 
 ---
 
-## Current Stack (v3.7.0)
+## Current Stack (v3.3.0)
 
 | Layer | Technology | Status |
 | --- | --- | --- |
@@ -57,7 +57,7 @@
 | ServiceNow Adapter | Go (adapters/servicenow.go) | ✅ Running |
 | AWS Terraform | ECS Fargate + RDS + ALB live · eu-central-1 | ✅ Deployed |
 | Azure Terraform | Container Apps + PostgreSQL live · westeurope | ✅ Deployed |
-| GCP Terraform | Cloud Run · Cloud SQL · Artifact Registry (written, not deployed) | 📋 Ready |
+| GCP Terraform | Cloud Run · Cloud SQL · Artifact Registry live · europe-west1 | ✅ Deployed |
 | CI/CD (rebuilt) | GitHub Actions (218-line pipeline) | ✅ Running |
 
 ### Running Services
@@ -411,7 +411,7 @@ seiko_integration     → Go microservice          :8083 (host) / :8080 (interna
 | Mar–May 2026 | Phase 6 | v3.0.0 | ✅ Redpanda, Go integration-service, ServiceNow adapter |
 | Mar–Apr 2026 | Phase 6.1 | v3.1.0 | ✅ GCP Terraform (Cloud Run · Cloud SQL · AR), CI rebuild, 100 backend + 44 RTL + 23 E2E tests |
 | Apr 2026 | Phase 6.2 | v3.2.0 | ✅ AWS ECS Fargate + RDS live on ALB (eu-central-1), Unsplash image URLs, config.ts same-origin routing |
-| Apr 2026 | Phase 6.3 | v3.3.0 | 📋 GCP Cloud Run + Cloud SQL deploy (`terraform apply`) |
+| Mar 2026 | Phase 6.3 | v3.3.0 | ✅ GCP Cloud Run + Cloud SQL live (europe-west1), CORS fix, Stripe secret, migration fix |
 | Apr 2026 | Phase 6.4 | v3.4.0 | ✅ Resilience: retry, circuit breaker, idempotency, DLQ, graceful shutdown |
 | Apr 2026 | Phase 6.5 | v3.5.0 | ✅ Integration observability: Grafana dashboard, Prometheus scrape, 4 alert rules |
 | Apr 2026 | Phase 6.6 | v3.6.0 | ✅ Chaos engineering: SERVICENOW_CHAOS_FAILURE_RATE, 10 consumer_test.go tests |
@@ -430,10 +430,10 @@ seiko_integration     → Go microservice          :8083 (host) / :8080 (interna
 4. **Event-driven in practice** — Kafka producer (TypeScript) + Go consumer + ServiceNow adapter. Running services, not diagrams.
 5. **Multi-language architecture** — TypeScript backend, Go integration service, Terraform IaC
 6. **AI integration with real operational impact** — Claude agent with Tool Use, multi-model strategy, AGENTS.md + GEMINI.md
-7. **Multi-cloud strategy** — Azure deployed, AWS in progress, same app — different cloud
+7. **Multi-cloud strategy** — Azure, AWS, and GCP all deployed with the same app — Terraform per provider
 8. **Disciplined progression** — no skipping, certifications aligned to phases
 
 ---
 
 > Living document — updated after each sprint.
-> Last updated: March 2026 · v3.2.0 Released (AWS ECS live) · Phases 6.0–6.7 complete (v3.0.0–v3.7.0) · v3.2.0 retroactively completed · Next: Phase 6.3 (GCP Cloud Run terraform apply)
+> Last updated: March 2026 · v3.3.0 Released (GCP Cloud Run + Cloud SQL live) · All Phase 6 sub-phases complete · Next: Phase 7 (v4.0.0 — AWS MSK + Azure EventHub)
