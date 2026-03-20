@@ -46,6 +46,17 @@ const copy = {
   },
 } as const;
 
+const ranchPalette = {
+  dark: "#1a1a1a",
+  leather: "#6bbbae",
+  beige: "#ffffff",
+  sand: "#f7f6f3",
+  border: "#e2e0d8",
+  text: "#1a1a1a",
+  secondaryText: "#6b6b6b",
+  lightText: "#ffffff",
+};
+
 const Navbar = ({ userDisplayName, cartCount, logout, onCartClick }: NavbarProps) => {
   const { isDark, toggle } = useTheme();
   const { language, setLanguage } = useLanguage();
@@ -64,40 +75,56 @@ const Navbar = ({ userDisplayName, cartCount, logout, onCartClick }: NavbarProps
     return (
       <header className="fixed-top shadow-sm">
         <div
-          className="text-white py-2 px-4 d-flex justify-content-between align-items-center small"
-          style={{ letterSpacing: "0.08em", background: "#1b1212", borderBottom: "1px solid #332020" }}
+          className="py-2 px-4 d-flex justify-content-between align-items-center small"
+          style={{
+            letterSpacing: "0.08em",
+            background: ranchPalette.dark,
+            borderBottom: "1px solid rgba(231,215,190,0.18)",
+            color: ranchPalette.lightText,
+          }}
         >
-          <div>Direktbestellung mit Schritt-für-Schritt Konfiguration</div>
+          <div>Direktbestellung mit Schritt-fuer-Schritt Konfiguration</div>
           <div className="d-flex gap-3 align-items-center">
             <span>DE</span>
             <span>Lieferung ab 20 Min.</span>
           </div>
         </div>
 
-        <nav className="navbar p-3" style={{ background: "rgba(10, 10, 10, 0.95)", backdropFilter: "blur(14px)" }}>
+        <nav
+          className="navbar p-3"
+          style={{
+            background: "rgba(245, 239, 230, 0.94)",
+            backdropFilter: "blur(14px)",
+            borderBottom: `1px solid ${ranchPalette.border}`,
+          }}
+        >
           <div className="container-fluid d-flex justify-content-between align-items-center">
-            <Link className="navbar-brand fw-bold fs-4 m-0 text-white" to="/" style={{ letterSpacing: "0.08em" }}>
-              RANCH-TRADE
+            <Link
+              className="navbar-brand fw-bold fs-4 m-0"
+              to="/"
+              style={{ letterSpacing: "0.08em", color: ranchPalette.text }}
+            >
+              RANCH KEBAB
             </Link>
 
             <div className="d-none d-lg-flex gap-4">
-              <a className="nav-link fw-semibold text-uppercase small text-white" href="#menu-top">Speisekarte</a>
-              <a className="nav-link fw-semibold text-uppercase small text-white" href="#doener">Döner</a>
-              <a className="nav-link fw-semibold text-uppercase small text-white" href="#vegetarisch">Vegetarisch</a>
-              <a className="nav-link fw-semibold text-uppercase small text-white" href="#falafel">Falafel</a>
-              <a className="nav-link fw-semibold text-uppercase small text-white" href="#salateBeilagen">Salate & Beilagen</a>
-              <a className="nav-link fw-semibold text-uppercase small text-white" href="#menu-top">Bestellen</a>
+              <a className="nav-link fw-semibold text-uppercase small" href="/speisekarte.png" target="_blank" rel="noopener noreferrer" style={{ color: ranchPalette.secondaryText }}>Speisekarte</a>
+              <a className="nav-link fw-semibold text-uppercase small" href="/#menu-top" style={{ color: ranchPalette.leather }}>Bestellen</a>
             </div>
 
             <div className="d-flex align-items-center gap-3">
-              <button className="btn btn-link p-0 text-white" onClick={toggle} style={{ fontSize: "1.2rem" }}>
-                {isDark ? "Sonne" : "Mond"}
-              </button>
 
-              <div className="position-relative text-white" style={{ cursor: "pointer" }} onClick={handleCart}>
-                <span style={{ fontSize: "1.4rem" }}>Warenkorb</span>
+              <div
+                className="position-relative"
+                style={{ cursor: "pointer", color: ranchPalette.text }}
+                onClick={handleCart}
+              >
+                <span style={{ fontSize: "1.4rem", fontWeight: 700 }}>Warenkorb</span>
                 {cartCount > 0 && (
-                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white">
+                  <span
+                    className="position-absolute top-0 start-100 translate-middle badge rounded-pill border border-white"
+                    style={{ background: ranchPalette.leather }}
+                  >
                     {cartCount}
                   </span>
                 )}

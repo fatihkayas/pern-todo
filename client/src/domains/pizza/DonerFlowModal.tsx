@@ -15,7 +15,26 @@ interface DonerFlowModalProps {
   onAddToCart: (item: PizzaCartItem) => void;
 }
 
-type StepKey = "side" | "sauces" | "drink" | "summary";
+type StepKey = "side" | "sauces" | "drink" | "extra" | "summary";
+
+const friesExtras = [
+  { id: "none", name: "Keine Pommes", price: 0 },
+  { id: "pommes-klein", name: "Pommes Klein", price: 3 },
+  { id: "pommes-gross", name: "Pommes Gross", price: 5 },
+];
+
+const palette = {
+  overlay: "rgba(42,31,24,0.34)",
+  modalTop: "#F8F2EA",
+  modalBottom: "#EFE3D3",
+  card: "#FFFFFF",
+  border: "#E5D6C2",
+  text: "#2A1F18",
+  secondaryText: "#5C4A3E",
+  muted: "#8A7A6A",
+  leather: "#8B5E3C",
+  gold: "#C1863B",
+};
 
 const DonerFlowModal: React.FC<DonerFlowModalProps> = ({
   item,
@@ -30,21 +49,24 @@ const DonerFlowModal: React.FC<DonerFlowModalProps> = ({
     if (item.flow.sideRequired) nextSteps.push("side");
     if (item.flow.saucesIncluded > 0) nextSteps.push("sauces");
     if (item.flow.drinkOptional) nextSteps.push("drink");
+    if (item.categoryId === "doener") nextSteps.push("extra");
     nextSteps.push("summary");
     return nextSteps;
-  }, [item.flow.drinkOptional, item.flow.saucesIncluded, item.flow.sideRequired]);
+  }, [item.categoryId, item.flow.drinkOptional, item.flow.saucesIncluded, item.flow.sideRequired]);
 
   const [stepIndex, setStepIndex] = React.useState(0);
   const [side, setSide] = React.useState<{ name: string; price: number } | null>(null);
   const [selectedSauces, setSelectedSauces] = React.useState<MenuSauceOption[]>([]);
   const [drink, setDrink] = React.useState<MenuDrinkItem | null>(null);
+  const [extra, setExtra] = React.useState<{ name: string; price: number } | null>(null);
   const [isCompact, setIsCompact] = React.useState(() => window.innerWidth < 960);
 
   const currentStep = steps[stepIndex];
   const basePrice = item.price;
   const sidePrice = side?.price ?? 0;
   const drinkPrice = drink?.price ?? 0;
-  const total = basePrice + sidePrice + drinkPrice;
+  const extraPrice = extra?.price ?? 0;
+  const total = basePrice + sidePrice + drinkPrice + extraPrice;
 
   React.useEffect(() => {
     const onResize = () => setIsCompact(window.innerWidth < 960);
@@ -86,6 +108,8 @@ const DonerFlowModal: React.FC<DonerFlowModalProps> = ({
         toppings: [],
         side: side?.name,
         sidePrice,
+        extra: extra?.price ? extra.name : undefined,
+        extraPrice,
         sauces: selectedSauces.map((entry) => entry.name),
         drink: drink?.name,
         drinkPrice,
@@ -97,7 +121,7 @@ const DonerFlowModal: React.FC<DonerFlowModalProps> = ({
   return (
     <div style={styles.overlay} onClick={onClose}>
       <div style={styles.modal} onClick={(event) => event.stopPropagation()}>
-        <button style={styles.closeButton} onClick={onClose} aria-label="Schließen">
+        <button style={styles.closeButton} onClick={onClose} aria-label="Schliessen">
           x
         </button>
 
@@ -108,7 +132,12 @@ const DonerFlowModal: React.FC<DonerFlowModalProps> = ({
           }}
         >
           <div>
-            <div style={styles.progressRow}>
+            <div
+              style={{
+                ...styles.progressRow,
+                gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))`,
+              }}
+            >
               {steps.map((step, index) => (
                 <div key={step} style={styles.progressItem}>
                   <div
@@ -131,7 +160,7 @@ const DonerFlowModal: React.FC<DonerFlowModalProps> = ({
             </div>
 
             {currentStep === "side" ? (
-              <StepCard title="Wähle eine Beilage" subtitle="Bitte entscheide dich für Pommes oder Reis.">
+              <StepCard title="Waehle eine Beilage" subtitle="Bitte entscheide dich fuer Pommes oder Reis.">
                 <OptionGrid>
                   {item.flow.sideOptions?.map((option) => (
                     <ChoiceButton
@@ -144,7 +173,7 @@ const DonerFlowModal: React.FC<DonerFlowModalProps> = ({
                 </OptionGrid>
                 <ActionRow>
                   <GhostButton onClick={goBack} disabled={stepIndex === 0}>
-                    Zurück
+                    Zurueck
                   </GhostButton>
                   <PrimaryButton onClick={goNext} disabled={!side}>
                     Weiter
@@ -155,8 +184,8 @@ const DonerFlowModal: React.FC<DonerFlowModalProps> = ({
 
             {currentStep === "sauces" ? (
               <StepCard
-                title="Wähle bis zu 3 Soßen"
-                subtitle={`Du kannst bis zu ${Math.min(maxFreeSauces, item.flow.saucesIncluded)} Soßen kostenlos auswählen.`}
+                title="Waehle bis zu 3 Sossen"
+                subtitle={`Du kannst bis zu ${Math.min(maxFreeSauces, item.flow.saucesIncluded)} Sossen kostenlos auswaehlen.`}
               >
                 <OptionGrid>
                   {sauces.map((option) => {
@@ -176,7 +205,7 @@ const DonerFlowModal: React.FC<DonerFlowModalProps> = ({
                   })}
                 </OptionGrid>
                 <ActionRow>
-                  <GhostButton onClick={goBack}>Zurück</GhostButton>
+                  <GhostButton onClick={goBack}>Zurueck</GhostButton>
                   <PrimaryButton onClick={goNext}>Weiter</PrimaryButton>
                 </ActionRow>
               </StepCard>
@@ -184,8 +213,8 @@ const DonerFlowModal: React.FC<DonerFlowModalProps> = ({
 
             {currentStep === "drink" ? (
               <StepCard
-                title="Getränk hinzufügen?"
-                subtitle="Wähle optional einen Softdrink. Der Preis wird direkt zum Gesamtbetrag addiert."
+                title="Getraenk hinzufuegen?"
+                subtitle="Waehle optional einen Softdrink. Der Preis wird direkt zum Gesamtbetrag addiert."
               >
                 <OptionGrid>
                   {drinks.map((entry) => (
@@ -198,27 +227,52 @@ const DonerFlowModal: React.FC<DonerFlowModalProps> = ({
                   ))}
                 </OptionGrid>
                 <ActionRow>
-                  <GhostButton onClick={goBack}>Zurück</GhostButton>
-                  <GhostButton onClick={goNext}>Ohne Getränk weiter</GhostButton>
+                  <GhostButton onClick={goBack}>Zurueck</GhostButton>
+                  <GhostButton onClick={goNext}>Ohne Getraenk weiter</GhostButton>
+                  <PrimaryButton onClick={goNext}>Weiter</PrimaryButton>
+                </ActionRow>
+              </StepCard>
+            ) : null}
+
+            {currentStep === "extra" ? (
+              <StepCard
+                title="Pommes dazu?"
+                subtitle="Du kannst optional eine kleine oder grosse Portion Pommes zum Menue dazunehmen."
+              >
+                <OptionGrid>
+                  {friesExtras.map((entry) => (
+                    <ChoiceButton
+                      key={entry.id}
+                      label={entry.price ? `${entry.name} · ${formatEuro(entry.price)}` : entry.name}
+                      active={(extra?.name ?? "Keine Pommes") === entry.name}
+                      onClick={() =>
+                        setExtra(entry.price ? { name: entry.name, price: entry.price } : null)
+                      }
+                    />
+                  ))}
+                </OptionGrid>
+                <ActionRow>
+                  <GhostButton onClick={goBack}>Zurueck</GhostButton>
                   <PrimaryButton onClick={goNext}>Weiter</PrimaryButton>
                 </ActionRow>
               </StepCard>
             ) : null}
 
             {currentStep === "summary" ? (
-              <StepCard title="Bestellübersicht" subtitle="Prüfe deine Auswahl und lege den Artikel in den Warenkorb.">
+              <StepCard title="Bestelluebersicht" subtitle="Pruefe deine Auswahl und lege den Artikel in den Warenkorb.">
                 <div style={{ ...styles.summaryBoxMobile, display: isCompact ? "grid" : "none" }}>
                   <SummaryList
                     itemName={item.name}
                     basePrice={basePrice}
                     side={side}
+                    extra={extra}
                     sauces={selectedSauces}
                     drink={drink}
                     total={total}
                   />
                 </div>
                 <ActionRow>
-                  <GhostButton onClick={goBack}>Zurück</GhostButton>
+                  <GhostButton onClick={goBack}>Zurueck</GhostButton>
                   <PrimaryButton onClick={addToCart}>In den Warenkorb</PrimaryButton>
                 </ActionRow>
               </StepCard>
@@ -232,6 +286,7 @@ const DonerFlowModal: React.FC<DonerFlowModalProps> = ({
                 itemName={item.name}
                 basePrice={basePrice}
                 side={side}
+                extra={extra}
                 sauces={selectedSauces}
                 drink={drink}
                 total={total}
@@ -260,19 +315,21 @@ const SummaryList: React.FC<{
   itemName: string;
   basePrice: number;
   side: { name: string; price: number } | null;
+  extra: { name: string; price: number } | null;
   sauces: MenuSauceOption[];
   drink: MenuDrinkItem | null;
   total: number;
-}> = ({ itemName, basePrice, side, sauces, drink, total }) => (
+}> = ({ itemName, basePrice, side, extra, sauces, drink, total }) => (
   <div style={styles.summaryBox}>
     <SummaryRow label="Basis" value={itemName} amount={basePrice} />
     <SummaryRow label="Beilage" value={side?.name ?? "Keine"} amount={side?.price ?? 0} />
+    <SummaryRow label="Extra" value={extra?.name ?? "Kein Extra"} amount={extra?.price ?? 0} />
     <SummaryRow
-      label="Soßen"
+      label="Sossen"
       value={sauces.length ? sauces.map((entry) => entry.name).join(", ") : "Keine"}
       amount={0}
     />
-    <SummaryRow label="Getränk" value={drink?.name ?? "Kein Getränk"} amount={drink?.price ?? 0} />
+    <SummaryRow label="Getraenk" value={drink?.name ?? "Kein Getraenk"} amount={drink?.price ?? 0} />
     <SummaryRow label="Gesamt" value={formatEuro(total)} strong />
   </div>
 );
@@ -345,25 +402,27 @@ function stepLabel(step: StepKey) {
     case "side":
       return "Beilage";
     case "sauces":
-      return "Soßen";
+      return "Sossen";
     case "drink":
-      return "Getränk";
+      return "Getraenk";
+    case "extra":
+      return "Extra";
     case "summary":
-      return "Übersicht";
+      return "Uebersicht";
     default:
       return step;
   }
 }
 
 function formatEuro(price: number) {
-  return `${price.toFixed(2).replace(".", ",")} €`;
+  return `${price.toFixed(2).replace(".", ",")} EUR`;
 }
 
 const styles: Record<string, React.CSSProperties> = {
   overlay: {
     position: "fixed",
     inset: 0,
-    background: "rgba(0,0,0,0.78)",
+    background: palette.overlay,
     backdropFilter: "blur(6px)",
     display: "flex",
     alignItems: "center",
@@ -377,9 +436,9 @@ const styles: Record<string, React.CSSProperties> = {
     maxHeight: "92vh",
     overflowY: "auto",
     borderRadius: 28,
-    background: "linear-gradient(180deg, #171010 0%, #090909 100%)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    boxShadow: "0 30px 80px rgba(0,0,0,0.45)",
+    background: `linear-gradient(180deg, ${palette.modalTop} 0%, ${palette.modalBottom} 100%)`,
+    border: `1px solid ${palette.border}`,
+    boxShadow: "0 28px 80px rgba(42,31,24,0.18)",
     padding: "28px 24px",
     position: "relative",
   },
@@ -389,10 +448,10 @@ const styles: Record<string, React.CSSProperties> = {
     right: 14,
     width: 38,
     height: 38,
-    border: "1px solid rgba(255,255,255,0.12)",
+    border: `1px solid ${palette.border}`,
     borderRadius: 999,
-    background: "transparent",
-    color: "#fff",
+    background: "rgba(255,255,255,0.86)",
+    color: palette.text,
     cursor: "pointer",
   },
   modalGrid: {
@@ -414,28 +473,28 @@ const styles: Record<string, React.CSSProperties> = {
     width: 34,
     height: 34,
     borderRadius: 999,
-    border: "1px solid rgba(255,255,255,0.12)",
+    border: `1px solid ${palette.border}`,
     display: "grid",
     placeItems: "center",
-    color: "rgba(255,255,255,0.55)",
+    color: palette.muted,
     fontWeight: 800,
-    background: "rgba(255,255,255,0.04)",
+    background: "#FFF9F3",
   },
   progressDotActive: {
-    background: "linear-gradient(135deg, #e63946 0%, #ff6b35 100%)",
+    background: palette.leather,
     color: "#fff",
     border: "none",
   },
   progressLabel: {
     fontSize: 12,
-    color: "rgba(255,255,255,0.65)",
+    color: palette.muted,
     textAlign: "center",
   },
   header: {
     marginBottom: 20,
   },
   kicker: {
-    color: "#ff7a00",
+    color: palette.gold,
     textTransform: "uppercase",
     letterSpacing: "0.18em",
     fontSize: 12,
@@ -443,24 +502,24 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 10,
   },
   title: {
-    color: "#fff",
+    color: palette.text,
     margin: 0,
     fontSize: 32,
     fontWeight: 900,
   },
   description: {
-    color: "rgba(255,255,255,0.7)",
+    color: palette.secondaryText,
     margin: "10px 0 0",
     lineHeight: 1.7,
   },
   stepTitle: {
-    color: "#fff",
+    color: palette.text,
     fontSize: 24,
     margin: "0 0 6px",
     fontWeight: 800,
   },
   stepSubtitle: {
-    color: "rgba(255,255,255,0.64)",
+    color: palette.secondaryText,
     margin: "0 0 18px",
     lineHeight: 1.6,
   },
@@ -471,17 +530,20 @@ const styles: Record<string, React.CSSProperties> = {
   choiceButton: {
     minHeight: 58,
     borderRadius: 18,
-    border: "1px solid rgba(255,255,255,0.08)",
-    background: "rgba(255,255,255,0.03)",
-    color: "#fff",
+    border: `1px solid ${palette.border}`,
+    background: palette.card,
+    color: palette.text,
     textAlign: "left",
     padding: "14px 16px",
     fontWeight: 700,
     cursor: "pointer",
+    boxShadow: "0 8px 20px rgba(42,31,24,0.06)",
+    transition: "all 0.25s ease",
   },
   choiceButtonActive: {
-    border: "1px solid rgba(255,122,0,0.45)",
-    background: "rgba(230,57,70,0.18)",
+    border: `1px solid ${palette.leather}`,
+    background: "#F8EFE5",
+    boxShadow: "0 12px 26px rgba(139,94,60,0.14)",
   },
   choiceButtonDisabled: {
     opacity: 0.45,
@@ -498,9 +560,9 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: 52,
     padding: "0 18px",
     borderRadius: 999,
-    border: "1px solid rgba(255,255,255,0.12)",
+    border: `1px solid ${palette.leather}`,
     background: "transparent",
-    color: "#fff",
+    color: palette.leather,
     fontWeight: 700,
     cursor: "pointer",
   },
@@ -509,10 +571,11 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "0 22px",
     borderRadius: 999,
     border: "none",
-    background: "linear-gradient(135deg, #e63946 0%, #ff6b35 100%)",
+    background: palette.leather,
     color: "#fff",
     fontWeight: 800,
     cursor: "pointer",
+    boxShadow: "0 12px 26px rgba(139,94,60,0.18)",
   },
   summaryPanel: {
     position: "sticky",
@@ -521,12 +584,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   summaryPanelInner: {
     borderRadius: 24,
-    border: "1px solid rgba(255,255,255,0.08)",
-    background: "rgba(255,255,255,0.04)",
+    border: `1px solid ${palette.border}`,
+    background: "rgba(255,255,255,0.88)",
     padding: 18,
+    boxShadow: "0 12px 30px rgba(42,31,24,0.08)",
   },
   summaryKicker: {
-    color: "#ff8b8b",
+    color: palette.gold,
     textTransform: "uppercase",
     letterSpacing: "0.16em",
     fontSize: 12,
@@ -547,24 +611,24 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "flex-start",
   },
   summaryLabel: {
-    color: "rgba(255,255,255,0.56)",
+    color: palette.muted,
     fontSize: 12,
     textTransform: "uppercase",
     letterSpacing: "0.08em",
     marginBottom: 4,
   },
   summaryValue: {
-    color: "#fff",
+    color: palette.text,
     fontWeight: 700,
     lineHeight: 1.5,
   },
   summaryStrong: {
-    color: "#ffb2a3",
+    color: palette.leather,
     fontWeight: 900,
     fontSize: 18,
   },
   summaryAmount: {
-    color: "#fff",
+    color: palette.text,
     fontWeight: 700,
     whiteSpace: "nowrap",
   },

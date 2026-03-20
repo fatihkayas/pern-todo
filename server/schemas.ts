@@ -58,8 +58,12 @@ export const createPizzaOrderSchema = z.object({
           size: z.string().min(1),
           toppings: z.array(z.string()).default([]),
           side: z.string().optional(),
+          sidePrice: z.coerce.number().min(0).optional(),
+          extra: z.string().optional(),
+          extraPrice: z.coerce.number().min(0).optional(),
           sauces: z.array(z.string()).optional(),
           drink: z.string().optional(),
+          drinkPrice: z.coerce.number().min(0).optional(),
         }),
       })
     )

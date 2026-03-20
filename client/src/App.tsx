@@ -15,6 +15,7 @@ import MyOrders from "./pages/MyOrders";
 import AdminPanel from "./pages/AdminPanel";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import GoogleAuthCallback from "./pages/GoogleAuthCallback";
 import { ThemeProvider } from "./context/ThemeContext";
 import { LanguageProvider } from "./context/LanguageContext";
 import { Watch, CartItem, Customer, PizzaCartItem } from "./types";
@@ -170,6 +171,7 @@ function App() {
               path="/login"
               element={customer ? <Navigate to="/" /> : <Login onLogin={handleLogin} />}
             />
+            <Route path="/auth/google/callback" element={<GoogleAuthCallback onLogin={handleLogin} />} />
             <Route
               path="/checkout"
               element={

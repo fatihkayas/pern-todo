@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Pizza, PizzaCartItem, PizzaOptions } from "../../types";
+import { Pizza, PizzaCartItem } from "../../types";
 
 interface PizzaCustomizerProps {
   pizza: Pizza;
@@ -7,16 +7,15 @@ interface PizzaCustomizerProps {
   onClose: () => void;
 }
 
-// Boyuta göre fiyat çarpanı
-const SIZE_MULTIPLIER: Record<string, number> = { S: 1.0, M: 1.3, L: 1.6 };
-const SIZE_LABEL: Record<string, string> = { S: "Küçük (25cm)", M: "Orta (30cm)", L: "Büyük (35cm)" };
+const SIZE_MULTIPLIER: Record<string, number> = { S: 1, M: 1.3, L: 1.6 };
+const SIZE_LABEL: Record<string, string> = { S: "Klein (25cm)", M: "Mittel (30cm)", L: "Groß (35cm)" };
 
 const PizzaCustomizer: React.FC<PizzaCustomizerProps> = ({ pizza, onClose, onAdd }) => {
-  const [size, setSize] = useState<PizzaOptions["size"]>("M");
+  const [size, setSize] = useState<string>(pizza.sizes[0] || "M");
   const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
 
   const basePrice = parseFloat(pizza.base_price);
-  const finalPrice = (basePrice * SIZE_MULTIPLIER[size]).toFixed(2);
+  const finalPrice = (basePrice * (SIZE_MULTIPLIER[size] || 1)).toFixed(2);
 
   const toggleTopping = (topping: string) => {
     setSelectedToppings((prev) =>
@@ -35,56 +34,52 @@ const PizzaCustomizer: React.FC<PizzaCustomizerProps> = ({ pizza, onClose, onAdd
   };
 
   return (
-    // Karartılmış arka plan (overlay)
     <div style={styles.overlay} onClick={onClose}>
       <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <button style={styles.closeBtn} onClick={onClose}>✕</button>
+        <button style={styles.closeBtn} onClick={onClose}>x</button>
 
         <h2 style={styles.title}>{pizza.name}</h2>
         <p style={styles.desc}>{pizza.description}</p>
 
-        {/* Boyut seçimi */}
         <section style={styles.section}>
-          <h4 style={styles.sectionTitle}>Boyut Seç</h4>
+          <h4 style={styles.sectionTitle}>Größe wählen</h4>
           <div style={styles.sizeRow}>
-            {(pizza.sizes as string[]).map((s) => (
+            {(pizza.sizes as string[]).map((entry) => (
               <button
-                key={s}
-                style={{ ...styles.sizeBtn, ...(size === s ? styles.sizeBtnActive : {}) }}
-                onClick={() => setSize(s as PizzaOptions["size"])}
+                key={entry}
+                style={{ ...styles.sizeBtn, ...(size === entry ? styles.sizeBtnActive : {}) }}
+                onClick={() => setSize(entry)}
               >
-                <strong>{s}</strong>
-                <span style={{ fontSize: 11 }}>{SIZE_LABEL[s]}</span>
+                <strong>{entry}</strong>
+                <span style={{ fontSize: 11 }}>{SIZE_LABEL[entry] || entry}</span>
                 <span style={{ color: "#c0392b", fontWeight: 700 }}>
-                  ${(basePrice * SIZE_MULTIPLIER[s]).toFixed(2)}
+                  ${(basePrice * (SIZE_MULTIPLIER[entry] || 1)).toFixed(2)}
                 </span>
               </button>
             ))}
           </div>
         </section>
 
-        {/* Topping seçimi */}
         <section style={styles.section}>
-          <h4 style={styles.sectionTitle}>Ekstra Malzeme</h4>
+          <h4 style={styles.sectionTitle}>Extra Zutaten</h4>
           <div style={styles.toppingGrid}>
-            {(pizza.toppings as string[]).map((t) => (
-              <label key={t} style={styles.toppingLabel}>
+            {(pizza.toppings as string[]).map((entry) => (
+              <label key={entry} style={styles.toppingLabel}>
                 <input
                   type="checkbox"
-                  checked={selectedToppings.includes(t)}
-                  onChange={() => toggleTopping(t)}
+                  checked={selectedToppings.includes(entry)}
+                  onChange={() => toggleTopping(entry)}
                 />
-                {t}
+                {entry}
               </label>
             ))}
           </div>
         </section>
 
-        {/* Özet + Ekle butonu */}
         <div style={styles.footer}>
-          <span style={styles.total}>Toplam: <strong>${finalPrice}</strong></span>
+          <span style={styles.total}>Gesamt: <strong>${finalPrice}</strong></span>
           <button style={styles.addBtn} onClick={handleAdd}>
-            Sepete Ekle
+            In den Warenkorb
           </button>
         </div>
       </div>

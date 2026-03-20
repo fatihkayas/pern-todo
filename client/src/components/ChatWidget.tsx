@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { apiUrl } from "../config";
+import { IS_PIZZA } from "../config/branding";
 
 interface Message {
   role: "user" | "assistant";
@@ -32,12 +33,13 @@ const styles: { [key: string]: React.CSSProperties } = {
     right: "24px",
     width: "360px",
     height: "500px",
+    maxHeight: "calc(100vh - 120px)",
     background: "#fff",
     borderRadius: "16px",
     boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
     display: "flex",
     flexDirection: "column",
-    zIndex: 1000,
+    zIndex: 1060,
     overflow: "hidden",
     fontFamily: "Arial, sans-serif",
   },
@@ -125,7 +127,7 @@ const styles: { [key: string]: React.CSSProperties } = {
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Hi! I'm your Seiko store assistant. How can I help you today?" },
+    { role: "assistant", content: IS_PIZZA ? "Hallo! Wie kann ich dir heute helfen?" : "Hi! I'm your Seiko store assistant. How can I help you today?" },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -148,41 +150,56 @@ export default function ChatWidget() {
     setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
     try {
-      const postRes = await fetch(apiUrl("/api/v1/chat"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
-        }),
-      });
+      if (IS_PIZZA) {
+        // Direct Ollama call — no Trigger.dev needed
+        const res = await fetch(apiUrl("/api/v1/restaurant-chat"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })) }),
+        });
+        if (!res.ok) throw new Error("Chat nicht verfügbar");
+        const data = (await res.json()) as { text: string };
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { role: "assistant", content: data.text };
+          return updated;
+        });
+      } else {
+        const postRes = await fetch(apiUrl("/api/v1/chat"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
+          }),
+        });
 
-      if (!postRes.ok) throw new Error("Chat request failed");
+        if (!postRes.ok) throw new Error("Chat request failed");
 
-      const { runId } = (await postRes.json()) as { runId: string };
+        const { runId } = (await postRes.json()) as { runId: string };
 
-      // Poll until the job completes
-      let text = "";
-      for (let i = 0; i < 120; i++) {
-        await new Promise((r) => setTimeout(r, 1000));
-        const pollRes = await fetch(apiUrl(`/api/v1/chat/${runId}`));
-        const poll = (await pollRes.json()) as { status: string; text?: string };
-        if (poll.status === "COMPLETED" || poll.status === "FAILED") {
-          text = poll.text ?? "Sorry, something went wrong. Please try again.";
-          break;
+        let responseText = "";
+        for (let i = 0; i < 120; i++) {
+          await new Promise((r) => setTimeout(r, 1000));
+          const pollRes = await fetch(apiUrl(`/api/v1/chat/${runId}`));
+          const poll = (await pollRes.json()) as { status: string; text?: string };
+          if (poll.status === "COMPLETED" || poll.status === "FAILED") {
+            responseText = poll.text ?? "Sorry, something went wrong. Please try again.";
+            break;
+          }
         }
-      }
 
-      setMessages((prev) => {
-        const updated = [...prev];
-        updated[updated.length - 1] = { role: "assistant", content: text || "No response received." };
-        return updated;
-      });
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { role: "assistant", content: responseText || "No response received." };
+          return updated;
+        });
+      }
     } catch (_err) {
       setMessages((prev) => {
         const updated = [...prev];
         updated[updated.length - 1] = {
           role: "assistant",
-          content: "Sorry, something went wrong. Please try again.",
+          content: IS_PIZZA ? "Entschuldigung, der Assistent ist gerade nicht erreichbar." : "Sorry, something went wrong. Please try again.",
         };
         return updated;
       });
@@ -211,8 +228,8 @@ export default function ChatWidget() {
       {open && (
         <div style={styles.window}>
           <div style={styles.header}>
-            <span>⌚</span>
-            <span>Seiko Assistant</span>
+            <span>{IS_PIZZA ? "🥙" : "⌚"}</span>
+            <span>{IS_PIZZA ? "Ranch Kebab Assistent" : "Seiko Assistant"}</span>
           </div>
 
           <div style={styles.messages}>

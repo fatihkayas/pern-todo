@@ -58,6 +58,8 @@ export interface PizzaOptions {
   toppings: string[];
   side?: string;
   sidePrice?: number;
+  extra?: string;
+  extraPrice?: number;
   sauces?: string[];
   drink?: string;
   drinkPrice?: number;
@@ -100,6 +102,7 @@ export interface RestaurantMenuItem {
   name: string;
   price: number;
   description: string;
+  tags?: string[];
   allergens?: string[];
   image_url?: string;
   categoryId: string;
