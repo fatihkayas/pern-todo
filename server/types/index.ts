@@ -19,10 +19,10 @@ export interface Customer {
   customer_id: number;
   email: string;
   full_name: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  country?: string;
+  phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  country?: string | null;
   is_admin: boolean;
   password_hash?: string;
 }

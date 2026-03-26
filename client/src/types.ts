@@ -17,6 +17,11 @@ export interface Customer {
   customer_id: number;
   email: string;
   full_name: string;
+  phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  country?: string | null;
+  isProfileCompleted?: boolean;
 }
 
 export type OrderStatus =

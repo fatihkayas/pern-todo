@@ -11,6 +11,11 @@ const JWT_SECRET = process.env.JWT_SECRET || "seiko_secret_key_change_in_prod";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
+type PublicCustomer = Pick<
+  Customer,
+  "customer_id" | "email" | "full_name" | "phone" | "address" | "city" | "country"
+>;
+
 function getFrontendUrl() {
   return (process.env.FRONTEND_URL || "http://localhost:3000").replace(/\/+$/, "");
 }
@@ -32,6 +37,23 @@ function createAuthToken(customer: Pick<Customer, "customer_id" | "email">) {
   return jwt.sign({ customer_id: customer.customer_id, email: customer.email }, JWT_SECRET, {
     expiresIn: "7d",
   });
+}
+
+function isCustomerProfileCompleted(customer: Partial<PublicCustomer>) {
+  return Boolean(
+    customer.full_name?.trim() &&
+    customer.email?.trim() &&
+    customer.phone?.trim() &&
+    customer.address?.trim() &&
+    customer.city?.trim()
+  );
+}
+
+function serializeCustomer(customer: PublicCustomer) {
+  return {
+    ...customer,
+    isProfileCompleted: isCustomerProfileCompleted(customer),
+  };
 }
 
 function redirectToFrontend(res: Response, params: Record<string, string>) {
@@ -94,8 +116,8 @@ router.post("/register", validate(registerSchema), async (req: Request, res: Res
       return;
     }
     const password_hash = await bcrypt.hash(password, 10);
-    const result = await pool.query<Pick<Customer, "customer_id" | "email" | "full_name">>(
-      "INSERT INTO customers (email, full_name, password_hash, phone, address, city, country) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING customer_id, email, full_name",
+    const result = await pool.query<PublicCustomer>(
+      "INSERT INTO customers (email, full_name, password_hash, phone, address, city, country) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING customer_id, email, full_name, phone, address, city, country",
       [
         email,
         full_name,
@@ -108,7 +130,7 @@ router.post("/register", validate(registerSchema), async (req: Request, res: Res
     );
     const customer = result.rows[0];
     const token = createAuthToken(customer);
-    res.status(201).json({ token, customer });
+    res.status(201).json({ token, customer: serializeCustomer(customer) });
   } catch (err) {
     console.error("Register error:", (err as Error).message);
     res.status(500).json({ error: "Kayıt hatası" });
@@ -161,11 +183,15 @@ router.post("/login", validate(loginSchema), async (req: Request, res: Response)
     const token = createAuthToken(customer);
     res.json({
       token,
-      customer: {
+      customer: serializeCustomer({
         customer_id: customer.customer_id,
         email: customer.email,
         full_name: customer.full_name,
-      },
+        phone: customer.phone ?? null,
+        address: customer.address ?? null,
+        city: customer.city ?? null,
+        country: customer.country ?? null,
+      }),
     });
   } catch (err) {
     console.error("Login error:", (err as Error).message);
@@ -258,25 +284,25 @@ router.get("/google/callback", async (req: Request, res: Response) => {
     }
 
     const fullName = userData.name || userData.given_name || userData.email;
-    const existing = await pool.query<Pick<Customer, "customer_id" | "email" | "full_name">>(
-      "SELECT customer_id, email, full_name FROM customers WHERE email = $1",
+    const existing = await pool.query<PublicCustomer>(
+      "SELECT customer_id, email, full_name, phone, address, city, country FROM customers WHERE email = $1",
       [userData.email]
     );
 
-    let customer: Pick<Customer, "customer_id" | "email" | "full_name">;
+    let customer: PublicCustomer;
 
     if (existing.rows.length > 0) {
       customer = existing.rows[0];
       if (customer.full_name !== fullName) {
-        const updated = await pool.query<Pick<Customer, "customer_id" | "email" | "full_name">>(
-          "UPDATE customers SET full_name = $1 WHERE customer_id = $2 RETURNING customer_id, email, full_name",
+        const updated = await pool.query<PublicCustomer>(
+          "UPDATE customers SET full_name = $1 WHERE customer_id = $2 RETURNING customer_id, email, full_name, phone, address, city, country",
           [fullName, customer.customer_id]
         );
         customer = updated.rows[0];
       }
     } else {
-      const created = await pool.query<Pick<Customer, "customer_id" | "email" | "full_name">>(
-        "INSERT INTO customers (email, full_name, password_hash, phone, address, city, country) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING customer_id, email, full_name",
+      const created = await pool.query<PublicCustomer>(
+        "INSERT INTO customers (email, full_name, password_hash, phone, address, city, country) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING customer_id, email, full_name, phone, address, city, country",
         [userData.email, fullName, null, null, null, null, null]
       );
       customer = created.rows[0];
@@ -284,7 +310,7 @@ router.get("/google/callback", async (req: Request, res: Response) => {
 
     redirectToFrontend(res, {
       token: createAuthToken(customer),
-      customer: JSON.stringify(customer),
+      customer: JSON.stringify(serializeCustomer(customer)),
       returnTo,
     });
   } catch (err) {

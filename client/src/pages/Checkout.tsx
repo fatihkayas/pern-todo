@@ -9,6 +9,7 @@ import { IS_PIZZA } from "../config/branding";
 
 const stripePublishableKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
+const stripeAvailable = Boolean(stripePublishableKey);
 const googleAuthUrl = process.env.REACT_APP_GOOGLE_AUTH_URL || apiUrl("/api/v1/auth/google");
 
 interface CheckoutFormProps {
@@ -114,6 +115,10 @@ const initialGuestForm: GuestFormState = {
   orderNote: "",
 };
 
+function normalizeOptionalText(value?: string | null) {
+  return value?.trim() || "";
+}
+
 const Checkout = ({ cart, pizzaCart = [], onOrderSuccess }: CheckoutProps) => {
   const navigate = useNavigate();
   const [clientSecret, setClientSecret] = useState("");
@@ -122,10 +127,32 @@ const Checkout = ({ cart, pizzaCart = [], onOrderSuccess }: CheckoutProps) => {
   const [loading, setLoading] = useState(false);
   const [guestEnabled, setGuestEnabled] = useState(true);
   const [fulfillmentMode, setFulfillmentMode] = useState<FulfillmentMode>("delivery");
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "cash">(stripeAvailable ? "stripe" : "cash");
   const [guestForm, setGuestForm] = useState<GuestFormState>(initialGuestForm);
   const [errors, setErrors] = useState<GuestFormErrors>({});
 
   const token = localStorage.getItem("token");
+  const savedCustomer = React.useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("customer") || "null") as import("../types").Customer | null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (savedCustomer) {
+      setGuestForm((f) => ({
+        ...f,
+        fullName: f.fullName || normalizeOptionalText(savedCustomer.full_name),
+        email: f.email || normalizeOptionalText(savedCustomer.email),
+        phone: f.phone || normalizeOptionalText(savedCustomer.phone),
+        street: f.street || normalizeOptionalText(savedCustomer.address),
+        city: f.city || normalizeOptionalText(savedCustomer.city),
+      }));
+    }
+  }, [savedCustomer]);
+
   const activeItems = IS_PIZZA ? pizzaCart : cart;
   const total = IS_PIZZA
     ? pizzaCart.reduce((sum, item) => sum + Number(item.base_price) * item.quantity, 0)
@@ -138,6 +165,10 @@ const Checkout = ({ cart, pizzaCart = [], onOrderSuccess }: CheckoutProps) => {
   }, [activeItems.length, navigate]);
 
   const isAuthenticated = Boolean(token);
+  const isProfileComplete =
+    Boolean(guestForm.fullName.trim() && guestForm.email.trim() && guestForm.phone.trim()) &&
+    (fulfillmentMode === "pickup" ||
+      Boolean(guestForm.street.trim() && guestForm.postalCode.trim() && guestForm.city.trim()));
 
   const orderSummary = useMemo(
     () =>
@@ -228,72 +259,88 @@ const Checkout = ({ cart, pizzaCart = [], onOrderSuccess }: CheckoutProps) => {
   };
 
   const createOrder = async () => {
-    if (!isAuthenticated) {
-      const valid = validateGuestForm();
-      if (!valid) {
-        toast.error("Bitte prüfe deine Kundendaten.");
-        return;
-      }
+    const valid = validateGuestForm();
+    if (!valid) {
+      toast.error("Bitte prüfe deine Kundendaten.");
+      return;
     }
 
     setLoading(true);
 
     try {
-      const orderRes = await fetch(apiUrl(IS_PIZZA ? "/api/v1/pizza/orders" : "/api/v1/orders"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(
-          IS_PIZZA
-            ? {
-                items: pizzaCart.map((item) => ({
-                  pizza_id: item.pizza_id,
-                  quantity: item.quantity,
-                  unit_price: Number(item.base_price),
-                  options: {
-                    size: item.options.size || "Standard",
-                    toppings: item.options.toppings || [],
-                    side: item.options.side,
-                    sidePrice: item.options.sidePrice,
-                    extra: item.options.extra,
-                    extraPrice: item.options.extraPrice,
-                    sauces: item.options.sauces,
-                    drink: item.options.drink,
-                    drinkPrice: item.options.drinkPrice,
-                  },
-                })),
-                delivery_address: isAuthenticated ? "" : buildAddressPayload(),
-              }
-            : {
-                items: cart.map((item) => ({
-                  watch_id: item.watch_id,
-                  quantity: item.quantity,
-                  unit_price: Number(item.price),
-                })),
-                shipping_address: isAuthenticated ? "" : buildAddressPayload(),
-              }
-        ),
-      });
+      if (IS_PIZZA) {
+        const endpoint = paymentMethod === "cash" ? "/api/v1/pizza/orders" : "/api/v1/pizza/checkout";
+        const res = await fetch(apiUrl(endpoint), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            items: pizzaCart.map((item) => ({
+              pizza_id: item.pizza_id,
+              quantity: item.quantity,
+              unit_price: Number(item.base_price),
+              options: {
+                size: item.options.size || "Standard",
+                toppings: item.options.toppings || [],
+                side: item.options.side,
+                sidePrice: item.options.sidePrice,
+                extra: item.options.extra,
+                extraPrice: item.options.extraPrice,
+                sauces: item.options.sauces,
+                drink: item.options.drink,
+                drinkPrice: item.options.drinkPrice,
+              },
+            })),
+            delivery_address: buildAddressPayload(),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || data.error || "Checkout fehlgeschlagen.");
+        setOrderId(data.order_id);
+        if (paymentMethod === "cash") {
+          // Cash on delivery — skip Stripe, go straight to success
+          setStep("success");
+          onOrderSuccess?.();
+          return;
+        }
+        setClientSecret(data.clientSecret);
+      } else {
+        const orderRes = await fetch(apiUrl("/api/v1/orders"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            items: cart.map((item) => ({
+              watch_id: item.watch_id,
+              quantity: item.quantity,
+              unit_price: Number(item.price),
+            })),
+            shipping_address: buildAddressPayload(),
+          }),
+        });
+        const orderData = await orderRes.json();
+        if (!orderRes.ok) throw new Error(orderData.error || "Bestellung konnte nicht erstellt werden.");
+        setOrderId(orderData.order_id);
 
-      const orderData = await orderRes.json();
-      if (!orderRes.ok) throw new Error(orderData.error || "Bestellung konnte nicht erstellt werden.");
-      setOrderId(orderData.order_id);
+        const payRes = await fetch(apiUrl("/api/v1/stripe/create-payment-intent"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ amount: total, order_id: orderData.order_id, currency: "eur" }),
+        });
+        const payData = await payRes.json();
+        if (!payRes.ok) throw new Error(payData.error || "Zahlung konnte nicht initialisiert werden.");
+        setClientSecret(payData.clientSecret);
+      }
 
-      const payRes = await fetch(apiUrl("/api/v1/stripe/create-payment-intent"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ amount: total, order_id: orderData.order_id, currency: "eur" }),
-      });
-      const payData = await payRes.json();
-      if (!payRes.ok) throw new Error(payData.error || "Zahlung konnte nicht initialisiert werden.");
-
-      setClientSecret(payData.clientSecret);
       setStep("payment");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -311,46 +358,82 @@ const Checkout = ({ cart, pizzaCart = [], onOrderSuccess }: CheckoutProps) => {
       <div style={styles.container}>
         <div style={styles.headerBlock}>
           <div style={styles.kicker}>Ranch Kebab Checkout</div>
-          <h1 style={styles.title}>Kasse ohne Zwang zur Registrierung.</h1>
+          <h1 style={styles.title}>
+            {isAuthenticated ? `Hallo, ${savedCustomer?.full_name?.split(" ")[0] ?? ""}!` : "Kasse ohne Zwang zur Registrierung."}
+          </h1>
           <p style={styles.subtitle}>
-            Melde dich mit Google an oder bestelle einfach als Gast. Dein Checkout bleibt
-            reibungslos, touch-freundlich und klar.
+            {isAuthenticated
+              ? "Du bist angemeldet. Fülle die Lieferdetails aus und schließe deine Bestellung ab."
+              : "Melde dich mit Google an oder bestelle einfach als Gast."}
           </p>
+        </div>
+
+        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 32 }}>
+          {(["details", "payment", "success"] as const).map((s, i) => {
+            const stepIndex = ["details", "payment", "success"].indexOf(step);
+            const done = i < stepIndex;
+            const active = step === s;
+            const labels = ["Kundendaten", "Zahlung", "Bestätigung"];
+            return (
+              <React.Fragment key={s}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{
+                    width: 26, height: 26, borderRadius: "50%",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    background: done ? ranchPalette.yellow : active ? ranchPalette.brown : ranchPalette.border,
+                    color: (done || active) ? "#fff" : ranchPalette.muted,
+                    fontSize: 12, fontWeight: 800,
+                    transition: "background 0.3s",
+                  }}>
+                    {done ? "✓" : i + 1}
+                  </div>
+                  <span style={{
+                    fontSize: 13, fontWeight: active ? 800 : 500,
+                    color: active ? ranchPalette.text : ranchPalette.muted,
+                  }}>
+                    {labels[i]}
+                  </span>
+                </div>
+                {i < 2 && <div style={{ flex: 1, height: 2, borderRadius: 1, background: done ? ranchPalette.yellow : ranchPalette.border, transition: "background 0.3s" }} />}
+              </React.Fragment>
+            );
+          })}
         </div>
 
         {step === "details" && (
           <div style={styles.layout}>
             <div style={styles.mainCard}>
-              <div style={styles.sectionBlock}>
-                <button type="button" style={styles.googleButton} onClick={handleGoogleContinue}>
-                  <GoogleIcon />
-                  <span>Mit Google anmelden</span>
-                </button>
-                <div style={styles.dividerRow}>
-                  <div style={styles.dividerLine} />
-                  <span style={styles.dividerText}>oder</span>
-                  <div style={styles.dividerLine} />
-                </div>
-
-                <button
-                  type="button"
-                  style={{
-                    ...styles.guestButton,
-                    ...(guestEnabled ? styles.guestButtonActive : {}),
-                  }}
-                  onClick={scrollToGuestForm}
-                >
-                  Ohne Konto bestellen
-                </button>
-
-                {isAuthenticated ? (
-                  <div style={styles.loggedInNotice}>
-                    Du bist bereits angemeldet. Kontodaten werden automatisch verwendet, Gast-Checkout bleibt aber weiterhin verfügbar.
+              {!isAuthenticated && (
+                <div style={styles.sectionBlock}>
+                  <button type="button" style={styles.googleButton} onClick={handleGoogleContinue}>
+                    <GoogleIcon />
+                    <span>Mit Google anmelden</span>
+                  </button>
+                  <div style={styles.dividerRow}>
+                    <div style={styles.dividerLine} />
+                    <span style={styles.dividerText}>oder</span>
+                    <div style={styles.dividerLine} />
                   </div>
-                ) : null}
-              </div>
+                  <button
+                    type="button"
+                    style={{ ...styles.guestButton, ...(guestEnabled ? styles.guestButtonActive : {}) }}
+                    onClick={scrollToGuestForm}
+                  >
+                    Ohne Konto bestellen
+                  </button>
+                </div>
+              )}
 
-              {(guestEnabled || !isAuthenticated) && (
+              {isAuthenticated && (
+                <div style={{ ...styles.loggedInNotice, marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span>✓ Angemeldet als <strong>{savedCustomer?.full_name}</strong></span>
+                  <a href="/orders" style={{ fontSize: 13, color: ranchPalette.brown, textDecoration: "none", fontWeight: 700 }}>
+                    Meine Bestellungen →
+                  </a>
+                </div>
+              )}
+
+              {(guestEnabled || isAuthenticated) && (
                 <div id="guest-checkout-form" style={styles.formBlock}>
                   <div style={styles.toggleRow}>
                     <button
@@ -440,9 +523,58 @@ const Checkout = ({ cart, pizzaCart = [], onOrderSuccess }: CheckoutProps) => {
                 </div>
               )}
 
-              <button type="button" style={styles.primaryAction} onClick={createOrder} disabled={loading}>
-                {loading ? "Wird verarbeitet..." : "Bestellung abschließen"}
+              {IS_PIZZA && (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: ranchPalette.text, marginBottom: 10 }}>Zahlungsart</div>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    {stripeAvailable && (
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("stripe")}
+                        style={{
+                          flex: 1, padding: "12px 16px", borderRadius: 14, cursor: "pointer",
+                          border: `2px solid ${paymentMethod === "stripe" ? ranchPalette.yellow : ranchPalette.border}`,
+                          background: paymentMethod === "stripe" ? "rgba(193,134,59,0.08)" : ranchPalette.surface,
+                          fontWeight: 700, fontSize: 13, color: ranchPalette.text,
+                        }}
+                      >
+                        💳 Kreditkarte (Stripe)
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("cash")}
+                      style={{
+                        flex: 1, padding: "12px 16px", borderRadius: 14, cursor: "pointer",
+                        border: `2px solid ${paymentMethod === "cash" ? ranchPalette.yellow : ranchPalette.border}`,
+                        background: paymentMethod === "cash" ? "rgba(193,134,59,0.08)" : ranchPalette.surface,
+                        fontWeight: 700, fontSize: 13, color: ranchPalette.text,
+                      }}
+                    >
+                      💵 Barzahlung bei Lieferung
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {isAuthenticated && !isProfileComplete ? (
+                <div style={{ ...styles.inlineInfo, marginBottom: 12 }}>
+                  Bitte ergÃ¤nze zuerst Name, E-Mail und Telefonnummer
+                  {fulfillmentMode === "delivery" ? " sowie StraÃŸe, Postleitzahl und Stadt" : ""}
+                  , bevor du zur Zahlung gehst.
+                </div>
+              ) : null}
+
+              <button type="button" style={{ ...styles.primaryAction, fontSize: 17, padding: "18px 28px", letterSpacing: "0.03em", opacity: loading || !isProfileComplete ? 0.6 : 1, cursor: loading || !isProfileComplete ? "not-allowed" : "pointer" }} onClick={createOrder} disabled={loading || !isProfileComplete}>
+                {loading ? "Wird verarbeitet..." : paymentMethod === "cash"
+                  ? `Jetzt bestellen · ${formatEuro(total)}`
+                  : `Weiter zur Zahlung · ${formatEuro(total)}`}
               </button>
+              <p style={{ margin: "10px 0 0", fontSize: 12, color: ranchPalette.muted, textAlign: "center" }}>
+                {paymentMethod === "cash"
+                  ? "Zahlung erfolgt in bar bei Lieferung oder Abholung."
+                  : "Sichere Zahlung über Stripe · Keine Registrierung nötig"}
+              </p>
             </div>
 
             <aside style={styles.summaryCard}>
@@ -468,8 +600,11 @@ const Checkout = ({ cart, pizzaCart = [], onOrderSuccess }: CheckoutProps) => {
 
         {step === "payment" && clientSecret && orderId !== null && (
           <div style={styles.paymentCard}>
+            <div style={{ ...styles.loggedInNotice, marginBottom: 24, textAlign: "center", fontSize: 15 }}>
+              Bestellung #{orderId} angelegt · Jetzt bezahlen: <strong>{formatEuro(total)}</strong>
+            </div>
             <div style={styles.sectionBlock}>
-              <SectionTitle title="Zahlungsdetails" subtitle="Stripe verarbeitet deine Zahlung sicher. Ein Konto ist nicht erforderlich." />
+              <SectionTitle title="Jetzt bezahlen" subtitle="Stripe verarbeitet deine Zahlung sicher und verschlüsselt." />
               {!stripePromise ? (
                 <div style={styles.inlineError}>Stripe ist nicht konfiguriert. Bitte REACT_APP_STRIPE_PUBLISHABLE_KEY prüfen.</div>
               ) : (
