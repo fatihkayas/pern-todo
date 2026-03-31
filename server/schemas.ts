@@ -70,3 +70,5 @@ export const createPizzaOrderSchema = z.object({
     .min(1),
   delivery_address: z.string().optional(),
 });
+
+export const pizzaCheckoutSchema = createPizzaOrderSchema;

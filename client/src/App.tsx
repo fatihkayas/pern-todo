@@ -26,12 +26,18 @@ import RestaurantPage from "./domains/pizza/RestaurantPage";
 function App() {
   const [watches, setWatches] = useState<Watch[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [pizzaCart, setPizzaCart] = useState<PizzaCartItem[]>([]);
+  const [pizzaCart, setPizzaCart] = useState<PizzaCartItem[]>(() => {
+    try { return JSON.parse(localStorage.getItem("pizzaCart") || "[]"); } catch { return []; }
+  });
   const [cartOpen, setCartOpen] = useState(false);
   const [customer, setCustomer] = useState<Customer | null>(() => {
     const saved = localStorage.getItem("customer");
     return saved ? (JSON.parse(saved) as Customer) : null;
   });
+
+  useEffect(() => {
+    localStorage.setItem("pizzaCart", JSON.stringify(pizzaCart));
+  }, [pizzaCart]);
 
   useEffect(() => {
     if (IS_PIZZA) {
@@ -60,6 +66,7 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("customer");
+    localStorage.removeItem("pizzaCart");
     setCustomer(null);
     setCart([]);
     setPizzaCart([]);
@@ -181,6 +188,7 @@ function App() {
                   onOrderSuccess={() => {
                     setCart([]);
                     setPizzaCart([]);
+                    localStorage.removeItem("pizzaCart");
                   }}
                 />
               }

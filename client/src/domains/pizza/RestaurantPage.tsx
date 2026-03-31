@@ -32,6 +32,20 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({
 }) => {
   const categories = restaurantMenuData.categories;
   const [selectedItem, setSelectedItem] = React.useState<RestaurantMenuItem | null>(null);
+
+  const featuredItems = React.useMemo(() => {
+    const picks = [1, 5, 17, 21, 8, 23];
+    return picks
+      .map((id) => categories.flatMap((c) => c.items).find((it) => it.id === id))
+      .filter((it): it is RestaurantMenuItem => !!it);
+  }, [categories]);
+  const [carouselIndex, setCarouselIndex] = React.useState(0);
+  React.useEffect(() => {
+    const t = window.setInterval(() => {
+      setCarouselIndex((i) => (i + 1) % featuredItems.length);
+    }, 2800);
+    return () => clearInterval(t);
+  }, [featuredItems.length]);
   const [speisekarteOpen, setSpeisekarteOpen] = React.useState(false);
   const [activeCategoryId, setActiveCategoryId] = React.useState(categories[0]?.id ?? "");
   const [activeItemId, setActiveItemId] = React.useState<number | null>(categories[0]?.items[0]?.id ?? null);
@@ -88,10 +102,10 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({
         <div style={styles.heroContent}>
           <div style={styles.heroTextBlock}>
             <div style={styles.heroEyebrow}>RANCH KEBAB</div>
-            <h1 style={styles.heroTitle}>Kategorie waehlen und nach unten durchscrollen.</h1>
+            <h1 style={styles.heroTitle}>Frisch. Lecker. Jeden Tag.</h1>
             <p style={styles.heroCopy}>
-              Horizontales Schieben ist entfernt. Wenn du auf Doener, Vegetarisch oder eine
-              andere Kategorie klickst, werden alle Produkte direkt darunter angezeigt.
+              Döner, Dürüm, Falafel und mehr — alles frisch zubereitet. Wähle eine Kategorie
+              und bestelle direkt online.
             </p>
             <div style={styles.heroActions}>
               <button style={styles.primaryButton} onClick={() => setSelectedItem(activeProduct ?? null)}>
@@ -107,6 +121,53 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({
           </div>
         </div>
       </section>
+
+      <div style={styles.carouselSection}>
+        <div style={styles.carouselTrack}>
+          {featuredItems.map((item, idx) => {
+            const offset = ((idx - carouselIndex + featuredItems.length) % featuredItems.length);
+            const isCenter = offset === 0;
+            const isLeft = offset === featuredItems.length - 1;
+            const isRight = offset === 1;
+            const visible = isCenter || isLeft || isRight;
+            if (!visible) return null;
+            const xMap = { [featuredItems.length - 1]: "-370px", 0: "0px", 1: "370px" };
+            return (
+              <div
+                key={item.id}
+                style={{
+                  ...styles.carouselCard,
+                  transform: `translateX(${xMap[offset]}) scale(${isCenter ? 1 : 0.82})`,
+                  opacity: isCenter ? 1 : 0.45,
+                  zIndex: isCenter ? 2 : 1,
+                  cursor: "pointer",
+                }}
+                onClick={() => isCenter ? setSelectedItem(item) : setCarouselIndex(idx)}
+              >
+                <div
+                  style={{
+                    ...styles.carouselImg,
+                    backgroundImage: `url(${item.image_url})`,
+                  }}
+                />
+                <div style={styles.carouselBody}>
+                  <div style={styles.carouselName}>{item.name}</div>
+                  <div style={styles.carouselPrice}>{formatEuro(item.price)}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div style={styles.carouselDots}>
+          {featuredItems.map((_, idx) => (
+            <span
+              key={idx}
+              style={{ ...styles.dot, ...(idx === carouselIndex ? styles.dotActive : {}) }}
+              onClick={() => setCarouselIndex(idx)}
+            />
+          ))}
+        </div>
+      </div>
 
       <div id="menu-top" style={styles.pageBody}>
         <div style={styles.stickyCategoryWrap}>
@@ -251,7 +312,7 @@ const styles: Record<string, React.CSSProperties> = {
     inset: "28px 20px auto 20px",
     height: 500,
     borderRadius: 36,
-    background: `linear-gradient(90deg, rgba(247,246,243,0.9) 0%, rgba(247,246,243,0.36) 48%), url(${heroImage}) center / cover no-repeat`,
+    background: `linear-gradient(90deg, rgba(247,246,243,0.9) 0%, rgba(247,246,243,0.36) 48%), url(${heroImage}) top center / cover no-repeat`,
     boxShadow: PALETTE.shadow,
   },
   heroOverlay: {
@@ -546,6 +607,64 @@ const styles: Record<string, React.CSSProperties> = {
     maxHeight: "90vh",
     borderRadius: 18,
     boxShadow: "0 30px 80px rgba(0,0,0,0.2)",
+  },
+  carouselSection: {
+    padding: "40px 0 28px",
+    overflow: "hidden",
+    background: PALETTE.background,
+  },
+  carouselTrack: {
+    position: "relative",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    height: 420,
+  },
+  carouselCard: {
+    position: "absolute",
+    width: 340,
+    borderRadius: 24,
+    background: PALETTE.surface,
+    boxShadow: "0 8px 40px rgba(0,0,0,0.13)",
+    overflow: "hidden",
+    transition: "transform 0.45s cubic-bezier(.4,0,.2,1), opacity 0.45s ease",
+  },
+  carouselImg: {
+    width: "100%",
+    height: 290,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  },
+  carouselBody: {
+    padding: "16px 20px 18px",
+  },
+  carouselName: {
+    fontWeight: 700,
+    fontSize: 14,
+    color: PALETTE.text,
+    marginBottom: 4,
+  },
+  carouselPrice: {
+    fontWeight: 800,
+    fontSize: 15,
+    color: PALETTE.accent,
+  },
+  carouselDots: {
+    display: "flex",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 16,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: "50%",
+    background: PALETTE.border,
+    cursor: "pointer",
+    transition: "background 0.3s",
+  },
+  dotActive: {
+    background: PALETTE.accent,
   },
 };
 

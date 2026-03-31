@@ -231,6 +231,12 @@ const Checkout = ({ cart, pizzaCart = [], onOrderSuccess }: CheckoutProps) => {
     }
 
     setErrors(nextErrors);
+    const firstErrorKey = Object.keys(nextErrors)[0];
+    if (firstErrorKey) {
+      window.setTimeout(() => {
+        document.getElementById(`field-${firstErrorKey}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 0);
+    }
     return Object.keys(nextErrors).length === 0;
   };
 
@@ -458,16 +464,21 @@ const Checkout = ({ cart, pizzaCart = [], onOrderSuccess }: CheckoutProps) => {
                     </button>
                   </div>
 
-                  <SectionTitle title="Kundendaten" subtitle="Ohne Konto bestellen oder als Gast weitermachen." />
+                  <SectionTitle
+                    title={isAuthenticated ? "Lieferdetails" : "Kundendaten"}
+                    subtitle={isAuthenticated ? "Fülle deine Kontaktdaten und Lieferadresse aus." : "Ohne Konto bestellen oder als Gast weitermachen."}
+                  />
 
                   <div style={styles.formGrid}>
                     <Field
+                      id="field-fullName"
                       label="Vollständiger Name"
                       value={guestForm.fullName}
                       onChange={(value) => setField("fullName", value)}
                       error={errors.fullName}
                     />
                     <Field
+                      id="field-email"
                       label="E-Mail"
                       type="email"
                       value={guestForm.email}
@@ -475,6 +486,7 @@ const Checkout = ({ cart, pizzaCart = [], onOrderSuccess }: CheckoutProps) => {
                       error={errors.email}
                     />
                     <Field
+                      id="field-phone"
                       label="Telefonnummer"
                       value={guestForm.phone}
                       onChange={(value) => setField("phone", value)}
@@ -487,18 +499,21 @@ const Checkout = ({ cart, pizzaCart = [], onOrderSuccess }: CheckoutProps) => {
                       <SectionTitle title="Lieferadresse" subtitle="Bitte gib die vollständige Adresse für die Zustellung an." />
                       <div style={styles.formGrid}>
                         <Field
+                          id="field-street"
                           label="Straße und Hausnummer"
                           value={guestForm.street}
                           onChange={(value) => setField("street", value)}
                           error={errors.street}
                         />
                         <Field
+                          id="field-postalCode"
                           label="Postleitzahl"
                           value={guestForm.postalCode}
                           onChange={(value) => setField("postalCode", value)}
                           error={errors.postalCode}
                         />
                         <Field
+                          id="field-city"
                           label="Stadt"
                           value={guestForm.city}
                           onChange={(value) => setField("city", value)}
@@ -655,15 +670,17 @@ function Field({
   onChange,
   error,
   type = "text",
+  id,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   error?: string;
   type?: string;
+  id?: string;
 }) {
   return (
-    <label style={styles.fieldWrap}>
+    <label id={id} style={styles.fieldWrap}>
       <span style={styles.fieldLabel}>{label}</span>
       <input
         type={type}

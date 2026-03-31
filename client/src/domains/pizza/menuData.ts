@@ -18,6 +18,34 @@ const sideOptions = [
   { name: "Reis", price: 0 },
 ];
 
+const itemImages: Record<number, string> = {
+  // Döner (mevcut fotoğraflar)
+  1: "/images/doener-kebab-kalb.jpg",
+  2: "/images/doener-kebab-haehnchen.jpg",
+  3: "/images/doener-kebab-extra-fleisch.jpg",
+  4: "/images/doener-kebab-kaese.jpg",
+
+  // Vegetarisch
+  17: "/images/veggi-doner.jpg",
+  18: "/images/veggi-durum.jpg",
+  19: "/images/veggi-special-teller.jpg",
+  20: "/images/falafel-box.jpg",
+  21: "/images/falafel-im-brot.jpg",
+  22: "/images/falafel-durum.jpg",
+  23: "/images/falafel-teller.jpg",
+  24: "/images/salat-box.jpg",
+  25: "/images/kase-brot.jpg",
+
+  // Vorspeisen
+  31: "/images/zigaretten-boerek.jpg",
+  34: "/images/suesskartoffel-fritten.png",
+  35: "/images/baklava.jpg",
+  36: "/images/zigaretten-boerek.jpg",
+
+  // Softdrinks
+  37: "/images/fritz-kola.jpg",
+};
+
 function item(
   categoryId: string,
   categoryName: string,
@@ -32,7 +60,7 @@ function item(
   return {
     ...data,
     pizza_id: `00000000-0000-4000-8000-${String(data.id).padStart(12, "0")}`,
-    image_url: categoryImages[categoryId],
+    image_url: itemImages[data.id] ?? categoryImages[categoryId],
     categoryId,
     categoryName,
     flow: {

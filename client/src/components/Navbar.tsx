@@ -114,6 +114,33 @@ const Navbar = ({ userDisplayName, cartCount, logout, onCartClick }: NavbarProps
 
             <div className="d-flex align-items-center gap-3">
 
+              {userDisplayName ? (
+                <div className="d-flex align-items-center gap-2">
+                  <span style={{ fontSize: 13, fontWeight: 700, color: ranchPalette.leather }}>
+                    {userDisplayName}
+                  </span>
+                  <Link
+                    to="/orders"
+                    style={{ fontSize: 12, fontWeight: 600, color: ranchPalette.secondaryText, textDecoration: "none" }}
+                  >
+                    Bestellungen
+                  </Link>
+                  <button
+                    onClick={logout}
+                    style={{ fontSize: 12, fontWeight: 600, color: "#c0392b", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                  >
+                    Abmelden
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  style={{ fontSize: 13, fontWeight: 700, color: ranchPalette.secondaryText, textDecoration: "none" }}
+                >
+                  Anmelden
+                </Link>
+              )}
+
               <div
                 className="position-relative"
                 style={{ cursor: "pointer", color: ranchPalette.text }}
