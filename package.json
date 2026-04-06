@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "prepare": "husky",
-    "predev": "podman-compose up -d db ollama adminer prometheus alertmanager grafana redpanda redpanda-console redpanda-init",
-    "dev": "concurrently --kill-others --names \"server,trigger,client\" --prefix-colors \"cyan,magenta,green\" \"cd server && npm run dev\" \"cd server && npx trigger.dev@latest dev\" \"cd client && npm start\"",
+    "predev": "podman stop seiko_backend || true && podman-compose up -d db ollama adminer prometheus alertmanager grafana redpanda redpanda-console redpanda-init",
+    "dev": "concurrently --kill-others --names \"server,client\" --prefix-colors \"cyan,green\" \"cd server && npm run dev\" \"cd client && npm start\"",
+    "dev:trigger": "cd server && npx trigger.dev@4.4.3 dev",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report"
