@@ -39,6 +39,11 @@ export const confirmOrderSchema = z.object({
   order_id: z.number().int().positive(),
 });
 
+export const capturePaypalOrderSchema = z.object({
+  paypal_order_id: z.string().min(1),
+  order_id: z.number().int().positive(),
+});
+
 export const updateOrderStatusSchema = z.object({
   status: z.enum(["pending", "processing", "shipped", "delivered", "cancelled"]),
 });

@@ -19,15 +19,13 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { LanguageProvider } from "./context/LanguageContext";
 import { Watch, CartItem, Customer } from "./types";
 import { apiUrl } from "./config";
+import { clearAuthData, getStoredCustomer } from "./utils/auth";
 
 function App() {
   const [watches, setWatches] = useState<Watch[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
-  const [customer, setCustomer] = useState<Customer | null>(() => {
-    const saved = localStorage.getItem("customer");
-    return saved ? (JSON.parse(saved) as Customer) : null;
-  });
+  const [customer, setCustomer] = useState<Customer | null>(() => getStoredCustomer());
 
   useEffect(() => {
     fetch(apiUrl("/api/v1/watches"))
@@ -50,8 +48,7 @@ function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("customer");
+    clearAuthData();
     setCustomer(null);
     setCart([]);
     toast.success("Logged out. See you soon! 👋");

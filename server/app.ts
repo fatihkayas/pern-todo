@@ -13,6 +13,7 @@ import { httpLogger, correlationMiddleware } from "./middleware/logger";
 import chatRouter from "./routes/chat";
 import checkoutRouter from "./routes/checkout";
 import stripeRouter from "./routes/stripe";
+import paypalRouter from "./routes/paypal";
 import adminRouter from "./routes/admin";
 import authRouter from "./routes/auth";
 import ordersRouter from "./routes/orders";
@@ -122,6 +123,7 @@ app.get("/api/v1/watches", async (_req: Request, res: Response) => {
 });
 
 app.use("/api/v1/stripe", stripeRouter);
+app.use("/api/v1/paypal", paypalRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/orders", ordersRouter);
