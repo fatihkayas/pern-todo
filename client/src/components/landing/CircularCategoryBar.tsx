@@ -1,4 +1,3 @@
-import React from "react";
 import { useLanguage } from "../../context/LanguageContext";
 
 export interface CategoryItem {
@@ -66,7 +65,7 @@ const CircularCategoryBar = ({
               {cat.icon}
             </div>
             <div className="mt-2" style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700 }}>
-              {t[cat.id as keyof typeof t]}
+              {(t as Record<string, string>)[cat.id] ?? cat.id}
             </div>
           </button>
         ))}

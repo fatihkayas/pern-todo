@@ -76,3 +76,8 @@ test-results/
 
 # Local helper binaries
 cloud-sql-proxy.exe
+# Supplier data
+server/scripts/*.csv
+server/scripts/*.xlsx
+server/scripts/*.ods
+cloud-sql-proxy.exe
