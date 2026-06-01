@@ -112,10 +112,54 @@ app.use(metricsMiddleware);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-app.get("/api/v1/watches", async (_req: Request, res: Response) => {
+app.get("/api/v1/watches", async (req: Request, res: Response) => {
+  const category = ((req.query.category as string) || "").trim().toLowerCase();
   try {
-    const result = await pool.query("SELECT * FROM watches ORDER BY watch_id DESC");
+    const result = category
+      ? await pool.query("SELECT * FROM watches WHERE LOWER(category) = $1 ORDER BY watch_name", [
+          category,
+        ])
+      : await pool.query("SELECT * FROM watches ORDER BY watch_id DESC");
     res.json(result.rows);
+  } catch (err) {
+    console.error("DB Error:", (err as Error).message);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+/**
+ * @swagger
+ * /watches/{id}:
+ *   get:
+ *     summary: Get single watch by ID
+ *     tags: [Watches]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Watch object
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Database error
+ */
+app.get("/api/v1/watches/:id", async (req: Request<{ id: string }>, res: Response) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid watch ID" });
+    return;
+  }
+  try {
+    const result = await pool.query("SELECT * FROM watches WHERE watch_id = $1", [id]);
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: "Watch not found" });
+      return;
+    }
+    res.json(result.rows[0]);
   } catch (err) {
     console.error("DB Error:", (err as Error).message);
     res.status(500).json({ error: "Database error" });

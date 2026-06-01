@@ -2,7 +2,12 @@ import express, { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import pool from "../db";
 import validate from "../middleware/validate";
-import { updateOrderStatusSchema, updateStockSchema } from "../schemas";
+import {
+  updateOrderStatusSchema,
+  updateStockSchema,
+  updateWatchSchema,
+  createWatchSchema,
+} from "../schemas";
 import { tasks } from "@trigger.dev/sdk/v3";
 import { AuthPayload } from "../types";
 
@@ -157,15 +162,146 @@ router.put(
  *       403:
  *         description: Not an admin
  */
-// GET /api/admin/watches
-router.get("/watches", adminAuth, async (_req: Request, res: Response) => {
+// GET /api/admin/watches?page=1&limit=50&search=casio&brand=Seiko
+router.get("/watches", adminAuth, async (req: Request, res: Response) => {
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
+  const limit = Math.min(200, Math.max(1, parseInt(req.query.limit as string) || 50));
+  const search = ((req.query.search as string) || "").trim();
+  const brand = ((req.query.brand as string) || "").trim();
+  const offset = (page - 1) * limit;
+
+  const conditions: string[] = [];
+  const params: (string | number)[] = [];
+  let idx = 1;
+
+  if (search) {
+    conditions.push(
+      `(LOWER(watch_name) LIKE $${idx} OR LOWER(model_code) LIKE $${idx} OR LOWER(brand) LIKE $${idx})`
+    );
+    params.push(`%${search.toLowerCase()}%`);
+    idx++;
+  }
+  if (brand) {
+    conditions.push(`brand = $${idx}`);
+    params.push(brand);
+    idx++;
+  }
+
+  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+
   try {
-    const result = await pool.query("SELECT * FROM watches ORDER BY watch_name");
-    res.json(result.rows);
+    const [dataResult, countResult] = await Promise.all([
+      pool.query(
+        `SELECT * FROM watches ${where} ORDER BY watch_name LIMIT $${idx} OFFSET $${idx + 1}`,
+        [...params, limit, offset]
+      ),
+      pool.query(`SELECT COUNT(*) AS total FROM watches ${where}`, params),
+    ]);
+
+    const total = parseInt(countResult.rows[0].total, 10);
+    res.json({
+      watches: dataResult.rows,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+    });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
 });
+
+// PUT /api/admin/watches/:id — update any watch fields (image, description, price, etc.)
+router.put(
+  "/watches/:id",
+  adminAuth,
+  validate(updateWatchSchema),
+  async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id as string, 10);
+    if (isNaN(id)) {
+      res.status(400).json({ error: "Invalid ID" });
+      return;
+    }
+
+    const fields = req.body as Record<string, unknown>;
+    const allowed = [
+      "watch_name",
+      "brand",
+      "model_code",
+      "price",
+      "stock_quantity",
+      "image_url",
+      "description",
+      "category",
+    ];
+    const setClauses: string[] = [];
+    const values: unknown[] = [];
+    let i = 1;
+
+    for (const key of allowed) {
+      if (key in fields && fields[key] !== undefined) {
+        setClauses.push(`${key} = $${i++}`);
+        values.push(fields[key] === "" ? null : fields[key]);
+      }
+    }
+
+    if (setClauses.length === 0) {
+      res.status(400).json({ error: "No fields to update" });
+      return;
+    }
+    values.push(id);
+
+    try {
+      const result = await pool.query(
+        `UPDATE watches SET ${setClauses.join(", ")} WHERE watch_id = $${i} RETURNING *`,
+        values
+      );
+      if (result.rows.length === 0) {
+        res.status(404).json({ error: "Watch not found" });
+        return;
+      }
+      res.json(result.rows[0]);
+    } catch (err) {
+      res.status(500).json({ error: (err as Error).message });
+    }
+  }
+);
+
+// POST /api/admin/watches — create new watch
+router.post(
+  "/watches",
+  adminAuth,
+  validate(createWatchSchema),
+  async (req: Request, res: Response) => {
+    const { brand, watch_name, model_code, price, stock_quantity, image_url, description } =
+      req.body as {
+        brand: string;
+        watch_name: string;
+        model_code?: string;
+        price: number;
+        stock_quantity: number;
+        image_url?: string;
+        description?: string;
+      };
+    try {
+      const result = await pool.query(
+        `INSERT INTO watches (brand, watch_name, model_code, price, stock_quantity, image_url, description)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+        [
+          brand,
+          watch_name,
+          model_code || null,
+          price,
+          stock_quantity ?? 0,
+          image_url || null,
+          description || null,
+        ]
+      );
+      res.status(201).json(result.rows[0]);
+    } catch (err) {
+      res.status(500).json({ error: (err as Error).message });
+    }
+  }
+);
 
 /**
  * @swagger

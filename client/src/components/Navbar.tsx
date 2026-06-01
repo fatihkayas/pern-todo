@@ -9,13 +9,13 @@ interface NavbarProps {
   onCartClick: () => void;
 }
 
-const WATCH_CATEGORIES: { label: string; search: string; sub?: string[] }[] = [
-  { label: "Automatik",   search: "automatic" },
-  { label: "Chronograph", search: "chrono" },
-  { label: "Taucher",     search: "diver" },
-  { label: "Sport",       search: "sport" },
-  { label: "Klassik",     search: "classic" },
-  { label: "Luxus",       search: "luxury", sub: ["TAG Heuer", "Longines", "MIDO", "Gucci"] },
+const WATCH_CATEGORIES: { label: string; category: string; sub?: string[] }[] = [
+  { label: "Automatik",   category: "automatic" },
+  { label: "Chronograph", category: "chronograph" },
+  { label: "Taucher",     category: "diver" },
+  { label: "Sport",       category: "sport" },
+  { label: "Klassik",     category: "classic" },
+  { label: "Luxus",       category: "luxury", sub: ["TAG Heuer", "Longines", "MIDO", "Gucci"] },
 ];
 
 const Navbar = ({ userDisplayName, cartCount, logout, onCartClick }: NavbarProps) => {
@@ -233,7 +233,7 @@ const Navbar = ({ userDisplayName, cartCount, logout, onCartClick }: NavbarProps
         {WATCH_CATEGORIES.map((cat) => (
           <div key={cat.label} style={{ position: "relative" }} className="cat-item">
             <Link
-              to="/uhren"
+              to={`/uhren?category=${cat.category}`}
               style={{
                 fontFamily: "'Jost', sans-serif",
                 fontSize: "0.7rem",
@@ -270,7 +270,7 @@ const Navbar = ({ userDisplayName, cartCount, logout, onCartClick }: NavbarProps
                 {cat.sub.map((brand) => (
                   <Link
                     key={brand}
-                    to="/uhren"
+                    to={`/uhren?brand=${encodeURIComponent(brand)}`}
                     style={{
                       display: "block",
                       padding: "7px 20px",

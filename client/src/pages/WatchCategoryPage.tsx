@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Watch } from "../types";
 import PromoBanner from "../components/shop/PromoBanner";
 import CategoryHeader from "../components/shop/CategoryHeader";
@@ -15,37 +16,75 @@ interface WatchCategoryPageProps {
 
 const PER_PAGE = 24;
 
+const CATEGORY_LABELS: Record<string, string> = {
+  automatic: "Automatik",
+  chronograph: "Chronograph",
+  diver: "Taucher",
+  sport: "Sport",
+  classic: "Klassik",
+  luxury: "Luxus",
+};
+
 const WatchCategoryPage = ({ watches, addToCart }: WatchCategoryPageProps) => {
+  const [searchParams] = useSearchParams();
+
+  // URL params set by Navbar category clicks
+  const urlCategory = searchParams.get("category") || ""; // e.g. "automatic"
+  const urlBrand    = searchParams.get("brand")    || ""; // e.g. "TAG Heuer"
+
   const [filters, setFilters] = useState<ShopFilters>({
-    brand: "all",
+    brand: urlBrand || "all",
     priceMin: 0,
-    priceMax: 1000,
+    priceMax: 2000,
     inStockOnly: false,
   });
-  const [sort, setSort] = useState<SortOption>("relevanz");
-  const [view, setView] = useState<ViewMode>("grid");
-  const [page, setPage] = useState(1);
+  const [sort, setSort]   = useState<SortOption>("relevanz");
+  const [view, setView]   = useState<ViewMode>("grid");
+  const [page, setPage]   = useState(1);
 
-  // Sorted unique brand list
+  // Re-sync whenever the user navigates to a different category via Navbar
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, brand: urlBrand || "all" }));
+    setPage(1);
+  }, [urlCategory, urlBrand]);
+
+  // --- Unique brand list derived from the *currently visible* watches --------
   const brands = useMemo(() => {
+    // When a category is active, only show brands present in that category
+    const base = urlCategory
+      ? watches.filter((w) => w.category === urlCategory)
+      : watches;
     const map = new Map<string, number>();
-    for (const w of watches) {
+    for (const w of base) {
       const b = (w.brand || "").trim();
       if (b) map.set(b, (map.get(b) ?? 0) + 1);
     }
     return Array.from(map.entries())
       .sort((a, b) => b[1] - a[1])
       .map(([brand]) => brand);
-  }, [watches]);
+  }, [watches, urlCategory]);
 
-  // Filtered + sorted
+  // --- Filtering + sorting --------------------------------------------------
   const processed = useMemo(() => {
     let result = watches.filter((w) => {
       const price = parseFloat(w.price) || 0;
       const brand = (w.brand || "").trim();
+
+      // Navbar category filter (uses DB category column)
+      if (urlCategory && w.category !== urlCategory) return false;
+
+      // Navbar brand filter (Luxus sub-brands)
+      if (urlBrand && brand !== urlBrand) return false;
+
+      // Sidebar brand filter
       if (filters.brand !== "all" && brand !== filters.brand) return false;
+
+      // Price range
       if (price < filters.priceMin || price > filters.priceMax) return false;
+
+      // In-stock only
       if (filters.inStockOnly && (w.stock_quantity ?? 0) === 0) return false;
+
       return true;
     });
 
@@ -62,60 +101,49 @@ const WatchCategoryPage = ({ watches, addToCart }: WatchCategoryPageProps) => {
     }
 
     return result;
-  }, [watches, filters, sort]);
+  }, [watches, filters, sort, urlCategory, urlBrand]);
 
-  // Paginated slice
+  // --- Pagination -----------------------------------------------------------
   const paginated = useMemo(
     () => processed.slice((page - 1) * PER_PAGE, page * PER_PAGE),
     [processed, page]
   );
 
-  const handleFilterChange = (f: ShopFilters) => {
-    setFilters(f);
-    setPage(1);
-  };
+  const handleFilterChange = (f: ShopFilters) => { setFilters(f); setPage(1); };
+  const handleBrandSelect  = (brand: string)  => { setFilters((p) => ({ ...p, brand })); setPage(1); };
 
-  const handleBrandSelect = (brand: string) => {
-    setFilters((prev) => ({ ...prev, brand }));
-    setPage(1);
-  };
+  // --- Page title -----------------------------------------------------------
+  const pageTitle = urlBrand
+    ? urlBrand
+    : urlCategory
+      ? (CATEGORY_LABELS[urlCategory] ?? urlCategory)
+      : "Uhren";
+
+  const breadcrumb = [
+    { label: "Home", href: "/" },
+    { label: "Uhren", href: "/uhren" },
+    ...(urlCategory || urlBrand ? [{ label: pageTitle }] : []),
+  ];
 
   return (
     <div style={{ background: "var(--brand-light)", minHeight: "100vh", paddingTop: 136 }}>
-      <PromoBanner
-        message="Kostenloser Versand ab €150 Bestellwert"
-        code="GRATIS150"
-      />
+      <PromoBanner message="Kostenloser Versand ab €150 Bestellwert" code="GRATIS150" />
 
       <CategoryHeader
-        title="Uhren"
+        title={pageTitle}
         subtitle="Entdecken Sie unsere exklusive Kollektion aus über 24 Marken"
         count={processed.length}
-        breadcrumb={[
-          { label: "Home", href: "/" },
-          { label: "Uhren" },
-        ]}
+        breadcrumb={breadcrumb}
       />
 
       <div className="container-fluid px-3 px-md-4 py-3">
-        {/* Brand bar */}
-        <BrandBar
-          brands={brands}
-          selected={filters.brand}
-          onSelect={handleBrandSelect}
-        />
+        <BrandBar brands={brands} selected={filters.brand} onSelect={handleBrandSelect} />
 
         <div className="row g-4 mt-1">
-          {/* Sidebar — hidden on mobile */}
           <div className="col-12 col-md-3 col-lg-2 d-none d-md-block">
-            <FilterSidebar
-              brands={brands}
-              filters={filters}
-              onChange={handleFilterChange}
-            />
+            <FilterSidebar brands={brands} filters={filters} onChange={handleFilterChange} />
           </div>
 
-          {/* Main */}
           <div className="col-12 col-md-9 col-lg-10">
             <SortToolbar
               count={processed.length}
@@ -128,10 +156,17 @@ const WatchCategoryPage = ({ watches, addToCart }: WatchCategoryPageProps) => {
             {paginated.length === 0 ? (
               <div
                 className="d-flex flex-column align-items-center justify-content-center py-5"
-                style={{ color: "#aaa", fontFamily: "'Jost', sans-serif" }}
+                style={{ color: "#aaa", fontFamily: "'Jost', sans-serif", gap: 8 }}
               >
-                <span style={{ fontSize: "2rem" }}>⌚</span>
-                <p className="mt-2 mb-0">Keine Artikel für diese Filter gefunden.</p>
+                <span style={{ fontSize: "2.5rem" }}>⌚</span>
+                <p style={{ margin: 0, fontSize: "0.85rem" }}>
+                  Keine Artikel für diese Kategorie gefunden.
+                </p>
+                {urlCategory && (
+                  <p style={{ margin: 0, fontSize: "0.75rem", color: "#ccc" }}>
+                    Kategorie: {pageTitle} — Bitte zuerst die Migration ausführen.
+                  </p>
+                )}
               </div>
             ) : view === "list" ? (
               <div className="mt-3">

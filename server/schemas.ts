@@ -51,3 +51,24 @@ export const updateOrderStatusSchema = z.object({
 export const updateStockSchema = z.object({
   stock_quantity: z.coerce.number().int().min(0),
 });
+
+export const updateWatchSchema = z.object({
+  watch_name: z.string().min(1).optional(),
+  brand: z.string().min(1).optional(),
+  model_code: z.string().optional(),
+  price: z.coerce.number().positive().optional(),
+  stock_quantity: z.coerce.number().int().min(0).optional(),
+  image_url: z.string().url().or(z.literal("")).optional(),
+  description: z.string().optional(),
+  category: z.enum(["automatic", "chronograph", "diver", "sport", "classic", "luxury"]).optional(),
+});
+
+export const createWatchSchema = z.object({
+  brand: z.string().min(1),
+  watch_name: z.string().min(1),
+  model_code: z.string().optional(),
+  price: z.coerce.number().positive(),
+  stock_quantity: z.coerce.number().int().min(0).default(0),
+  image_url: z.string().url().or(z.literal("")).optional(),
+  description: z.string().optional(),
+});

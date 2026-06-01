@@ -7,6 +7,7 @@ export interface Watch {
   stock_quantity: number;
   description?: string;
   model_code?: string;
+  category?: string;
 }
 
 export interface CartItem extends Watch {
