@@ -1,20 +1,20 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "../../context/LanguageContext";
 
 const copy = {
   en: {
-    kicker: "SEIKO + TISSOT CURATED COLLECTION",
-    title: "Precision Meets Heritage.",
-    subtitle: "Explore premium automatic and classic watches designed for timeless performance.",
-    ctaPrimary: "Shop Collection",
-    ctaSecondary: "Discover Story",
+    kicker: "RANCH WATCHES — MULTI-BRAND COLLECTION",
+    title: "Time, Crafted for You.",
+    subtitle: "Over 3,900 watches across 24 premium brands. Automatic, chronograph, diver and classic — curated for every wrist.",
+    ctaPrimary: "Shop All Watches",
+    ctaSecondary: "Browse by Brand",
   },
   de: {
-    kicker: "SEIKO + TISSOT KURATIERTE KOLLEKTION",
-    title: "Präzision trifft Tradition.",
-    subtitle: "Entdecken Sie Premium-Automatik- und klassische Uhren mit zeitloser Performance.",
-    ctaPrimary: "Kollektion ansehen",
-    ctaSecondary: "Story entdecken",
+    kicker: "RANCH WATCHES — MULTI-MARKEN KOLLEKTION",
+    title: "Zeit, für Sie gemacht.",
+    subtitle: "Über 3.900 Uhren von 24 Premium-Marken. Automatik, Chronograph, Taucher und Klassik — kuratiert für jedes Handgelenk.",
+    ctaPrimary: "Alle Uhren ansehen",
+    ctaSecondary: "Nach Marke stöbern",
   },
 } as const;
 

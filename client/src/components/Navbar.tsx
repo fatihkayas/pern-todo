@@ -1,6 +1,5 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useTheme } from "../context/ThemeContext";
+import { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
 
 interface NavbarProps {
@@ -10,151 +9,343 @@ interface NavbarProps {
   onCartClick: () => void;
 }
 
-const copy = {
-  en: {
-    promo: "15% off all Seiko models | Free Shipping",
-    support: "Customer Support: 0850 ...",
-    store: "Store",
-    about: "About",
-    contact: "Contact",
-    brands: "Brands",
-    automatic: "Automatic",
-    sport: "Sport",
-    classic: "Classic",
-    deals: "Deals",
-    account: "My Account",
-    logout: "Logout",
-    login: "Login",
-    register: "Sign Up",
-  },
-  de: {
-    promo: "15% Rabatt auf alle Seiko-Modelle | Kostenloser Versand",
-    support: "Kundendienst: 0850 ...",
-    store: "Shop",
-    about: "Über Uns",
-    contact: "Kontakt",
-    brands: "Marken",
-    automatic: "Automatik",
-    sport: "Sport",
-    classic: "Klassisch",
-    deals: "Angebote",
-    account: "Mein Konto",
-    logout: "Abmelden",
-    login: "Anmelden",
-    register: "Registrieren",
-  },
-} as const;
+const WATCH_CATEGORIES: { label: string; search: string; sub?: string[] }[] = [
+  { label: "Automatik",   search: "automatic" },
+  { label: "Chronograph", search: "chrono" },
+  { label: "Taucher",     search: "diver" },
+  { label: "Sport",       search: "sport" },
+  { label: "Klassik",     search: "classic" },
+  { label: "Luxus",       search: "luxury", sub: ["TAG Heuer", "Longines", "MIDO", "Gucci"] },
+];
 
 const Navbar = ({ userDisplayName, cartCount, logout, onCartClick }: NavbarProps) => {
-  const { isDark, toggle } = useTheme();
   const { language, setLanguage } = useLanguage();
   const navigate = useNavigate();
-  const t = copy[language];
+  const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const isActive = (path: string) => location.pathname === path;
 
   const handleCart = () => {
-    if (!userDisplayName) {
-      navigate("/login");
-      return;
-    }
+    if (!userDisplayName) { navigate("/login"); return; }
     onCartClick();
   };
 
+  const navLinkStyle = (path: string) => ({
+    fontFamily: "'Jost', sans-serif",
+    fontWeight: 400,
+    fontSize: "0.78rem",
+    letterSpacing: "0.12em",
+    textDecoration: "none",
+    color: isActive(path) ? "var(--brand-gold)" : "var(--brand-anthracite)",
+    borderBottom: isActive(path) ? "1px solid var(--brand-gold)" : "1px solid transparent",
+    paddingBottom: 2,
+    transition: "color .15s",
+  });
+
   return (
-    <header className="fixed-top shadow-sm">
+    <header
+      className="fixed-top"
+      style={{ background: "#fff", borderBottom: "var(--border-luxury)", zIndex: 1000 }}
+    >
+      {/* Top utility bar */}
       <div
-        className="bg-dark text-white py-2 px-4 d-flex justify-content-between align-items-center small fw-light"
-        style={{ letterSpacing: "0.05em" }}
+        style={{
+          background: "var(--brand-anthracite)",
+          color: "#ccc",
+          fontSize: "0.68rem",
+          letterSpacing: "0.1em",
+          fontFamily: "'Jost', sans-serif",
+          padding: "6px 24px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
       >
-        <div>🏷️ {t.promo}</div>
-        <div className="d-flex gap-3 align-items-center">
-          <span>🇬🇧 EN / 🇩🇪 DE</span>
-          <span>{t.support}</span>
+        <span>KOSTENLOSER VERSAND AB €150</span>
+        <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+          <button
+            onClick={() => setLanguage("en")}
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              color: language === "en" ? "#fff" : "#888",
+              fontSize: "0.68rem", letterSpacing: "0.1em", fontFamily: "inherit",
+              padding: 0,
+            }}
+          >EN</button>
+          <span style={{ color: "#555" }}>|</span>
+          <button
+            onClick={() => setLanguage("de")}
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              color: language === "de" ? "#fff" : "#888",
+              fontSize: "0.68rem", letterSpacing: "0.1em", fontFamily: "inherit",
+              padding: 0,
+            }}
+          >DE</button>
         </div>
       </div>
 
-      <nav className={`navbar p-3 ${isDark ? "navbar-dark bg-dark" : "navbar-light bg-white"}`}>
-        <div className="container-fluid d-flex justify-content-between align-items-center">
-          <Link className="navbar-brand fw-bold fs-4 mx-auto mx-lg-0" to="/" style={{ letterSpacing: "0.1em" }}>
-            ⌚ SEIKO & TISSOT STORE
+      {/* Main nav */}
+      <div
+        style={{ padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}
+      >
+        {/* Logo */}
+        <Link
+          to="/"
+          style={{
+            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontSize: "1.55rem",
+            fontWeight: 500,
+            letterSpacing: "0.18em",
+            color: "var(--brand-anthracite)",
+            textDecoration: "none",
+            textTransform: "uppercase",
+          }}
+        >
+          Ranch Watches
+        </Link>
+
+        {/* Center nav links — desktop */}
+        <nav className="d-none d-lg-flex" style={{ gap: 36 }}>
+          <Link to="/" style={navLinkStyle("/")}>
+            {language === "de" ? "SHOP" : "SHOP"}
           </Link>
+          <Link to="/uhren" style={navLinkStyle("/uhren")}>
+            {language === "de" ? "UHREN" : "WATCHES"}
+          </Link>
+          <Link to="/about" style={navLinkStyle("/about")}>
+            {language === "de" ? "ÜBER UNS" : "ABOUT"}
+          </Link>
+          <Link to="/contact" style={navLinkStyle("/contact")}>
+            {language === "de" ? "KONTAKT" : "CONTACT"}
+          </Link>
+        </nav>
 
-          <div className="d-none d-lg-flex gap-4">
-            <Link className="nav-link fw-semibold text-uppercase small" to="/">{t.store}</Link>
-            <Link className="nav-link fw-semibold text-uppercase small" to="/about">{t.about}</Link>
-            <Link className="nav-link fw-semibold text-uppercase small" to="/contact">{t.contact}</Link>
-            <div className="nav-item dropdown">
-              <button
-                className="btn nav-link fw-bold text-primary text-uppercase small dropdown-toggle p-0 border-0 bg-transparent"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
+        {/* Right actions */}
+        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          {/* User */}
+          {userDisplayName ? (
+            <>
+              <Link
+                to="/orders"
+                style={{ ...navLinkStyle("/orders"), display: "none" }}
+                className="d-none d-md-inline"
               >
-                {t.brands}
-              </button>
-              <ul className="dropdown-menu">
-                <li><Link className="dropdown-item" to="/?cat=Seiko">Seiko</Link></li>
-                <li><Link className="dropdown-item" to="/?cat=Tissot">Tissot</Link></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="d-flex align-items-center gap-3">
-            <div className="btn-group btn-group-sm" role="group" aria-label="Language selector">
+                {userDisplayName.split(" ")[0].toUpperCase()}
+              </Link>
               <button
-                type="button"
-                className={`btn ${language === "en" ? "btn-dark" : "btn-outline-dark"}`}
-                onClick={() => setLanguage("en")}
+                onClick={logout}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  fontFamily: "'Jost', sans-serif", fontSize: "0.72rem",
+                  letterSpacing: "0.1em", color: "#aaa",
+                }}
+                className="d-none d-md-inline"
               >
-                EN
+                {language === "de" ? "ABMELDEN" : "LOGOUT"}
               </button>
-              <button
-                type="button"
-                className={`btn ${language === "de" ? "btn-dark" : "btn-outline-dark"}`}
-                onClick={() => setLanguage("de")}
+            </>
+          ) : (
+            <div className="d-none d-md-flex" style={{ gap: 12 }}>
+              <Link
+                to="/login"
+                style={{
+                  fontFamily: "'Jost', sans-serif", fontSize: "0.72rem",
+                  letterSpacing: "0.1em", color: "#777", textDecoration: "none",
+                }}
               >
-                DE
-              </button>
+                {language === "de" ? "ANMELDEN" : "LOGIN"}
+              </Link>
+              <Link
+                to="/register"
+                style={{
+                  fontFamily: "'Jost', sans-serif", fontSize: "0.72rem",
+                  letterSpacing: "0.1em",
+                  color: "#fff",
+                  background: "var(--brand-anthracite)",
+                  padding: "5px 16px",
+                  textDecoration: "none",
+                }}
+              >
+                {language === "de" ? "REGISTRIEREN" : "SIGN UP"}
+              </Link>
             </div>
+          )}
 
-            <button className="btn btn-link p-0" onClick={toggle} style={{ fontSize: "1.2rem" }}>
-              {isDark ? "☀️" : "🌙"}
-            </button>
+          {/* Cart */}
+          <button
+            onClick={handleCart}
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              position: "relative", padding: 0,
+            }}
+            aria-label="Cart"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--brand-anthracite)" strokeWidth="1.5">
+              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+            {cartCount > 0 && (
+              <span
+                style={{
+                  position: "absolute", top: -6, right: -8,
+                  background: "var(--brand-gold)", color: "#fff",
+                  borderRadius: "50%", width: 16, height: 16,
+                  fontSize: "0.6rem", display: "flex", alignItems: "center",
+                  justifyContent: "center", fontFamily: "'Jost', sans-serif",
+                }}
+              >
+                {cartCount}
+              </span>
+            )}
+          </button>
 
-            <div className="position-relative" style={{ cursor: "pointer" }} onClick={handleCart}>
-              <span style={{ fontSize: "1.5rem" }}>👜</span>
-              {cartCount > 0 && (
-                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary border border-white">
-                  {cartCount}
-                </span>
-              )}
-            </div>
+          {/* Mobile hamburger */}
+          <button
+            className="d-lg-none"
+            onClick={() => setMenuOpen((o) => !o)}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
+            aria-label="Menu"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--brand-anthracite)" strokeWidth="1.5">
+              {menuOpen
+                ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>
+                : <><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>
+              }
+            </svg>
+          </button>
+        </div>
+      </div>
 
-            {userDisplayName ? (
-              <div className="d-flex align-items-center gap-2 border-start ps-3">
-                <span className="small d-none d-md-inline fw-medium">{userDisplayName}</span>
-                <Link to="/orders" className="btn btn-sm btn-outline-dark rounded-0 px-3">{t.account}</Link>
-                <button className="btn btn-sm btn-link text-danger text-decoration-none" onClick={logout}>{t.logout}</button>
-              </div>
-            ) : (
-              <div className="d-flex gap-2 border-start ps-3">
-                <Link to="/login" className="btn btn-sm btn-outline-dark rounded-0 px-3">{t.login}</Link>
-                <Link to="/register" className="btn btn-sm btn-dark rounded-0 px-3">{t.register}</Link>
+      {/* Category bar — desktop */}
+      <div
+        className="d-none d-md-flex"
+        style={{
+          borderTop: "var(--border-luxury)",
+          justifyContent: "center",
+          gap: 40,
+          padding: "10px 24px",
+          background: "#fafaf8",
+        }}
+      >
+        {WATCH_CATEGORIES.map((cat) => (
+          <div key={cat.label} style={{ position: "relative" }} className="cat-item">
+            <Link
+              to="/uhren"
+              style={{
+                fontFamily: "'Jost', sans-serif",
+                fontSize: "0.7rem",
+                letterSpacing: "0.14em",
+                color: "#666",
+                textDecoration: "none",
+                transition: "color .15s",
+                display: "block",
+                padding: "2px 0",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--brand-gold)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#666")}
+            >
+              {cat.label.toUpperCase()}
+            </Link>
+            {/* Luxus dropdown */}
+            {cat.sub && (
+              <div
+                className="cat-dropdown"
+                style={{
+                  display: "none",
+                  position: "absolute",
+                  top: "100%",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  background: "#fff",
+                  border: "var(--border-luxury)",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                  minWidth: 160,
+                  zIndex: 200,
+                  padding: "8px 0",
+                }}
+              >
+                {cat.sub.map((brand) => (
+                  <Link
+                    key={brand}
+                    to="/uhren"
+                    style={{
+                      display: "block",
+                      padding: "7px 20px",
+                      fontFamily: "'Jost', sans-serif",
+                      fontSize: "0.75rem",
+                      letterSpacing: "0.08em",
+                      color: "#555",
+                      textDecoration: "none",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = "var(--brand-gold)";
+                      e.currentTarget.style.background = "#faf9f7";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = "#555";
+                      e.currentTarget.style.background = "none";
+                    }}
+                  >
+                    {brand}
+                  </Link>
+                ))}
               </div>
             )}
           </div>
-        </div>
-      </nav>
-
-      <div className={`py-2 border-top border-bottom d-none d-md-block ${isDark ? "bg-dark border-secondary" : "bg-light border-light"}`}>
-        <div className="container-fluid d-flex justify-content-center gap-5 small fw-bold text-uppercase" style={{ letterSpacing: "0.1em" }}>
-          <Link to="/?cat=Seiko" className="nav-link text-muted">Seiko</Link>
-          <Link to="/?cat=Tissot" className="nav-link text-muted">Tissot</Link>
-          <Link to="/?cat=Automatic" className="nav-link text-muted">{t.automatic}</Link>
-          <Link to="/?cat=Sport" className="nav-link text-muted">{t.sport}</Link>
-          <Link to="/?cat=Classic" className="nav-link text-muted">{t.classic}</Link>
-          <Link to="/?cat=all" className="nav-link text-danger">{t.deals}</Link>
-        </div>
+        ))}
       </div>
+      <style>{`
+        .cat-item:hover .cat-dropdown { display: block !important; }
+      `}</style>
+
+      {/* Mobile menu */}
+      {menuOpen && (
+        <div
+          style={{
+            background: "#fff",
+            borderTop: "var(--border-luxury)",
+            padding: "16px 24px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
+          }}
+        >
+          {[
+            { label: language === "de" ? "SHOP" : "SHOP", path: "/" },
+            { label: language === "de" ? "UHREN" : "WATCHES", path: "/uhren" },
+            { label: language === "de" ? "ÜBER UNS" : "ABOUT", path: "/about" },
+            { label: language === "de" ? "KONTAKT" : "CONTACT", path: "/contact" },
+          ].map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => setMenuOpen(false)}
+              style={{
+                fontFamily: "'Jost', sans-serif",
+                fontSize: "0.85rem",
+                letterSpacing: "0.12em",
+                color: "var(--brand-anthracite)",
+                textDecoration: "none",
+              }}
+            >
+              {item.label}
+            </Link>
+          ))}
+          {!userDisplayName && (
+            <>
+              <Link to="/login" onClick={() => setMenuOpen(false)} style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.78rem", letterSpacing: "0.1em", color: "#888", textDecoration: "none" }}>
+                {language === "de" ? "ANMELDEN" : "LOGIN"}
+              </Link>
+              <Link to="/register" onClick={() => setMenuOpen(false)} style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.78rem", letterSpacing: "0.1em", color: "#888", textDecoration: "none" }}>
+                {language === "de" ? "REGISTRIEREN" : "SIGN UP"}
+              </Link>
+            </>
+          )}
+        </div>
+      )}
     </header>
   );
 };

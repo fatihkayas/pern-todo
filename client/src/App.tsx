@@ -13,6 +13,7 @@ import Returns from "./pages/Returns";
 import ProductDetail from "./pages/ProductDetail";
 import MyOrders from "./pages/MyOrders";
 import AdminPanel from "./pages/AdminPanel";
+import WatchCategoryPage from "./pages/WatchCategoryPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -111,6 +112,7 @@ function App() {
             <Route path="/checkout" element={<Checkout cart={cart} onOrderSuccess={() => setCart([])} />} />
             <Route path="/orders" element={<MyOrders />} />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/uhren" element={<WatchCategoryPage watches={watches} addToCart={addToCart} />} />
             <Route path="/register" element={customer ? <Navigate to="/" /> : <Register onLogin={handleLogin} />} />
           </Routes>
           <ChatWidget />
