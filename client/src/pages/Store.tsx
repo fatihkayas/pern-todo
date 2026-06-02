@@ -4,10 +4,16 @@ import DynamicHero from "../components/landing/DynamicHero";
 import StripeTrustBand from "../components/landing/StripeTrustBand";
 import LuxuryFooter from "../components/landing/LuxuryFooter";
 import { Watch } from "../types";
+import { apiUrl } from "../config";
 
 interface StoreProps {
-  watches: Watch[];
   addToCart: (watch: Watch) => void;
+}
+
+interface BrandGroup {
+  brand: string;
+  count: number;
+  watches: Watch[];
 }
 
 const BRAND_ICONS: Record<string, string> = {
@@ -36,7 +42,6 @@ const GENDER_KEYWORDS: Record<Gender, string[]> = {
   damen: ["damen", "ladies", "lady", "women", "dame", "femme"],
 };
 
-// Collapsible sidebar group
 const Group = ({ label, children }: { label: string; children: React.ReactNode }) => {
   const [open, setOpen] = useState(true);
   return (
@@ -59,10 +64,15 @@ const Group = ({ label, children }: { label: string; children: React.ReactNode }
   );
 };
 
-const Store = ({ watches, addToCart }: StoreProps) => {
+const Store = ({ addToCart }: StoreProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const searchRef = useRef<HTMLInputElement>(null);
+
+  const [brandSummary, setBrandSummary] = useState<BrandGroup[]>([]);
+  const [filteredWatches, setFilteredWatches] = useState<Watch[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filterLoading, setFilterLoading] = useState(false);
 
   const [activeBrand, setActiveBrand] = useState("all");
   const [gender, setGender] = useState<Gender>("all");
@@ -70,6 +80,17 @@ const Store = ({ watches, addToCart }: StoreProps) => {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
 
+  // Fetch brand-grouped summary on mount
+  useEffect(() => {
+    setLoading(true);
+    fetch(apiUrl("/api/v1/watches/brands-summary"))
+      .then((r) => r.json())
+      .then((data: BrandGroup[]) => setBrandSummary(Array.isArray(data) ? data : []))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Sync brand from URL ?cat= param
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const cat = params.get("cat");
@@ -77,44 +98,46 @@ const Store = ({ watches, addToCart }: StoreProps) => {
     else setActiveBrand("all");
   }, [location.search]);
 
-  // Brand groups sorted by count
-  const brandGroups = useMemo(() => {
-    const map = new Map<string, Watch[]>();
-    for (const w of watches) {
-      const b = (w.brand || "Other").trim();
-      if (!map.has(b)) map.set(b, []);
-      map.get(b)!.push(w);
+  // Fetch watches when a filter is active (brand / search)
+  useEffect(() => {
+    const isFiltering = activeBrand !== "all" || search !== "";
+    if (!isFiltering) {
+      setFilteredWatches([]);
+      return;
     }
-    return Array.from(map.entries()).sort((a, b) => b[1].length - a[1].length);
-  }, [watches]);
+    const params = new URLSearchParams({ limit: "500" });
+    if (activeBrand !== "all") params.set("brand", activeBrand);
+    if (search) params.set("search", search);
+
+    setFilterLoading(true);
+    fetch(apiUrl(`/api/v1/watches?${params}`))
+      .then((r) => r.json())
+      .then((data: Watch[] | { watches: Watch[] }) => {
+        setFilteredWatches(Array.isArray(data) ? data : data.watches ?? []);
+      })
+      .catch(console.error)
+      .finally(() => setFilterLoading(false));
+  }, [activeBrand, search]);
 
   const brands = useMemo(
-    () => brandGroups.map(([b]) => b).slice().sort((a, b) => a.localeCompare(b)),
-    [brandGroups]
+    () => brandSummary.map((g) => g.brand).sort((a, b) => a.localeCompare(b)),
+    [brandSummary]
   );
-
-  // Apply all filters
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const genderKws = GENDER_KEYWORDS[gender];
-    return watches.filter((w) => {
-      const price = parseFloat(w.price) || 0;
-      const hay = `${w.watch_name} ${w.brand} ${w.description ?? ""} ${w.model_code ?? ""}`.toLowerCase();
-      if (activeBrand !== "all" && (w.brand || "").trim() !== activeBrand) return false;
-      if (price > maxPrice) return false;
-      if (q && !hay.includes(q)) return false;
-      if (genderKws.length > 0 && !genderKws.some((kw) => hay.includes(kw))) return false;
-      return true;
-    });
-  }, [watches, activeBrand, maxPrice, search, gender]);
 
   const isFiltering = activeBrand !== "all" || search !== "" || gender !== "all" || maxPrice < 1000;
 
-  // For brand-grouped "all" view, apply price + gender + search filters
-  const filteredBrandGroups = useMemo(() => {
-    if (isFiltering) return [];
-    return brandGroups;
-  }, [brandGroups, isFiltering]);
+  // Apply gender + price client-side on the (already server-filtered) list
+  const displayWatches = useMemo(() => {
+    if (!isFiltering) return [];
+    const genderKws = GENDER_KEYWORDS[gender];
+    return filteredWatches.filter((w) => {
+      const price = parseFloat(w.price) || 0;
+      const hay = `${w.watch_name} ${w.brand} ${w.description ?? ""} ${w.model_code ?? ""}`.toLowerCase();
+      if (price > maxPrice) return false;
+      if (genderKws.length > 0 && !genderKws.some((kw) => hay.includes(kw))) return false;
+      return true;
+    });
+  }, [filteredWatches, gender, maxPrice, isFiltering]);
 
   const handleReset = () => {
     setActiveBrand("all");
@@ -126,11 +149,11 @@ const Store = ({ watches, addToCart }: StoreProps) => {
 
   const handleSearch = () => setSearch(searchInput);
 
-  const sidebarLabel: Record<string, string> = {
+  const sidebarLabel: React.CSSProperties = {
     fontFamily: "'Jost', sans-serif", fontSize: "0.78rem",
     color: "#444", display: "flex", alignItems: "center", gap: 8,
     cursor: "pointer", padding: "3px 0",
-  } as unknown as Record<string, string>;
+  };
 
   return (
     <main style={{ background: "#F9F9F7", color: "#1a1a1a", paddingTop: 136 }}>
@@ -139,10 +162,9 @@ const Store = ({ watches, addToCart }: StoreProps) => {
       <div className="container-fluid px-3 px-md-4 py-4">
         <div className="row g-4">
 
-          {/* ── LEFT SIDEBAR ── */}
+          {/* LEFT SIDEBAR */}
           <aside className="col-12 col-md-3 col-xl-2 d-none d-md-block">
 
-            {/* Search */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ position: "relative" }}>
                 <input
@@ -176,11 +198,10 @@ const Store = ({ watches, addToCart }: StoreProps) => {
               </div>
             </div>
 
-            {/* Marke */}
             <Group label="Marke">
               <div style={{ maxHeight: 220, overflowY: "auto" }}>
                 {["all", ...brands].map((b) => (
-                  <label key={b} style={sidebarLabel as unknown as React.CSSProperties}>
+                  <label key={b} style={sidebarLabel}>
                     <input
                       type="radio" name="brand" value={b}
                       checked={activeBrand === b}
@@ -195,10 +216,9 @@ const Store = ({ watches, addToCart }: StoreProps) => {
               </div>
             </Group>
 
-            {/* Geschlecht */}
             <Group label="Geschlecht">
               {(["all", "herren", "damen"] as Gender[]).map((g) => (
-                <label key={g} style={sidebarLabel as unknown as React.CSSProperties}>
+                <label key={g} style={sidebarLabel}>
                   <input
                     type="radio" name="gender" value={g}
                     checked={gender === g}
@@ -212,7 +232,6 @@ const Store = ({ watches, addToCart }: StoreProps) => {
               ))}
             </Group>
 
-            {/* Preis */}
             <Group label="Preis">
               <div style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.8rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", color: "#666", marginBottom: 8 }}>
@@ -228,7 +247,6 @@ const Store = ({ watches, addToCart }: StoreProps) => {
               </div>
             </Group>
 
-            {/* Reset */}
             {isFiltering && (
               <button
                 type="button"
@@ -245,43 +263,50 @@ const Store = ({ watches, addToCart }: StoreProps) => {
             )}
           </aside>
 
-          {/* ── MAIN CONTENT ── */}
+          {/* MAIN CONTENT */}
           <div className="col-12 col-md-9 col-xl-10">
 
-            {/* Filtered results */}
             {isFiltering ? (
               <div>
-                <div style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.78rem", color: "#888", marginBottom: 16 }}>
-                  {filtered.length.toLocaleString("de-DE")} Artikel gefunden
-                </div>
-                {filtered.length === 0 ? (
-                  <div style={{ textAlign: "center", color: "#bbb", padding: "60px 0", fontFamily: "'Jost', sans-serif" }}>
-                    <div style={{ fontSize: "2rem" }}>⌚</div>
-                    <p>Keine Uhren gefunden.</p>
+                {filterLoading ? (
+                  <div style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.8rem", color: "#aaa", padding: "40px 0" }}>
+                    Laden...
                   </div>
                 ) : (
-                  <div className="row g-3">
-                    {filtered.map((watch) => {
-                      const inStock = (watch.stock_quantity ?? 0) > 0;
-                      return (
-                        <div key={watch.watch_id} className="col-6 col-lg-4 col-xl-3">
-                          <WatchCard watch={watch} addToCart={addToCart} inStock={inStock} navigate={navigate} />
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <>
+                    <div style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.78rem", color: "#888", marginBottom: 16 }}>
+                      {displayWatches.length.toLocaleString("de-DE")} Artikel gefunden
+                    </div>
+                    {displayWatches.length === 0 ? (
+                      <div style={{ textAlign: "center", color: "#bbb", padding: "60px 0", fontFamily: "'Jost', sans-serif" }}>
+                        <div style={{ fontSize: "2rem" }}>⌚</div>
+                        <p>Keine Uhren gefunden.</p>
+                      </div>
+                    ) : (
+                      <div className="row g-3">
+                        {displayWatches.map((watch) => (
+                          <div key={watch.watch_id} className="col-6 col-lg-4 col-xl-3">
+                            <WatchCard watch={watch} addToCart={addToCart} inStock={(watch.stock_quantity ?? 0) > 0} navigate={navigate} />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
+            ) : loading ? (
+              <div style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.8rem", color: "#aaa", padding: "40px 0" }}>
+                Laden...
+              </div>
             ) : (
-              /* Brand-grouped view */
               <>
-                {filteredBrandGroups.map(([brand, items]) => (
+                {brandSummary.map(({ brand, count, watches }) => (
                   <div key={brand} className="mb-5">
                     <div className="d-flex align-items-center justify-content-between mb-3">
                       <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: "1.5rem", fontWeight: 400, margin: 0, letterSpacing: "0.02em" }}>
                         {BRAND_ICONS[brand] ?? "🕐"} {brand}
                         <span style={{ fontSize: "0.72rem", color: "#aaa", marginLeft: 10, fontFamily: "'Jost', sans-serif", fontWeight: 400, verticalAlign: "middle" }}>
-                          {items.length}
+                          {count}
                         </span>
                       </h2>
                       <button
@@ -297,14 +322,11 @@ const Store = ({ watches, addToCart }: StoreProps) => {
                       </button>
                     </div>
                     <div className="row g-3">
-                      {items.slice(0, 6).map((watch) => {
-                        const inStock = (watch.stock_quantity ?? 0) > 0;
-                        return (
-                          <div key={watch.watch_id} className="col-6 col-md-4 col-xl-2">
-                            <WatchCard watch={watch} addToCart={addToCart} inStock={inStock} navigate={navigate} compact />
-                          </div>
-                        );
-                      })}
+                      {watches.map((watch) => (
+                        <div key={watch.watch_id} className="col-6 col-md-4 col-xl-2">
+                          <WatchCard watch={watch} addToCart={addToCart} inStock={(watch.stock_quantity ?? 0) > 0} navigate={navigate} compact />
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -320,7 +342,6 @@ const Store = ({ watches, addToCart }: StoreProps) => {
   );
 };
 
-// ── Shared mini card ──
 function WatchCard({
   watch, addToCart, inStock, navigate, compact = false,
 }: {

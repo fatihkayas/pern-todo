@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
@@ -18,31 +18,13 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import { ThemeProvider } from "./context/ThemeContext";
 import { LanguageProvider } from "./context/LanguageContext";
-import { Watch, CartItem, Customer } from "./types";
-import { apiUrl } from "./config";
+import { CartItem, Customer, Watch } from "./types";
 import { clearAuthData, getStoredCustomer } from "./utils/auth";
 
 function App() {
-  const [watches, setWatches] = useState<Watch[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [customer, setCustomer] = useState<Customer | null>(() => getStoredCustomer());
-
-  useEffect(() => {
-    fetch(apiUrl("/api/v1/watches"))
-      .then((res) => {
-        if (!res.ok) throw new Error("Connection refused");
-        return res.json();
-      })
-      .then((data: Watch[]) => {
-        setWatches(Array.isArray(data) ? data : []);
-        if (data.length > 0) toast.success("Watches loaded successfully! ✅");
-      })
-      .catch((err: Error) => {
-        console.error("Fetch error:", err);
-        toast.error("Connection error: Backend unreachable ❌");
-      });
-  }, []);
 
   const handleLogin = (customerData: Customer) => {
     setCustomer(customerData);
@@ -103,7 +85,7 @@ function App() {
             onOrderSuccess={() => setCart([])}
           />
           <Routes>
-            <Route path="/" element={<Store watches={watches} addToCart={addToCart} />} />
+            <Route path="/" element={<Store addToCart={addToCart} />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/returns" element={<Returns />} />
@@ -112,7 +94,7 @@ function App() {
             <Route path="/checkout" element={<Checkout cart={cart} onOrderSuccess={() => setCart([])} />} />
             <Route path="/orders" element={<MyOrders />} />
             <Route path="/admin" element={<AdminPanel />} />
-            <Route path="/uhren" element={<WatchCategoryPage watches={watches} addToCart={addToCart} />} />
+            <Route path="/uhren" element={<WatchCategoryPage addToCart={addToCart} />} />
             <Route path="/register" element={customer ? <Navigate to="/" /> : <Register onLogin={handleLogin} />} />
           </Routes>
           <ChatWidget />
