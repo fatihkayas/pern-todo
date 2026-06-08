@@ -7,7 +7,7 @@ import { LanguageProvider } from "../context/LanguageContext";
 import type { Watch } from "../types";
 
 const mockWatch: Watch = {
-  watch_id: 1,
+  watch_id: "1",
   watch_name: "Seiko 5 Sports",
   brand: "Seiko",
   price: "299.99",

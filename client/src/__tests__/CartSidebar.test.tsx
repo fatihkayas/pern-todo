@@ -9,7 +9,7 @@ import type { CartItem } from "../types";
 jest.mock("react-hot-toast", () => ({ error: jest.fn() }));
 
 const mockItem: CartItem = {
-  watch_id: 1,
+  watch_id: "1",
   watch_name: "Seiko 5 Sports",
   brand: "Seiko",
   price: "299.99",
