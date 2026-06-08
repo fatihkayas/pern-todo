@@ -52,11 +52,11 @@ function App() {
     setCartOpen(true);
   };
 
-  const removeFromCart = (watch_id: number) => {
+  const removeFromCart = (watch_id: string) => {
     setCart((prev) => prev.filter((item) => item.watch_id !== watch_id));
   };
 
-  const updateQuantity = (watch_id: number, quantity: number) => {
+  const updateQuantity = (watch_id: string, quantity: number) => {
     if (quantity < 1) return removeFromCart(watch_id);
     setCart((prev) =>
       prev.map((item) => (item.watch_id === watch_id ? { ...item, quantity } : item))

@@ -265,8 +265,8 @@ app.get("/api/v1/watches/brands", async (req: Request, res: Response) => {
  *         description: Database error
  */
 app.get("/api/v1/watches/:id", async (req: Request<{ id: string }>, res: Response) => {
-  const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) {
+  const id = req.params.id;
+  if (!id) {
     res.status(400).json({ error: "Invalid watch ID" });
     return;
   }

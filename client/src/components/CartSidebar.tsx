@@ -7,8 +7,8 @@ interface CartSidebarProps {
   cart: CartItem[];
   isOpen: boolean;
   onClose: () => void;
-  removeFromCart: (watch_id: number) => void;
-  updateQuantity: (watch_id: number, quantity: number) => void;
+  removeFromCart: (watch_id: string) => void;
+  updateQuantity: (watch_id: string, quantity: number) => void;
   onOrderSuccess: () => void;
 }
 //

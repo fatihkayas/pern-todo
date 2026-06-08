@@ -1,5 +1,5 @@
 export interface Watch {
-  watch_id: number;
+  watch_id: string;
   watch_name: string;
   brand: string;
   price: string; // PostgreSQL DECIMAL returns as string

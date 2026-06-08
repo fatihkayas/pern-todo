@@ -131,7 +131,7 @@ const AdminPanel = () => {
     toast.success("Bestellstatus aktualisiert.");
   };
 
-  const updateWatch = async (watchId: number, patch: Partial<Watch>) => {
+  const updateWatch = async (watchId: string, patch: Partial<Watch>) => {
     const res = await fetchWithAuth(apiUrl(`/api/v1/admin/watches/${watchId}`), {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -471,7 +471,7 @@ const paginationBtn: React.CSSProperties = {
 
 interface WatchEditRowProps {
   watch: Watch;
-  onSave: (id: number, patch: Partial<Watch>) => Promise<void>;
+  onSave: (id: string, patch: Partial<Watch>) => Promise<void>;
 }
 
 function WatchEditRow({ watch, onSave }: WatchEditRowProps) {
