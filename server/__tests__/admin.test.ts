@@ -168,19 +168,23 @@ describe("GET /api/v1/admin/watches", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("returns all watches for an admin user", async () => {
-    mockQuery.mockResolvedValueOnce({ rows: [{ is_admin: true }] }).mockResolvedValueOnce({
-      rows: [
-        { watch_id: 1, watch_name: "Seiko 5 Sports", stock_quantity: 10 },
-        { watch_id: 2, watch_name: "Seiko Presage", stock_quantity: 5 },
-      ],
-    });
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ is_admin: true }] }) // adminAuth
+      .mockResolvedValueOnce({
+        rows: [
+          { watch_id: 1, watch_name: "Seiko 5 Sports", stock_quantity: 10 },
+          { watch_id: 2, watch_name: "Seiko Presage", stock_quantity: 5 },
+        ],
+      }) // watches data (Promise.all slot 1)
+      .mockResolvedValueOnce({ rows: [{ total: "2" }] }); // count (Promise.all slot 2)
 
     const res = await request(app)
       .get("/api/v1/admin/watches")
       .set("Authorization", `Bearer ${makeAdminToken()}`);
 
     expect(res.status).toBe(200);
-    expect(res.body).toHaveLength(2);
+    expect(res.body.watches).toHaveLength(2);
+    expect(res.body).toHaveProperty("total", 2);
   });
 
   it("returns 500 on DB error", async () => {
