@@ -1,6 +1,31 @@
+# Dependencies
 node_modules
 npm-debug.log
+
+# Build output (builder will recreate)
 build
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# VCS
 .git
-.env.local
+.gitignore
+
+# OS / editor
 .DS_Store
+.vscode
+.idea
+
+# Logs
+*.log
+
+# Docker files (avoid nesting issues)
+Dockerfile
+Dockerfile.*
+docker-compose.yml
+
+# Misc
+*.md

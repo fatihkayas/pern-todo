@@ -127,7 +127,12 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./server
+          file: ./server/Dockerfile.prod
           push: true
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/seiko-backend:latest
             ghcr.io/${{ github.repository_owner }}/seiko-backend:${{ github.sha }}
@@ -138,7 +143,12 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./client
+          file: ./client/Dockerfile.prod
           push: true
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/seiko-frontend:latest
             ghcr.io/${{ github.repository_owner }}/seiko-frontend:${{ github.sha }}
@@ -359,7 +369,12 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./server
+          file: ./server/Dockerfile.prod
           push: true
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
           tags: |
             ${{ steps.gcp_settings.outputs.ar_repo }}/backend:latest
             ${{ steps.gcp_settings.outputs.ar_repo }}/backend:${{ github.sha }}
@@ -370,8 +385,12 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./client
+          file: ./client/Dockerfile.prod
           push: true
           build-args: |
+            GIT_SHA=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
             REACT_APP_API_URL=${{ steps.gcp_urls.outputs.backend_url }}
             REACT_APP_STRIPE_PUBLISHABLE_KEY=${{ secrets.GCP_STRIPE_PUBLISHABLE_KEY }}
           tags: |

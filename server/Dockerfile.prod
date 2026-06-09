@@ -1,0 +1,33 @@
+# ── Stage 1: Builder ─────────────────────────────────────────────────────────
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+# ── Stage 2: Runner ───────────────────────────────────────────────────────────
+FROM gcr.io/distroless/nodejs20-debian12 AS runner
+WORKDIR /app
+
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+
+ARG GIT_SHA=unknown
+ARG VERSION=0.0.0
+ARG BUILD_DATE=unknown
+
+LABEL org.opencontainers.image.source="https://github.com/fatihkayas/pern-todo"
+LABEL org.opencontainers.image.revision="${GIT_SHA}"
+LABEL org.opencontainers.image.version="${VERSION}"
+LABEL org.opencontainers.image.created="${BUILD_DATE}"
+
+USER nonroot
+EXPOSE 5000
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
+  CMD ["node", "dist/healthcheck.js"]
+
+CMD ["dist/index.js"]
