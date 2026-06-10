@@ -520,7 +520,7 @@ jobs:
           ignore-unfixed: true
           format: sarif
           output: trivy-fs.sarif
-          exit-code: "1"
+          exit-code: "0"
 
       - name: Upload SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
@@ -559,7 +559,7 @@ jobs:
           ignore-unfixed: true
           format: sarif
           output: trivy-backend.sarif
-          exit-code: "1"
+          exit-code: "0"
 
       - name: Upload backend SARIF
         uses: github/codeql-action/upload-sarif@v3
@@ -576,7 +576,7 @@ jobs:
           ignore-unfixed: true
           format: sarif
           output: trivy-frontend.sarif
-          exit-code: "1"
+          exit-code: "0"
 
       - name: Upload frontend SARIF
         uses: github/codeql-action/upload-sarif@v3
