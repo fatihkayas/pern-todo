@@ -17,7 +17,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.10"
+          cpus: "0.25"
           memory: 64M
         reservations:
           memory: 32M
@@ -140,9 +140,9 @@ services:
       resources:
         limits:
           cpus: "0.25"
-          memory: 256M
-        reservations:
           memory: 128M
+        reservations:
+          memory: 64M
 
   adminer:
     image: adminer
