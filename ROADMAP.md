@@ -52,8 +52,8 @@
 | Logging | Pino JSON + Correlation ID + pino-http | ✅ |
 | Alerting | Prometheus rules (10 rules) + Alertmanager | ✅ |
 | API Docs | Swagger / OpenAPI 3.0 | ✅ |
-| CI/CD | GitHub Actions (218-line pipeline) + GHCR + ECR | ✅ |
-| Testing | 100 backend · 44 RTL · 23 Playwright E2E | ✅ |
+| CI/CD | GitHub Actions + GHCR · trivy-action v0.36.0 · native Semgrep · GCP deploy paused | ✅ |
+| Testing | 100 backend · 44 RTL · 23 Playwright E2E (rewritten for redesigned Store UI) | ✅ |
 | Code Quality | ESLint v8 + Prettier + Husky + commitlint | ✅ |
 | Message Broker | Redpanda (Kafka-compatible) | ✅ |
 | Integration Service | Go microservice — consumer + circuit breaker + DLQ | ✅ |
@@ -759,4 +759,4 @@ Phase 12 (IaC Library + AI-Native)
 ---
 
 > **Living document** — updated after each sprint.  
-> Last updated: 2026-06-08 · v3.7.0 released · Next: Phase 7 (v4.0.0 — Enterprise CD Foundation)
+> Last updated: 2026-06-10 · v3.7.0 current · CI maintenance: trivy v0.36.0, native Semgrep, E2E rewritten, GCP deploy paused · Next: Phase 7 (v4.0.0 — Enterprise CD Foundation)
