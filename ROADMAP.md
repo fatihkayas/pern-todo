@@ -24,7 +24,7 @@
 | v3.5.0 | 6.5 | Integration Observability — Grafana · Alerts | ✅ Released |
 | v3.6.0 | 6.6 | Chaos Engineering — 10 consumer tests | ✅ Released |
 | v3.7.0 | 6.7 | AI Log Analyzer — Claude + Jira auto-issue | ✅ Released |
-| v4.0.0 | 7 | Enterprise CD Foundation — GitLab · Artifactory · Container Hardening | 📋 Planned |
+| v4.0.0 | 7 | Enterprise CD Foundation — GitLab · Artifactory · Container Hardening | 🔄 In Progress |
 | v4.1.0 | 8 | Octopus Deploy — DEV→TEST→UAT→PROD · CAB Approval | 📋 Planned |
 | v5.0.0 | 9 | Kubernetes — Helm · HPA · PDB · NetworkPolicy · ArgoCD | 📋 Planned |
 | v5.1.0 | 10 | OpenShift 4 — SCC · Routes · BuildConfig | 📋 Planned |
@@ -217,12 +217,12 @@ seiko_integration     Go microservice         :8083 ← :8080
 > **Goal:** Replace ad-hoc deployments with an auditable, immutable, security-gated pipeline.  
 > **Duration:** 5 weeks · Weeks 1–5
 
-#### 7.1 — Container Hardening (Week 1–2)
+#### 7.1 — Container Hardening ✅ (Week 1–2)
 
 | Task | Deliverable | CV Impact |
 |------|------------|-----------|
 | Multi-stage Dockerfiles | builder → distroless runner | −45% image size |
-| Non-root user (`USER nonroot`) | CIS Docker Benchmark Level 2 | Security compliance |
+| Non-root user (`USER nonroot/nginx`) | CIS Docker Benchmark Level 2 | Security compliance |
 | `.dockerignore` | Exclude `node_modules`, `.env`, `coverage/`, `dist/` | Surface reduction |
 | `HEALTHCHECK` instruction | All Dockerfiles | Container orchestration ready |
 | Image labels | `BUILD_DATE`, `GIT_SHA`, `VERSION` build args | Full traceability |
@@ -759,4 +759,4 @@ Phase 12 (IaC Library + AI-Native)
 ---
 
 > **Living document** — updated after each sprint.  
-> Last updated: 2026-06-10 · v3.7.0 current · CI maintenance: trivy v0.36.0, native Semgrep, E2E rewritten, GCP deploy paused · Next: Phase 7 (v4.0.0 — Enterprise CD Foundation)
+> Last updated: 2026-06-10 · v3.7.0 current · Phase 7.1 Container Hardening ✅ · Next: Phase 7.2 GitLab CI/CD
