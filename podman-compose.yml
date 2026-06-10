@@ -2,6 +2,7 @@ services:
   nginx:
     image: nginx:alpine
     container_name: seiko_nginx
+    restart: unless-stopped
     ports:
       - "8090:80"
       - "8443:443"
@@ -13,9 +14,18 @@ services:
     depends_on:
       - frontend
       - backend
+    deploy:
+      resources:
+        limits:
+          cpus: "0.10"
+          memory: 64M
+        reservations:
+          memory: 32M
+
   db:
     image: postgres:15-alpine
     container_name: seiko_db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: jwtauth
       POSTGRES_USER: postgres
@@ -24,10 +34,24 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d jwtauth"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+        reservations:
+          memory: 256M
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     container_name: keycloak_server
+    restart: unless-stopped
     command: start-dev --import-realm
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
@@ -37,22 +61,41 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 768M
+        reservations:
+          memory: 512M
 
   ollama:
     image: ollama/ollama:latest
     container_name: seiko_ollama
+    restart: unless-stopped
     ports:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 2G
+        reservations:
+          memory: 1G
 
   backend:
     image: localhost/seiko-backend:latest
     container_name: seiko_backend
+    restart: unless-stopped
     depends_on:
-      - db
-      - ollama
+      db:
+        condition: service_healthy
+      ollama:
+        condition: service_started
     ports:
       - "5001:5000"
     environment:
@@ -65,10 +108,24 @@ services:
       OLLAMA_URL: http://seiko_ollama:11434
       OLLAMA_MODEL: llama3.2
       KAFKA_BROKER: seiko_redpanda:9092
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:5000/ready', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+        reservations:
+          memory: 256M
 
   frontend:
     image: localhost/seiko-frontend:latest
     container_name: seiko_frontend
+    restart: unless-stopped
     depends_on:
       - backend
       - keycloak
@@ -79,20 +136,37 @@ services:
       CHOKIDAR_USEPOLLING: true
       REACT_APP_BACKEND_URL: http://seiko_backend:5000
       DANGEROUSLY_DISABLE_HOST_CHECK: "true"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+        reservations:
+          memory: 128M
 
   adminer:
     image: adminer
     container_name: seiko_adminer
+    restart: unless-stopped
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "8082:8080"
     environment:
       ADMINER_DEFAULT_SERVER: db
+    deploy:
+      resources:
+        limits:
+          cpus: "0.10"
+          memory: 64M
+        reservations:
+          memory: 32M
 
   prometheus:
     image: prom/prometheus:latest
     container_name: seiko_prometheus
+    restart: unless-stopped
     ports:
       - "9090:9090"
     volumes:
@@ -107,10 +181,18 @@ services:
       - "--web.enable-lifecycle"
     depends_on:
       - backend
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+        reservations:
+          memory: 128M
 
   alertmanager:
     image: prom/alertmanager:latest
     container_name: seiko_alertmanager
+    restart: unless-stopped
     ports:
       - "9093:9093"
     volumes:
@@ -121,10 +203,18 @@ services:
       - "--storage.path=/alertmanager"
     depends_on:
       - prometheus
+    deploy:
+      resources:
+        limits:
+          cpus: "0.10"
+          memory: 64M
+        reservations:
+          memory: 32M
 
   grafana:
     image: grafana/grafana:latest
     container_name: seiko_grafana
+    restart: unless-stopped
     ports:
       - "3001:3000"
     volumes:
@@ -137,10 +227,18 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
     depends_on:
       - prometheus
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+        reservations:
+          memory: 128M
 
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:v23.3.21
     container_name: seiko_redpanda
+    restart: unless-stopped
     command:
       - redpanda
       - start
@@ -160,16 +258,31 @@ services:
       - --check=false
     ports:
       - "29092:29092"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 768M
+        reservations:
+          memory: 512M
 
   redpanda-console:
     image: docker.redpanda.com/redpandadata/console:latest
     container_name: seiko_redpanda_console
+    restart: unless-stopped
     depends_on:
       - redpanda
     ports:
       - "8084:8080"
     environment:
       KAFKA_BROKERS: seiko_redpanda:9092
+    deploy:
+      resources:
+        limits:
+          cpus: "0.10"
+          memory: 128M
+        reservations:
+          memory: 64M
 
   redpanda-init:
     image: docker.redpanda.com/redpandadata/redpanda:v23.3.21
@@ -182,10 +295,16 @@ services:
         sleep 5 &&
         rpk --brokers seiko_redpanda:9092 topic create orders.created --partitions 1 --replicas 1 || true
     restart: "no"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.10"
+          memory: 64M
 
   integration-service:
     image: localhost/seiko-integration:latest
     container_name: seiko_integration
+    restart: unless-stopped
     depends_on:
       - redpanda
       - db
@@ -198,6 +317,13 @@ services:
       DB_USER: postgres
       DB_PASSWORD: your_password
       DB_DATABASE: jwtauth
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          memory: 64M
 
 volumes:
   postgres_data:
