@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
-import { mockWatchesRoute } from "./helpers";
+import { mockApiRoutes } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
-  await mockWatchesRoute(page);
+  await mockApiRoutes(page);
 });
 
 // ── Page structure ──────────────────────────────────────────────────────────
@@ -12,9 +12,10 @@ test("navigation bar is visible", async ({ page }) => {
   await expect(page.getByRole("navigation")).toBeVisible();
 });
 
-test("product catalog section is rendered", async ({ page }) => {
+test("brand section headings are rendered after the API responds", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("#catalog")).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Seiko/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Tissot/ })).toBeVisible();
 });
 
 // ── Mocked API data ─────────────────────────────────────────────────────────
@@ -27,23 +28,22 @@ test("watch names are displayed after the API responds", async ({ page }) => {
 
 test("watch prices are displayed", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByText("$299.99")).toBeVisible();
-  await expect(page.getByText("$549.99")).toBeVisible();
+  await expect(page.getByText("€299.99")).toBeVisible();
+  await expect(page.getByText("€549.99")).toBeVisible();
 });
 
-test("brand badges are displayed", async ({ page }) => {
+test("brand names are shown on watch cards", async ({ page }) => {
   await page.goto("/");
-  // Badges are <span class="badge">{watch.brand}</span>
-  // The brand also appears in the category bar, so check for the badge role
-  await expect(page.locator(".badge").filter({ hasText: "Seiko" })).toBeVisible();
-  await expect(page.locator(".badge").filter({ hasText: "Tissot" })).toBeVisible();
+  // WatchCard renders brand as uppercase
+  await expect(page.getByText("SEIKO").first()).toBeVisible();
+  await expect(page.getByText("TISSOT").first()).toBeVisible();
 });
 
 // ── Navigation ──────────────────────────────────────────────────────────────
 
-test("clicking the logo navigates back to the store", async ({ page }) => {
+test("navigating to / shows the watch catalog", async ({ page }) => {
   await page.goto("/about");
   await page.goto("/");
   await expect(page).toHaveURL("/");
-  await expect(page.locator("#catalog")).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Seiko/ })).toBeVisible();
 });
