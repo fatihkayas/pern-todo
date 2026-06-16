@@ -19,7 +19,7 @@ import pool from "../db";
 const mockQuery = pool.query as jest.Mock;
 const mockCompare = bcrypt.compare as jest.Mock;
 
-const JWT_SECRET = "seiko_secret_key_change_in_prod";
+const JWT_SECRET = "seiko_secret_key_change_in_prod"; // nosemgrep: javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret
 
 describe("POST /api/v1/auth/register", () => {
   beforeEach(() => jest.clearAllMocks());

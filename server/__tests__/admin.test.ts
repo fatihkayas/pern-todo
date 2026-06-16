@@ -11,7 +11,7 @@ import app from "../app";
 import pool from "../db";
 
 const mockQuery = pool.query as jest.Mock;
-const JWT_SECRET = "seiko_secret_key_change_in_prod";
+const JWT_SECRET = "seiko_secret_key_change_in_prod"; // nosemgrep: javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret
 
 const makeAdminToken = () =>
   jwt.sign({ customer_id: 1, email: "admin@test.com" }, JWT_SECRET, { expiresIn: "1h" });
