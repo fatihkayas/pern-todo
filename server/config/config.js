@@ -17,9 +17,9 @@ module.exports = {
     dialectOptions:
       process.env.DB_SSL === "true"
         ? {
-            ssl: {
+            ssl: { // nosemgrep: problem-based-packs.insecure-transport.js-node.bypass-tls-verification.bypass-tls-verification
               require: true,
-              rejectUnauthorized: false, // nosemgrep: problem-based-packs.insecure-transport.js-node.bypass-tls-verification.bypass-tls-verification
+              rejectUnauthorized: false,
             },
           }
         : {},
@@ -34,9 +34,9 @@ module.exports = {
     dialectOptions:
       process.env.DB_SSL === "true"
         ? {
-            ssl: {
+            ssl: { // nosemgrep: problem-based-packs.insecure-transport.js-node.bypass-tls-verification.bypass-tls-verification
               require: true,
-              rejectUnauthorized: false, // nosemgrep: problem-based-packs.insecure-transport.js-node.bypass-tls-verification.bypass-tls-verification
+              rejectUnauthorized: false,
             },
           }
         : {},

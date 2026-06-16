@@ -10,9 +10,9 @@ module.exports = {
     port: 5432,
     dialect: "postgres",
     dialectOptions: {
-      ssl: {
+      ssl: { // nosemgrep: problem-based-packs.insecure-transport.js-node.bypass-tls-verification.bypass-tls-verification
         require: true,
-        rejectUnauthorized: false, // nosemgrep: problem-based-packs.insecure-transport.js-node.bypass-tls-verification.bypass-tls-verification
+        rejectUnauthorized: false,
       },
     },
   },
