@@ -1,0 +1,272 @@
+stages:
+  - validate
+  - test
+  - security
+  - build
+  - container-scan
+  - publish
+  - deploy-dev
+
+default:
+  retry:
+    max: 1
+    when: runner_system_failure
+
+variables:
+  BACKEND_IMAGE: "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA"
+  FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA"
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+
+# ── STAGE 1: VALIDATE ─────────────────────────────────────────────────────────
+
+backend:lint-typecheck:
+  stage: validate
+  image: node:20-alpine
+  cache:
+    key: "$CI_COMMIT_REF_SLUG-backend"
+    paths:
+      - server/node_modules/
+  script:
+    - cd server && npm ci
+    - npx tsc --noEmit
+    - npx eslint "**/*.ts" --max-warnings 0
+
+frontend:typecheck:
+  stage: validate
+  image: node:20-alpine
+  cache:
+    key: "$CI_COMMIT_REF_SLUG-frontend"
+    paths:
+      - client/node_modules/
+  script:
+    - cd client && npm ci --legacy-peer-deps
+    - npx tsc --noEmit
+
+integration:vet:
+  stage: validate
+  image: golang:1.22-alpine
+  script:
+    - cd integration-service && go vet ./...
+
+# ── STAGE 2: TEST ─────────────────────────────────────────────────────────────
+
+backend:test:
+  stage: test
+  image: node:20-alpine
+  services:
+    - name: postgres:15-alpine
+      alias: postgres
+  variables:
+    POSTGRES_DB: jwtauth_test
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_HOST_AUTH_METHOD: trust
+    NODE_ENV: test
+    DB_HOST: postgres
+    DB_PORT: "5432"
+    STRIPE_SECRET_KEY: sk_test_fake_gitlab_ci
+    STRIPE_WEBHOOK_SECRET: whsec_fake_gitlab_ci
+  cache:
+    key: "$CI_COMMIT_REF_SLUG-backend"
+    paths:
+      - server/node_modules/
+    policy: pull
+  script:
+    - cd server && npm ci
+    - npm run test:coverage
+  coverage: '/Lines\s*:\s*(\d+\.?\d*)%/'
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - server/coverage/lcov-report/
+
+integration:test:
+  stage: test
+  image: golang:1.22-alpine
+  script:
+    - cd integration-service && go test ./... -v -count=1
+
+# ── STAGE 3: SECURITY ─────────────────────────────────────────────────────────
+
+sast:semgrep:
+  stage: security
+  image: semgrep/semgrep:latest
+  script:
+    - semgrep scan
+        --config p/owasp-top-ten
+        --config p/nodejs
+        --json
+        --output semgrep-report.json
+        server/src/
+  allow_failure: true
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - semgrep-report.json
+
+sca:trivy-fs:
+  stage: security
+  image: aquasec/trivy:latest
+  variables:
+    TRIVY_NO_PROGRESS: "true"
+  script:
+    - trivy fs
+        --severity HIGH,CRITICAL
+        --exit-code 1
+        --format json
+        --output trivy-fs-report.json
+        server/
+  allow_failure: true
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - trivy-fs-report.json
+
+# ── STAGE 4: BUILD ────────────────────────────────────────────────────────────
+# Images are saved as .tar.gz — NOT pushed yet.
+# Unscanned images never reach the registry.
+
+build:backend:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - export BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  script:
+    - docker build
+        --file server/Dockerfile.prod
+        --build-arg GIT_SHA="$CI_COMMIT_SHORT_SHA"
+        --build-arg VERSION="${CI_COMMIT_TAG:-$CI_COMMIT_SHORT_SHA}"
+        --build-arg BUILD_DATE="$BUILD_DATE"
+        --tag "$BACKEND_IMAGE"
+        server/
+    - docker save "$BACKEND_IMAGE" | gzip > backend-image.tar.gz
+  artifacts:
+    paths:
+      - backend-image.tar.gz
+    expire_in: 1 hour
+
+build:frontend:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - export BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  script:
+    - docker build
+        --file client/Dockerfile.prod
+        --build-arg GIT_SHA="$CI_COMMIT_SHORT_SHA"
+        --build-arg VERSION="${CI_COMMIT_TAG:-$CI_COMMIT_SHORT_SHA}"
+        --build-arg BUILD_DATE="$BUILD_DATE"
+        --tag "$FRONTEND_IMAGE"
+        client/
+    - docker save "$FRONTEND_IMAGE" | gzip > frontend-image.tar.gz
+  artifacts:
+    paths:
+      - frontend-image.tar.gz
+    expire_in: 1 hour
+
+# ── STAGE 5: CONTAINER SCAN ───────────────────────────────────────────────────
+
+scan:backend:
+  stage: container-scan
+  image: aquasec/trivy:latest
+  needs:
+    - build:backend
+  variables:
+    TRIVY_NO_PROGRESS: "true"
+  script:
+    - trivy image
+        --exit-code 1
+        --severity CRITICAL
+        --format json
+        --output trivy-backend-report.json
+        --input backend-image.tar.gz
+  allow_failure: true
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - trivy-backend-report.json
+
+scan:frontend:
+  stage: container-scan
+  image: aquasec/trivy:latest
+  needs:
+    - build:frontend
+  variables:
+    TRIVY_NO_PROGRESS: "true"
+  script:
+    - trivy image
+        --exit-code 1
+        --severity CRITICAL
+        --format json
+        --output trivy-frontend-report.json
+        --input frontend-image.tar.gz
+  allow_failure: true
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - trivy-frontend-report.json
+
+# ── STAGE 6: PUBLISH ──────────────────────────────────────────────────────────
+# Only runs on main branch.
+# Tagged as :<sha> (immutable) and :latest (mutable pointer).
+
+publish:backend:
+  stage: publish
+  image: docker:24
+  services:
+    - docker:24-dind
+  needs:
+    - scan:backend
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - docker load --input backend-image.tar.gz
+    - docker tag "$BACKEND_IMAGE" "$CI_REGISTRY_IMAGE/backend:latest"
+    - docker push "$BACKEND_IMAGE"
+    - docker push "$CI_REGISTRY_IMAGE/backend:latest"
+
+publish:frontend:
+  stage: publish
+  image: docker:24
+  services:
+    - docker:24-dind
+  needs:
+    - scan:frontend
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - docker load --input frontend-image.tar.gz
+    - docker tag "$FRONTEND_IMAGE" "$CI_REGISTRY_IMAGE/frontend:latest"
+    - docker push "$FRONTEND_IMAGE"
+    - docker push "$CI_REGISTRY_IMAGE/frontend:latest"
+
+# ── STAGE 7: DEPLOY-DEV ───────────────────────────────────────────────────────
+# Phase 8 replaces this stub with Octopus Deploy:
+#   octo create-release --project pern-backend --version $CI_COMMIT_SHORT_SHA
+#   octo deploy-release --project pern-backend --deployTo DEV
+
+deploy:dev:
+  stage: deploy-dev
+  image: curlimages/curl:latest
+  needs:
+    - publish:backend
+    - publish:frontend
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+  script:
+    - echo "Backend  → $BACKEND_IMAGE"
+    - echo "Frontend → $FRONTEND_IMAGE"
+    - echo "Phase 8 — Octopus Deploy trigger goes here."
