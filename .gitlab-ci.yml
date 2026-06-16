@@ -94,7 +94,7 @@ sast:semgrep:
   stage: security
   image: semgrep/semgrep:latest
   script:
-    - semgrep scan --config p/owasp-top-ten --config p/nodejs --json --output semgrep-report.json server/src/
+    - semgrep scan --config p/owasp-top-ten --config p/nodejs --json --output semgrep-report.json server/
   allow_failure: true
   artifacts:
     when: always
