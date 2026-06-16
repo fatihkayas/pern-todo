@@ -94,12 +94,7 @@ sast:semgrep:
   stage: security
   image: semgrep/semgrep:latest
   script:
-    - semgrep scan
-        --config p/owasp-top-ten
-        --config p/nodejs
-        --json
-        --output semgrep-report.json
-        server/src/
+    - semgrep scan --config p/owasp-top-ten --config p/nodejs --json --output semgrep-report.json server/src/
   allow_failure: true
   artifacts:
     when: always
@@ -113,12 +108,7 @@ sca:trivy-fs:
   variables:
     TRIVY_NO_PROGRESS: "true"
   script:
-    - trivy fs
-        --severity HIGH,CRITICAL
-        --exit-code 1
-        --format json
-        --output trivy-fs-report.json
-        server/
+    - trivy fs --severity HIGH,CRITICAL --exit-code 1 --format json --output trivy-fs-report.json server/
   allow_failure: true
   artifacts:
     when: always
@@ -138,13 +128,7 @@ build:backend:
   before_script:
     - export BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   script:
-    - docker build
-        --file server/Dockerfile.prod
-        --build-arg GIT_SHA="$CI_COMMIT_SHORT_SHA"
-        --build-arg VERSION="${CI_COMMIT_TAG:-$CI_COMMIT_SHORT_SHA}"
-        --build-arg BUILD_DATE="$BUILD_DATE"
-        --tag "$BACKEND_IMAGE"
-        server/
+    - docker build --file server/Dockerfile.prod --build-arg GIT_SHA="$CI_COMMIT_SHORT_SHA" --build-arg VERSION="${CI_COMMIT_TAG:-$CI_COMMIT_SHORT_SHA}" --build-arg BUILD_DATE="$BUILD_DATE" --tag "$BACKEND_IMAGE" server/
     - docker save "$BACKEND_IMAGE" | gzip > backend-image.tar.gz
   artifacts:
     paths:
@@ -159,13 +143,7 @@ build:frontend:
   before_script:
     - export BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   script:
-    - docker build
-        --file client/Dockerfile.prod
-        --build-arg GIT_SHA="$CI_COMMIT_SHORT_SHA"
-        --build-arg VERSION="${CI_COMMIT_TAG:-$CI_COMMIT_SHORT_SHA}"
-        --build-arg BUILD_DATE="$BUILD_DATE"
-        --tag "$FRONTEND_IMAGE"
-        client/
+    - docker build --file client/Dockerfile.prod --build-arg GIT_SHA="$CI_COMMIT_SHORT_SHA" --build-arg VERSION="${CI_COMMIT_TAG:-$CI_COMMIT_SHORT_SHA}" --build-arg BUILD_DATE="$BUILD_DATE" --tag "$FRONTEND_IMAGE" client/
     - docker save "$FRONTEND_IMAGE" | gzip > frontend-image.tar.gz
   artifacts:
     paths:
@@ -182,12 +160,7 @@ scan:backend:
   variables:
     TRIVY_NO_PROGRESS: "true"
   script:
-    - trivy image
-        --exit-code 1
-        --severity CRITICAL
-        --format json
-        --output trivy-backend-report.json
-        --input backend-image.tar.gz
+    - trivy image --exit-code 1 --severity CRITICAL --format json --output trivy-backend-report.json --input backend-image.tar.gz
   allow_failure: true
   artifacts:
     when: always
@@ -203,12 +176,7 @@ scan:frontend:
   variables:
     TRIVY_NO_PROGRESS: "true"
   script:
-    - trivy image
-        --exit-code 1
-        --severity CRITICAL
-        --format json
-        --output trivy-frontend-report.json
-        --input frontend-image.tar.gz
+    - trivy image --exit-code 1 --severity CRITICAL --format json --output trivy-frontend-report.json --input frontend-image.tar.gz
   allow_failure: true
   artifacts:
     when: always
@@ -226,7 +194,10 @@ publish:backend:
   services:
     - docker:24-dind
   needs:
-    - scan:backend
+    - job: build:backend
+      artifacts: true
+    - job: scan:backend
+      artifacts: false
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
   script:
@@ -242,7 +213,10 @@ publish:frontend:
   services:
     - docker:24-dind
   needs:
-    - scan:frontend
+    - job: build:frontend
+      artifacts: true
+    - job: scan:frontend
+      artifacts: false
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
   script:
