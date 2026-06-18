@@ -315,6 +315,8 @@ pern-npm-local/           # npm packages (optional)
 
 ### Phase 8 — v4.1.0 — Octopus Deploy 📋
 
+> See [ADR-0001](./docs/adr/0001-octopus-deploy-and-argocd-division-of-responsibility.md) for why this coexists with ArgoCD GitOps in Phase 9.
+
 > **Goal:** Enterprise CD orchestration with auditable lifecycle, approval gates, and runbooks.  
 > **Duration:** 4 weeks · Weeks 6–9  
 > **Banking relevance:** Direct match to Deutsche Bank / Commerzbank CD Engineer job requirements.
@@ -449,6 +451,8 @@ GitOps repo: gitlab.example.com/pern/gitops-config
 
 ### Phase 10 — v5.1.0 — OpenShift 4 📋
 
+> See [ADR-0002](./docs/adr/0002-kubernetes-before-openshift.md) for why this is a migration from Phase 9, not a parallel target.
+
 > **Goal:** Deploy to Red Hat OpenShift — the de-facto container platform in German enterprise banking.  
 > **Duration:** 3 weeks · Weeks 14–16  
 > **Banking relevance:** >80% of DAX-listed banks run workloads on OCP (Deutsche Bank, Commerzbank, Helaba).
@@ -552,6 +556,8 @@ infra/
 
 #### 12.2 — Multi-Cloud Kafka (AWS MSK + Azure EventHub)
 
+> Stretch goal — lower priority. The resilience pattern is already proven once against Redpanda in Phase 6; pick this up only if Phases 7–12.1/12.3 are done with time remaining.
+
 | Broker | IaC | Consumer change |
 |--------|-----|----------------|
 | AWS MSK | `infra/modules/msk/` | Env var `KAFKA_BROKER` only |
@@ -569,8 +575,10 @@ infra/
 - [ ] Context injection: live inventory into Claude prompts
 
 **Autonomous Stock Agent:**
-- [ ] Prometheus low-stock alert → webhook → Claude Tool Use
-- [ ] Claude tools: `list_low_stock_watches`, `create_reorder_request`
+- [ ] Prometheus low-stock alert → webhook → LangGraph state graph
+- [ ] Tool calls exposed via a custom MCP server (`list_low_stock_watches`, `create_reorder_request`) — see ADR-0004
+- [ ] Human-approval branch when reorder value exceeds threshold (mirrors Phase 8 CAB approval pattern)
+- [ ] Retry/backoff branch on supplier notification failure (mirrors Phase 6.4 circuit breaker pattern)
 - [ ] Decision log in PostgreSQL (AgentOps pattern) — full audit trail
 
 **LLMOps:**

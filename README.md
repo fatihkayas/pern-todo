@@ -41,6 +41,8 @@ This is an **engineering platform** that simulates the architecture of a real pr
 
 > 📐 **[Interactive Architecture Diagram →](https://fatihkayas.github.io/pern-todo/architecture.html)**
 
+> 📋 **[Architecture Decision Records →](./docs/adr/)** — why Octopus *and* ArgoCD, why Kubernetes before OpenShift, why three clouds, why LangGraph for the stock agent.
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         CLIENT LAYER                            │
@@ -178,7 +180,7 @@ Security is enforced at every layer. OWASP Top 10 aligned.
 | Local HTTPS | mkcert self-signed certificates |
 | Production TLS | Let's Encrypt via ACM / Azure |
 | Secrets | Environment variables only — never hardcoded |
-| Dependency Audit | npm audit + Snyk in CI pipeline |
+| Dependency Audit | npm audit + Trivy SCA + Semgrep SAST in CI pipeline |
 | Container Isolation | Separate networks per service (Podman) |
 
 ---
@@ -189,10 +191,12 @@ Security is enforced at every layer. OWASP Top 10 aligned.
 
 ```
 Metrics    → Prometheus + Grafana    (API latency, error rate, stock levels, Claude token usage)
-Logs       → Loki + Promtail         (structured JSON, Kubernetes-native, low resource usage)
-Analytics  → ELK Stack               (full-text search, business intelligence, Kibana dashboards)
-Enterprise → Splunk                  (learning track — SPL queries, security event correlation)
-Tracing    → Jaeger                  (distributed tracing — Phase 5, microservices)
+Logs       → Loki + Promtail         (production)
+Tracing    → Jaeger                  (agent + tool-call spans)
+
+Exploratory / learning track (not production):
+- ELK Stack — full-text search, BI dashboards
+- Splunk — SPL queries, security event correlation
 ```
 
 ### Key Dashboards (Grafana)
@@ -246,14 +250,13 @@ GitOps       →  ArgoCD / Flux — Phase 6
 
 ## 🗺️ Roadmap
 
-```
-Phase 1  Feb–Mar 2026   ████████░░  Security hardening, Claude RAG chatbot, pgvector
-Phase 2  Apr 2026       ██████░░░░  Observability stack, AI stock agent, CI/CD
-Phase 3  May–Jun 2026   ████░░░░░░  AWS: ECS, RDS, CloudFront, production deployment
-Phase 4  Jul–Aug 2026   ██░░░░░░░░  Azure: multi-cloud, AKS, Azure Monitor
-Phase 5  Sep–Oct 2026   ░░░░░░░░░░  Kubernetes: EKS/AKS, OpenShift, Helm, GitOps
-Phase 6  Nov 2026+      ░░░░░░░░░░  AI-native: AgentOps, LLMOps, contextual memory
-```
+This README is the snapshot. The full, versioned roadmap lives in
+[ROADMAP.md](./ROADMAP.md).
+
+**Current: v3.7.0** · Phases 1–6 released · Phase 7.1 (Container
+Hardening) ✅ · Next: Phase 7.2 (GitLab CI/CD)
+
+See also: [Architecture Decision Records](./docs/adr/).
 
 ---
 
@@ -386,7 +389,7 @@ npm run format
 ### CI Pipeline (GitHub Actions)
 
 ```
-Push → Lint → Test → Security Scan (Snyk) → Build Image → Push to GHCR
+Push → Lint → Test → Semgrep SAST + Trivy SCA → Build Image → Trivy image scan → Push to GHCR
 ```
 
 ---
