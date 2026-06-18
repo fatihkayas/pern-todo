@@ -10,8 +10,9 @@
 [![Docker](https://img.shields.io/badge/Podman-Ready-892CA0?style=flat-square&logo=podman&logoColor=white)](https://podman.io)
 [![Claude AI](https://img.shields.io/badge/Claude-AI%20Agent-CC785C?style=flat-square&logo=anthropic&logoColor=white)](https://anthropic.com)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-Ready-326CE5?style=flat-square&logo=kubernetes&logoColor=white)](https://kubernetes.io)
-[![AWS](https://img.shields.io/badge/AWS-Planned-FF9900?style=flat-square&logo=amazonaws&logoColor=white)](https://aws.amazon.com)
-[![Azure](https://img.shields.io/badge/Azure-Planned-0078D4?style=flat-square&logo=microsoftazure&logoColor=white)](https://azure.microsoft.com)
+[![AWS](https://img.shields.io/badge/AWS-Deployed-FF9900?style=flat-square&logo=amazonaws&logoColor=white)](https://aws.amazon.com)
+[![Azure](https://img.shields.io/badge/Azure-Deployed-0078D4?style=flat-square&logo=microsoftazure&logoColor=white)](https://azure.microsoft.com)
+[![GCP](https://img.shields.io/badge/GCP-Deployed-4285F4?style=flat-square&logo=googlecloud&logoColor=white)](https://cloud.google.com)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 **A production-oriented, security-first, cloud-ready commerce platform** built with the PERN stack,  
@@ -32,7 +33,7 @@ This is an **engineering platform** that simulates the architecture of a real pr
 - **Security by design** — OWASP Top 10 coverage across frontend and backend
 - **Observability-first** — Prometheus, Grafana, Loki, ELK, and Splunk integration
 - **AI as an operational layer** — Claude LLM agent with Tool Use, RAG, and autonomous decision-making
-- **Cloud portability** — AWS and Azure deployment with no vendor lock-in
+- **Cloud portability** — AWS, Azure, and GCP deployments with no vendor lock-in
 - **Container orchestration** — Kubernetes-ready, OpenShift-compatible
 
 ---
@@ -63,7 +64,7 @@ This is an **engineering platform** that simulates the architecture of a real pr
 ┌──────────▼─────┐  ┌──────▼──────┐  ┌────────▼────────────────┐
 │  PostgreSQL 15 │  │ Claude Agent│  │   Observability Stack    │
 │  + pgvector    │  │  Tool Use   │  │  Prometheus · Grafana    │
-│  RAG-ready     │  │  RAG / LLM  │  │  Loki · ELK · Splunk    │
+│  RAG-ready     │  │  RAG / LLM  │  │  Loki · Jaeger           │
 └────────────────┘  └─────────────┘  └─────────────────────────┘
            │
 ┌──────────▼──────────────────────────────────────────────────────┐
@@ -94,34 +95,45 @@ This is an **engineering platform** that simulates the architecture of a real pr
 
 This project uses **Claude (Anthropic)** not as a chatbot decoration — but as an **operational layer** with real system impact.
 
-### Current: Secure RAG Chatbot
+### Live: Secure RAG Chatbot (v0.9.0)
 - Backend proxy pattern — API keys never exposed to client
-- System prompt injection with live todo/product context
+- System prompt injection with live product context
 - Conversation history (last 20 messages) per session
 - PostgreSQL-persisted chat history
-- Keycloak JWT-protected `/api/chat` endpoint
+- JWT-protected `/api/v1/chat` endpoint
 - Rate limiting: 10 req/min per user
 
-### Phase 2: Autonomous Stock Management Agent
+### Live: AI Log Analyzer — Claude + Jira (v3.7.0)
 
 ```
-Prometheus detects: seiko_stock_level{product="SKX007"} < 5
+Scheduled task (Trigger.dev cron) reads Pino structured logs
          │
          ▼
-Grafana Webhook → POST /api/agent/stock-alert
+Claude claude-opus-4-6 performs root cause analysis
          │
          ▼
-Claude Tool Use executes:
-  ├── query_db(product_id)        → fetch sales history
-  ├── calculate_reorder(trend)    → compute optimal quantity
-  ├── notify_supplier(quantity)   → send order request
-  └── log_decision(action, db)    → persist agent decision
+Jira REST API v3 → auto-creates issue with severity + summary
          │
          ▼
-Grafana Annotation: "AI Decision: 50 units ordered @ 14:32"
+Grafana annotation logged — full audit trail
 ```
 
-**No human intervention required.**
+**Zero human triage for recurring log patterns.**
+
+### Planned: Autonomous Stock Management Agent (Phase 12.3)
+
+```
+Prometheus: seiko_stock_level < 5 → webhook
+         │
+         ▼
+LangGraph state graph (see ADR-0004):
+  ├── MCP server tools: list_low_stock_watches, create_reorder_request
+  ├── Human-approval branch  (reorder value > threshold)
+  └── Retry/backoff branch   (supplier notification failure)
+         │
+         ▼
+Decision log → PostgreSQL · Grafana annotation
+```
 
 ### RAG Pipeline (pgvector)
 
@@ -138,15 +150,14 @@ Top-k product chunks → injected into Claude context
 Grounded, accurate product recommendation
 ```
 
-### Future: AgentOps & LLMOps (Phase 6)
+### Planned: LLMOps (Phase 12.3)
 
 | Feature | Description |
 |---|---|
 | Prompt versioning | System prompts managed in Git like code |
-| A/B prompt testing | Automated quality evaluation |
-| Token cost monitoring | Claude usage as Prometheus metric |
-| Contextual memory | User preferences persist across sessions |
-| Agent observability | Every tool-use decision logged in Loki |
+| Token cost monitoring | Claude spend as Prometheus metric |
+| Agent observability | Tool-call spans via Jaeger + OpenTelemetry |
+| Model fallback | Claude primary → Ollama on failure |
 
 ---
 
@@ -236,15 +247,15 @@ GitOps       →  ArgoCD / Flux — Phase 6
 
 ### Multi-Cloud Strategy
 
-| Layer | AWS | Azure |
-|---|---|---|
-| Container Runtime | ECS Fargate / EKS | Container Apps / AKS |
-| Database | RDS PostgreSQL | Azure Database for PostgreSQL |
-| CDN | CloudFront | Azure Front Door |
-| Secrets | Secrets Manager | Key Vault |
-| Monitoring | CloudWatch | Azure Monitor |
-| Container Registry | ECR | ACR |
-| IaC | CDK / Terraform | Bicep / Terraform |
+| Layer | AWS | Azure | GCP |
+|---|---|---|---|
+| Container Runtime | ECS Fargate / EKS | Container Apps / AKS | Cloud Run / GKE |
+| Database | RDS PostgreSQL | Azure Database for PostgreSQL | Cloud SQL |
+| CDN | CloudFront | Azure Front Door | Cloud CDN |
+| Secrets | Secrets Manager | Key Vault | Secret Manager |
+| Monitoring | CloudWatch | Azure Monitor | Cloud Monitoring |
+| Container Registry | ECR | ACR | Artifact Registry |
+| IaC | Terraform | Bicep / Terraform | Terraform |
 
 ---
 
@@ -438,7 +449,7 @@ pern-todo/
 
 2. **AI integration with real operational impact** — Claude is not a UI gimmick. It is a server-side agent with Tool Use, database access, and autonomous decision-making. This is LLMOps in practice.
 
-3. **Multi-cloud without vendor lock-in** — AWS and Azure deployments use the same containerized services. Switching providers does not require rewriting the application.
+3. **Multi-cloud without vendor lock-in** — AWS, Azure, and GCP deployments run the same containerized services unmodified. Cloud-specific concerns are isolated to the IaC layer only.
 
 4. **Full observability stack** — Prometheus, Grafana, Loki, ELK, and Splunk are all configured. The system is measurable, alertable, and debuggable in production.
 
@@ -460,7 +471,7 @@ pern-todo/
 
 **Observability** — Prometheus · Grafana · Loki · Promtail · Elasticsearch · Logstash · Kibana · Splunk · Jaeger
 
-**DevOps** — Podman · Nginx · GitHub Actions · Snyk · Trivy
+**DevOps** — Podman · Nginx · GitHub Actions · GitLab CI · Semgrep · Trivy
 
 **Cloud** — AWS (ECS · EKS · RDS · CloudFront · ACM · Secrets Manager) · Azure (Container Apps · AKS · PostgreSQL · Front Door · Key Vault)
 
