@@ -451,7 +451,7 @@ pern-todo/
 
 3. **Multi-cloud without vendor lock-in** — AWS, Azure, and GCP deployments run the same containerized services unmodified. Cloud-specific concerns are isolated to the IaC layer only.
 
-4. **Full observability stack** — Prometheus, Grafana, Loki, ELK, and Splunk are all configured. The system is measurable, alertable, and debuggable in production.
+4. **Full observability stack** — Prometheus, Grafana, Loki, and Jaeger are production-configured. ELK and Splunk are included as an exploratory learning track. The system is measurable, alertable, and debuggable in production.
 
 5. **Cloud-native trajectory** — The project is actively moving toward Kubernetes (EKS/AKS), GitOps (ArgoCD), and OpenShift. Every architectural decision is made with orchestration in mind.
 
@@ -469,7 +469,9 @@ pern-todo/
 
 **AI** — Claude API (Anthropic) · Tool Use · RAG · pgvector embeddings
 
-**Observability** — Prometheus · Grafana · Loki · Promtail · Elasticsearch · Logstash · Kibana · Splunk · Jaeger
+**Observability (production)** — Prometheus · Grafana · Loki · Promtail · Jaeger
+
+**Observability (exploratory)** — Elasticsearch · Logstash · Kibana · Splunk
 
 **DevOps** — Podman · Nginx · GitHub Actions · GitLab CI · Semgrep · Trivy
 
