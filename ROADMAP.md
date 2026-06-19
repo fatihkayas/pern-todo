@@ -43,7 +43,7 @@
 | Auth | Keycloak (OIDC + JWKS) | ✅ |
 | Containers | Podman + podman-compose | ✅ |
 | Reverse Proxy | Nginx + HTTPS (mkcert) | ✅ |
-| Payments | Stripe (Payment Intents + Webhooks) | ✅ |
+| Payments | Stripe (Payment Intents + Webhooks) · PayPal (Orders API v2) | ✅ |
 | AI Chatbot | Claude API (Anthropic) | ✅ |
 | Validation | Zod (all endpoints) | ✅ |
 | Security | Helmet + Rate Limiting + CORS | ✅ |

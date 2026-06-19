@@ -453,7 +453,9 @@ pern-todo/
 
 4. **Full observability stack** — Prometheus, Grafana, Loki, and Jaeger are production-configured. ELK and Splunk are included as an exploratory learning track. The system is measurable, alertable, and debuggable in production.
 
-5. **Cloud-native trajectory** — The project is actively moving toward Kubernetes (EKS/AKS), GitOps (ArgoCD), and OpenShift. Every architectural decision is made with orchestration in mind.
+5. **Dual payment provider** — Stripe (Payment Intents + Webhook verification) and PayPal (Orders API v2, create + capture) are both live and tested. The backend returns 503 gracefully when PayPal credentials are absent — no hard dependency.
+
+6. **Cloud-native trajectory** — The project is actively moving toward Kubernetes (EKS/AKS), GitOps (ArgoCD), and OpenShift. Every architectural decision is made with orchestration in mind.
 
 ---
 
@@ -466,6 +468,8 @@ pern-todo/
 **Database** — PostgreSQL 15 · pgvector · pg.Pool
 
 **Auth** — Keycloak · OpenID Connect · JWKS · RBAC
+
+**Payments** — Stripe (Payment Intents + Webhooks) · PayPal (Orders API v2 — create + capture, graceful no-op if unconfigured)
 
 **AI** — Claude API (Anthropic) · Tool Use · RAG · pgvector embeddings
 
