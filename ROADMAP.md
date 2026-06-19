@@ -24,6 +24,7 @@
 | v3.5.0 | 6.5 | Integration Observability — Grafana · Alerts | ✅ Released |
 | v3.6.0 | 6.6 | Chaos Engineering — 10 consumer tests | ✅ Released |
 | v3.7.0 | 6.7 | AI Log Analyzer — Claude + Jira auto-issue | ✅ Released |
+| v3.8.0 | 6.8 | Keycloak Frontend Integration — OIDC login flow · token refresh · RBAC route guards | 📋 Planned |
 | v4.0.0 | 7 | Enterprise CD Foundation — GitLab · Artifactory · Container Hardening | 🔄 In Progress |
 | v4.1.0 | 8 | Octopus Deploy — DEV→TEST→UAT→PROD · CAB Approval | 📋 Planned |
 | v5.0.0 | 9 | Kubernetes — Helm · HPA · PDB · NetworkPolicy · ArgoCD | 📋 Planned |
@@ -200,6 +201,18 @@ seiko_integration     Go microservice         :8083 ← :8080
 - [x] Claude claude-opus-4-6 root-cause analysis → categorized JSON (network_timeout · http_5xx · circuit_breaker_open · chaos_injection)
 - [x] Auto-creates Jira issue via REST API v3 (priority mapped to severity)
 - [x] Graceful no-op when Jira not configured
+
+#### 6.8 — Keycloak Frontend Integration (v3.8.0) 📋
+
+> **Goal:** Wire the existing Keycloak service into the React frontend — replacing the current JWT-only auth flow with a full OIDC login redirect flow.  
+> **Status:** Keycloak is already running in `podman-compose.yml` and provisioned via `keycloak-realm.json` (realm: WatchStore, client: watch-app). `client/src/keycloak.ts` exists. This phase closes the gap between "Keycloak running" and "Keycloak used."
+
+- [ ] Replace manual JWT login form with Keycloak redirect flow (`keycloak.login()`)
+- [ ] Token refresh — silent SSO via `silent-check-sso.html` (already present in `client/public/`)
+- [ ] RBAC-based frontend route guards — read roles from Keycloak token (`keycloak.hasRealmRole()`)
+- [ ] Update `client/src/keycloak.ts`: replace hardcoded `http://localhost:8080` with env var
+- [ ] Update `keycloak-realm.json` realm name to match backend expectation or align across all config
+- [ ] Remove or archive legacy `client/src/utils/auth.ts` JWT helpers once Keycloak flow is confirmed
 
 ---
 
