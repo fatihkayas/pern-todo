@@ -35,6 +35,12 @@ client/build/
 # Azure local config
 server/config/azure.js
 
+# Sequelize config with real DB credentials (copy from config.json.example)
+server/config/config.json
+
+# Local dev TLS certs (mkcert self-signed — regenerate with: mkcert localhost)
+nginx/ssl/*.pem
+
 # Bicep compiled ARM output (source of truth is .bicep files)
 infra/*.json
 

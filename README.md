@@ -278,6 +278,7 @@ See also: [Architecture Decision Records](./docs/adr/).
 - Node.js 20+
 - Podman + podman-compose (or Docker + docker-compose)
 - Git
+- [mkcert](https://github.com/FiloSottile/mkcert) — for local HTTPS certs (`nginx/ssl/` is gitignored; regenerate with `mkcert localhost` if missing)
 
 ### 1. Clone
 

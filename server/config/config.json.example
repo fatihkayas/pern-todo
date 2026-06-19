@@ -1,14 +1,14 @@
 {
   "development": {
     "username": "postgres",
-    "password": "your_password",
+    "password": "CHANGE_ME",
     "database": "jwtauth",
     "host": "db",
     "dialect": "postgres"
   },
   "production": {
     "username": "postgres",
-    "password": "your_password",
+    "password": "CHANGE_ME",
     "database": "jwtauth",
     "host": "db",
     "dialect": "postgres"
